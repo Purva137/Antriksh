@@ -1,0 +1,325 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Aditya-L1 — Antriksh</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
+  :root{--black:#000000;--white:#ffffff;--red:#FC3D21;--blue:#06038D;}
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--black);color:var(--white);font-family:'Space Grotesk',sans-serif;overflow-x:hidden;}
+  #stars-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:20px 48px;background:rgba(0,0,0,0.92);border-bottom:1px solid rgba(255,255,255,0.06);}
+  .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.12em;color:var(--white);text-decoration:none;}
+  .nav-logo span{color:var(--red);}
+  .nav-links{display:flex;gap:36px;list-style:none;}
+  .nav-links li{position:relative;padding-bottom:20px;margin-bottom:-20px;}
+  .nav-links a{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.8);text-decoration:none;transition:color 0.3s;}
+  .nav-links a:hover{color:var(--white);}
+  .nav-links li:hover>.dropdown{opacity:1;pointer-events:all;transform:translateY(0);}
+  .dropdown{position:absolute;top:100%;left:0;background:rgba(5,5,10,0.97);border:1px solid rgba(255,255,255,0.08);border-top:2px solid var(--red);padding:16px 0;min-width:200px;opacity:0;pointer-events:none;transform:translateY(4px);transition:all 0.2s ease;z-index:200;}
+  .dropdown a{display:block;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.7)!important;padding:10px 20px;text-decoration:none;transition:all 0.2s;} .nav-links li:last-child>.dropdown{left:auto;right:0;}
+  .dropdown a:hover{color:var(--white)!important;background:rgba(252,61,33,0.08);padding-left:28px;}
+  .nav-live{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;color:var(--red);text-transform:uppercase;}
+  .live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.4);}}
+  .mission-hero{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:0 48px 80px;overflow:hidden;}
+  .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 60% 30%, rgba(255,140,0,0.2) 0%, rgba(255,60,0,0.08) 30%, rgba(0,0,0,0) 60%);}
+  .hero-grid-lines{position:absolute;inset:0;background-image:linear-gradient(rgba(6,3,141,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(6,3,141,0.03) 1px,transparent 1px);background-size:60px 60px;}
+  .breadcrumb{position:relative;z-index:2;padding-top:120px;display:flex;align-items:center;gap:12px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.45);}
+  .breadcrumb a{color:rgba(255,255,255,0.45);text-decoration:none;}
+  .breadcrumb span{color:rgba(255,255,255,0.3);}
+  .mission-hero-content{position:relative;z-index:2;}
+  .mission-status-badge{display:inline-flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:#00c864;margin-bottom:20px;}
+  .mission-hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(70px,13vw,170px);line-height:0.85;letter-spacing:0.02em;margin-bottom:24px;}
+  .mission-hero-sub{font-size:18px;font-weight:300;color:rgba(255,255,255,0.7);max-width:600px;line-height:1.7;margin-bottom:48px;}
+  .hero-stats{display:flex;gap:0;border:1px solid rgba(255,255,255,0.08);}
+  .hero-stat{padding:20px 32px;border-right:1px solid rgba(255,255,255,0.08);}
+  .hero-stat:last-child{border-right:none;}
+  .hero-stat-value{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--white);line-height:1;}
+  .hero-stat-value span{color:var(--red);}
+  .hero-stat-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-top:4px;}
+  .mission-nav{position:sticky;top:69px;z-index:90;background:rgba(0,0,0,0.95);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;gap:0;overflow-x:auto;}
+  .mission-nav a{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.55);text-decoration:none;padding:18px 28px;border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.3s;}
+  .mission-nav a:hover,.mission-nav a.active{color:var(--white);border-bottom-color:var(--red);}
+  .content-section{position:relative;z-index:1;padding:80px 48px;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .section-tag{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--red);margin-bottom:12px;}
+  .section-title{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:0.03em;line-height:1;margin-bottom:32px;}
+  .section-body{font-size:16px;color:rgba(255,255,255,0.75);line-height:1.9;max-width:760px;}
+  .section-body p{margin-bottom:20px;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start;}
+  .two-col-wide{display:grid;grid-template-columns:1.4fr 1fr;gap:80px;align-items:start;}
+  .highlight-box{background:rgba(6,3,141,0.08);border:1px solid rgba(6,3,141,0.25);border-left:3px solid var(--blue);padding:28px 32px;margin:32px 0;}
+  .highlight-box-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:12px;}
+  .highlight-box-text{font-size:15px;color:rgba(255,255,255,0.85);line-height:1.8;}
+  .specs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:32px;}
+  .spec-item{background:#080808;border:1px solid rgba(255,255,255,0.04);padding:24px;}
+  .spec-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:8px;}
+  .spec-value{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);line-height:1;}
+  .spec-unit{font-family:'Space Mono',monospace;font-size:11px;color:rgba(255,255,255,0.55);margin-top:4px;}
+  .timeline-item{display:flex;gap:32px;padding:28px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .timeline-item:last-child{border-bottom:none;}
+  .timeline-date{font-family:'Space Mono',monospace;font-size:11px;color:var(--red);letter-spacing:0.1em;min-width:140px;padding-top:3px;}
+  .timeline-content-title{font-size:15px;font-weight:500;color:var(--white);margin-bottom:6px;}
+  .timeline-content-desc{font-size:13px;color:rgba(255,255,255,0.6);line-height:1.7;}
+  .discoveries-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;margin-top:32px;}
+  .discovery-card{background:#080808;border:1px solid rgba(255,255,255,0.04);padding:28px;transition:border-color 0.3s;}
+  .discovery-card:hover{border-color:rgba(252,61,33,0.15);}
+  .discovery-icon{font-size:32px;margin-bottom:12px;}
+  .discovery-title{font-size:15px;font-weight:500;color:var(--white);margin-bottom:8px;}
+  .discovery-desc{font-size:13px;color:rgba(255,255,255,0.6);line-height:1.7;}
+  .live-stat-box{background:rgba(0,200,100,0.04);border:1px solid rgba(0,200,100,0.15);border-left:3px solid #00c864;padding:24px 28px;display:flex;align-items:center;gap:24px;}
+  .live-stat-value{font-family:'Bebas Neue',sans-serif;font-size:40px;color:#00c864;line-height:1;}
+  .live-stat-label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.5);}
+  .next-mission{position:relative;z-index:1;padding:60px 48px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.06);}
+  .next-label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.4);}
+  .next-title{font-family:'Bebas Neue',sans-serif;font-size:36px;margin-top:8px;}
+  .btn-red{display:inline-flex;align-items:center;gap:12px;background:var(--red);color:var(--white);font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;padding:16px 32px;text-decoration:none;transition:all 0.3s;}
+  .btn-red:hover{background:#ff5540;transform:translateX(4px);}
+  .btn-outline{display:inline-flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;padding:16px 32px;text-decoration:none;transition:all 0.3s;margin-left:16px;}
+  .btn-outline:hover{border-color:rgba(255,255,255,0.6);color:var(--white);}
+  footer{position:relative;z-index:10;padding:40px 48px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;}
+  .footer-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.12em;color:rgba(255,255,255,0.3);text-decoration:none;}
+  .footer-logo span{color:rgba(252,61,33,0.2);}
+  .footer-credit{font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.35);}
+</style>
+<link rel="stylesheet" href="../responsive.css">
+</head>
+<body>
+<canvas id="stars-canvas"></canvas>
+<nav>
+  <a href="../index.html" class="nav-logo">ANTRIK<span>SH</span></a>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  <ul class="nav-links">
+    <li><a href="../missions.html">Missions</a><div class="dropdown"><a href="../missions.html">All Missions →</a></div></li>
+    <li><a href="../timeline.html">Timeline</a><div class="dropdown"><a href="../timeline.html">Full Timeline →</a></div></li>
+    <li><a href="../rockets.html">Rockets</a><div class="dropdown"><a href="../rockets.html">All Rockets →</a></div></li>
+    <li><a href="../heroes.html">Heroes</a><div class="dropdown"><a href="../heroes.html">All Scientists →</a></div></li>
+    <li><a href="../isropedia.html">ISRO-pedia</a><div class="dropdown"><a href="../isropedia.html">Explore →</a></div></li>
+    <li><a href="../eyes.html">Eyes on Space</a><div class="dropdown"><a href="../eyes.html">Live Tracking →</a></div></li>
+  </ul>
+  
+</nav>
+
+<div class="mission-hero">
+  <div class="hero-bg"><img src="../photos/adityal1(4).jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.25;z-index:-1;"></div>
+  <div class="hero-grid-lines"></div>
+  <div class="breadcrumb"><a href="../index.html">Antriksh</a><span>/</span><a href="../missions.html">Missions</a><span>/</span>Aditya-L1</div>
+  <div class="mission-hero-content">
+    <div class="mission-status-badge">● Active · Solar Observatory · L1 Lagrange Point</div>
+    <h1 class="mission-hero-title">ADITYA<span style="color:var(--red);">-L1</span></h1>
+    <p class="mission-hero-sub">India's first dedicated solar observatory — stationed 1.5 million kilometres from Earth at the L1 Lagrange point, staring at the Sun continuously, studying its corona, solar winds, and the space weather that affects every satellite and power grid on Earth.</p>
+    <a href="https://www.youtube.com/live/_IcgGYZTXQw?si=-Ho-xqSiaD2bMfqa" target="_blank" style="display:inline-flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:32px;transition:color 0.2s;" onmouseover="this.style.color='rgba(255,255,255,0.7)'" onmouseout="this.style.color='rgba(255,255,255,0.35)'">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+      Watch: Aditya-L1 Launch Live
+    </a>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-value">1<span>st</span></div><div class="hero-stat-label">Indian Solar Observatory</div></div>
+      <div class="hero-stat"><div class="hero-stat-value">1.5<span>M km</span></div><div class="hero-stat-label">Distance from Earth</div></div>
+      <div class="hero-stat"><div class="hero-stat-value">7</div><div class="hero-stat-label">Science Payloads</div></div>
+      <div class="hero-stat"><div class="hero-stat-value">5<span>yr</span></div><div class="hero-stat-label">Mission Design Life</div></div>
+      <div class="hero-stat"><div class="hero-stat-value">Active</div><div class="hero-stat-label">Status · 2026</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="mission-nav">
+  <a href="#overview" class="active">Overview</a>
+  <a href="#l1point">The L1 Point</a>
+  <a href="#instruments">7 Instruments</a>
+  <a href="#discoveries">Discoveries</a>
+  <a href="#timeline">Timeline</a>
+  <a href="#significance">Why It Matters</a>
+</div>
+
+<div class="content-section" id="overview">
+  <div class="two-col-wide">
+    <div>
+      <div class="section-tag">Overview</div>
+      <h2 class="section-title">India Watches the Sun</h2>
+      <div class="section-body">
+        <p>Aditya-L1 — named after Aditya, the Sanskrit name for the Sun — is India's first space-based solar observatory. Launched on September 2, 2023, it reached its destination on January 6, 2024, becoming the first Indian spacecraft to operate at a Lagrange point.</p>
+        <p>The L1 point is a gravitational sweet spot between the Earth and the Sun — 1.5 million kilometres from Earth — where a spacecraft can maintain a stable position with minimal fuel expenditure. From here, Aditya-L1 has an uninterrupted, continuous view of the Sun, 24 hours a day, 365 days a year — never blocked by Earth's shadow.</p>
+        <p>This matters because the Sun is not predictable. Solar flares, coronal mass ejections, and solar wind variations can knock out satellites, disrupt GPS, overload power grids, and endanger astronauts. Aditya-L1's job is to watch, warn, and help scientists understand the star that makes all life on Earth possible.</p>
+      </div>
+      <div class="highlight-box">
+        <div class="highlight-box-title">What is Space Weather?</div>
+        <div class="highlight-box-text">Solar eruptions can send charged particles hurtling toward Earth at millions of km/h. These interact with Earth's magnetic field and ionosphere — disrupting radio communications, damaging satellites, and in extreme cases, knocking out power grids for millions of people. Aditya-L1 provides early warning — like a weather station for solar storms.</div>
+      </div>
+    </div>
+    <div>
+      <div style="margin-bottom:16px;">
+        <div class="live-stat-box">
+          <div><div class="live-stat-value">ACTIVE</div><div class="live-stat-label">Mission Status · May 2026</div></div>
+        </div>
+      </div>
+      <div class="specs-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="spec-item"><div class="spec-label">Launch</div><div class="spec-value" style="font-size:16px;font-family:'Space Grotesk';">Sep 2, 2023</div></div>
+        <div class="spec-item"><div class="spec-label">L1 Insertion</div><div class="spec-value" style="font-size:16px;font-family:'Space Grotesk';">Jan 6, 2024</div></div>
+        <div class="spec-item"><div class="spec-label">Distance</div><div class="spec-value">1.5<div class="spec-unit">Million km</div></div></div>
+        <div class="spec-item"><div class="spec-label">Spacecraft Mass</div><div class="spec-value">1,475<div class="spec-unit">kg</div></div></div>
+        <div class="spec-item"><div class="spec-label">Launch Vehicle</div><div class="spec-value" style="font-size:18px;font-family:'Space Grotesk';">PSLV-C57</div></div>
+        <div class="spec-item"><div class="spec-label">Payloads</div><div class="spec-value">7</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="content-section" id="l1point">
+  <div class="section-tag">Location</div>
+  <h2 class="section-title">The L1 Lagrange Point</h2>
+  <div class="two-col">
+    <div class="section-body">
+      <p>The five Lagrange points are positions in space where the gravitational forces of two large bodies — in this case, the Sun and Earth — and the centrifugal force of an orbiting object perfectly balance. At L1, a spacecraft between the Earth and Sun is gravitationally "parked" — it requires very little thrust to maintain its position.</p>
+      <p>L1 is 1.5 million kilometres from Earth — about 1% of the Earth-Sun distance. From here, Aditya-L1 has a permanent, unobstructed view of the Sun that no Earth-based or Earth-orbiting telescope can match.</p>
+      <p>ESA's SOHO mission and NASA's ACE mission have operated at L1 for decades. Aditya-L1 joins this elite group — making India one of only a handful of nations to station a spacecraft at a Lagrange point.</p>
+      <p>On <strong style="color:var(--white);">January 6, 2024</strong>, ISRO executed the final burn to insert Aditya-L1 into its halo orbit around L1. The L1 point is technically unstable — without occasional corrections, a spacecraft would slowly drift away. ISRO performs <strong style="color:var(--white);">station-keeping manoeuvres every few weeks</strong>, making small thruster firings to maintain the precise halo orbit. This requires careful navigation and planning — and ISRO's mission operations team does it flawlessly.</p>
+    </div>
+    <div>
+      <div class="highlight-box" style="margin-top:0;">
+        <div class="highlight-box-title">Why L1 is Perfect for Solar Observation</div>
+        <div class="highlight-box-text">At L1, there are no orbital eclipses — the Sun is always in view. The data stream is continuous. Solar events can be detected with maximum lead time before their effects reach Earth. This gives scientists up to an hour of advance warning before a solar storm impacts Earth's technology.</div>
+      </div>
+      <div class="specs-grid" style="grid-template-columns:1fr 1fr;margin-top:16px;">
+        <div class="spec-item"><div class="spec-label">L1 Distance</div><div class="spec-value" style="font-size:18px;font-family:'Space Grotesk';">1.5M km</div></div>
+        <div class="spec-item"><div class="spec-label">% of Earth-Sun Dist.</div><div class="spec-value">1<div class="spec-unit">%</div></div></div>
+        <div class="spec-item"><div class="spec-label">Sun Always Visible</div><div class="spec-value" style="font-size:18px;font-family:'Space Grotesk';color:#00c864;">Yes</div></div>
+        <div class="spec-item"><div class="spec-label">Halo Orbit Insertion</div><div class="spec-value" style="font-size:14px;font-family:'Space Grotesk';">Jan 6, 2024</div></div>
+        <div class="spec-item"><div class="spec-label">Station-Keeping</div><div class="spec-value" style="font-size:14px;font-family:'Space Grotesk';">Every Few Weeks</div></div>
+        <div class="spec-item"><div class="spec-label">Warning Time</div><div class="spec-value">~1<div class="spec-unit">Hour advance</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="content-section" id="instruments">
+  <div class="section-tag">Science Payloads</div>
+  <h2 class="section-title">7 Instruments · 7 Ways to See the Sun</h2>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:32px;">
+    <div style="background:rgba(6,3,141,0.08);border:1px solid rgba(6,3,141,0.2);border-left:3px solid var(--blue);padding:20px 24px;">
+      <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:8px;">Remote Sensing Payloads · Looking at the Sun</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.8);line-height:1.8;">VELC · SUIT · SoLEXS · HEL1OS<br><span style="font-size:12px;color:rgba(255,255,255,0.5);">Observe the Sun's corona, UV emissions, and X-ray flares from a distance</span></div>
+    </div>
+    <div style="background:rgba(252,61,33,0.04);border:1px solid rgba(252,61,33,0.15);border-left:3px solid var(--red);padding:20px 24px;">
+      <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:8px;">In-Situ Payloads · Measuring the Local Environment</div>
+      <div style="font-size:14px;color:rgba(255,255,255,0.8);line-height:1.8;">ASPEX · PAPA · MAG<br><span style="font-size:12px;color:rgba(255,255,255,0.5);">Measure solar wind, plasma, and magnetic field right at the L1 point</span></div>
+    </div>
+  </div>
+  <div class="discoveries-grid" style="grid-template-columns:repeat(3,1fr);">
+    <div class="discovery-card"><div class="discovery-icon">🔭</div><div class="discovery-title">VELC</div><div class="discovery-desc">Visible Emission Line Coronagraph — the primary instrument. Observes the Sun's corona as close as <strong style="color:rgba(255,255,255,0.8);">1.05 solar radii from the Sun's surface</strong> — closer than almost any other space-based coronagraph in history — enabling unprecedented study of the inner corona and CME initiation zones.</div></div>
+    <div class="discovery-card"><div class="discovery-icon">☀️</div><div class="discovery-title">SUIT</div><div class="discovery-desc">Solar Ultraviolet Imaging Telescope — images the solar photosphere and chromosphere in UV using <strong style="color:rgba(255,255,255,0.8);">11 unique narrowband and broadband filters</strong>, each revealing a different layer of the solar atmosphere. Observed a rare plasma ejection in April 2026 — a first-of-its-kind observation in this wavelength.</div></div>
+    <div class="discovery-card"><div class="discovery-icon">🌟</div><div class="discovery-title">SoLEXS</div><div class="discovery-desc">Solar Low Energy X-ray Spectrometer — monitors soft X-ray flares from the Sun in the <strong style="color:rgba(255,255,255,0.8);">2 to 22 keV energy range</strong>, covering the full spectrum of solar flare intensity from minor B-class to extreme X-class events.</div></div>
+    <div class="discovery-card"><div class="discovery-icon">⚡</div><div class="discovery-title">HEL1OS</div><div class="discovery-desc">High Energy L1 Orbiting X-ray Spectrometer — studies hard X-ray flares and burst events from the Sun.</div></div>
+    <div class="discovery-card"><div class="discovery-icon">🧲</div><div class="discovery-title">ASPEX</div><div class="discovery-desc">Aditya Solar wind Particle EXperiment — studies solar wind properties and energy distribution of protons and alpha particles.</div></div>
+    <div class="discovery-card"><div class="discovery-icon">🌊</div><div class="discovery-title">PAPA</div><div class="discovery-desc">Plasma Analyser Package for Aditya — measures solar wind ions and electrons to understand the Sun's particle environment.</div></div>
+    <div class="discovery-card" style="grid-column:span 1;"><div class="discovery-icon">📡</div><div class="discovery-title">MAG</div><div class="discovery-desc">Advanced Tri-axial High-Resolution Digital Magnetometer — measures in-situ magnetic field variations at the L1 point.</div></div>
+  </div>
+</div>
+
+<div class="content-section" id="discoveries">
+  <div class="section-tag">Active Science · 2024–2026</div>
+  <h2 class="section-title">What Aditya-L1 Has Found</h2>
+  <div class="discoveries-grid">
+    <div class="discovery-card"><div class="discovery-icon">🌋</div><div class="discovery-title">Powerful Solar Flare Observed · 2026</div><div class="discovery-desc">SUIT observed a powerful solar flare and — in a first-of-its-kind observation — captured a rare plasma ejection in ultraviolet light that no other instrument had documented before.</div></div>
+    <div class="discovery-card"><div class="discovery-icon">🧲</div><div class="discovery-title">Geomagnetic Disturbance Explained</div><div class="discovery-desc">Aditya-L1 measurements helped explain unusual dawn-time geomagnetic disturbances during strong solar storms — resolving a puzzle that had confused scientists for years.</div></div>
+    <div class="discovery-card"><div class="discovery-icon">🌐</div><div class="discovery-title">Landmark Solar Storm Study</div><div class="discovery-desc">Aditya-L1 joined a global coordinated effort studying a major solar storm event — contributing Indian data to the international scientific community for the first time from L1.</div></div>
+    <div class="discovery-card"><div class="discovery-icon">🛡️</div><div class="discovery-title">Earth's Magnetic Shield Decoded</div><div class="discovery-desc">Aditya-L1's data decoded the impact of a powerful solar storm on Earth's invisible magnetic shield — improving models used to protect satellites and power infrastructure globally.</div></div>
+  </div>
+  <div class="highlight-box" style="margin-top:32px;">
+    <div class="highlight-box-title">ISRO-ESA Joint Heliophysics Workshop · 2026</div>
+    <div class="highlight-box-text">In 2026, ISRO and ESA jointly organised a Heliophysics Workshop bringing together data from Aditya-L1, ESA's Solar Orbiter, and ESA's Proba-3. India is now a core partner in global solar science — not just a participant, but a contributor of unique data no other mission provides.</div>
+  </div>
+</div>
+
+<div class="content-section" id="timeline">
+  <div class="section-tag">Mission Timeline</div>
+  <h2 class="section-title">Launch to L1 and Beyond</h2>
+  <div class="timeline-item"><div class="timeline-date">Sep 2, 2023</div><div><div class="timeline-content-title">Launch — PSLV-C57, Sriharikota</div><div class="timeline-content-desc">Aditya-L1 lifts off on PSLV-C57 XL. Inserted into Earth parking orbit. Journey to L1 begins.</div></div></div>
+  <div class="timeline-item"><div class="timeline-date">Sep–Dec 2023</div><div><div class="timeline-content-title">Earth Orbit Manoeuvres + Trans-L1 Injection</div><div class="timeline-content-desc">Multiple orbit-raising manoeuvres. Trans-Lagrangian Point 1 insertion burn executed successfully. Spacecraft en route to L1 point.</div></div></div>
+  <div class="timeline-item"><div class="timeline-date">Jan 6, 2024</div><div><div class="timeline-content-title">L1 Halo Orbit Insertion — India's First Lagrange Point Mission</div><div class="timeline-content-desc">Aditya-L1 enters halo orbit around L1 — 1.5 million km from Earth. India becomes one of a handful of nations to operate a spacecraft at a Lagrange point. Science operations begin.</div></div></div>
+  <div class="timeline-item"><div class="timeline-date">Jan 2024</div><div><div class="timeline-content-title">First Science Data Released</div><div class="timeline-content-desc">ISRO releases first datasets from all seven instruments on ISSDC and PRADAN portals — available to scientists worldwide.</div></div></div>
+  <div class="timeline-item"><div class="timeline-date">2024–2026</div><div><div class="timeline-content-title">Continuous Solar Observation</div><div class="timeline-content-desc">Aditya-L1 monitors solar activity continuously. Observations of solar flares, CMEs, and solar wind variations contribute to global space weather databases and scientific publications.</div></div></div>
+  <div class="timeline-item" style="border-bottom:none;"><div class="timeline-date">2026 · Ongoing</div><div><div class="timeline-content-title" style="color:#00c864;">Active — India's Solar Sentinel</div><div class="timeline-content-desc">Aditya-L1 continues operations. ISRO and ESA joint workshops ongoing. Second Announcement of Opportunity cycle for observations opened. India's eyes remain fixed on the Sun.</div></div></div>
+</div>
+
+<div class="content-section" id="significance">
+  <div class="section-tag">Why It Matters</div>
+  <h2 class="section-title">India's Solar Sentinel</h2>
+  <div class="discoveries-grid">
+    <div class="discovery-card"><div class="discovery-icon">🛰️</div><div class="discovery-title">Protecting Earth's Technology</div><div class="discovery-desc">Every satellite in orbit, every GPS system, every power grid is vulnerable to solar storms. Aditya-L1's early warning data helps agencies worldwide protect critical infrastructure — India is contributing to global safety.</div></div>
+    <div class="discovery-card"><div class="discovery-icon">🌍</div><div class="discovery-title">India at L1 — An Elite Club</div><div class="discovery-desc">Only ESA (SOHO) and NASA (ACE, WIND, DSCOVR) have previously operated science missions at L1. India is now in this club — the only developing nation with a spacecraft at a Lagrange point.</div></div>
+    <div class="discovery-card"><div class="discovery-icon">🔬</div><div class="discovery-title">Open Data for the World</div><div class="discovery-desc">ISRO's data from Aditya-L1 is publicly available. Scientists from any country can request observations and analysis. India is contributing to solar physics globally — not just for India.</div></div>
+    <div class="discovery-card"><div class="discovery-icon">🚀</div><div class="discovery-title">Essential for Gaganyaan Safety</div><div class="discovery-desc">Human spaceflight is directly affected by solar weather. Aditya-L1's real-time monitoring will help ISRO make informed go/no-go decisions for Gaganyaan missions — protecting India's astronauts.</div></div>
+  </div>
+</div>
+
+<div class="content-section" id="idsn">
+  <div class="section-tag">Ground Segment</div>
+  <h2 class="section-title">IDSN — India's Deep Space Ears</h2>
+  <div class="section-body">
+    <p>Every command ISRO sends to Aditya-L1 at 1.5 million km, and every byte of solar data it returns, passes through the <strong style="color:var(--white);">Indian Deep Space Network (IDSN)</strong> at Byalalu, Karnataka — 60 km from Bengaluru. The IDSN operates 18-metre and 32-metre parabolic dish antennas that can precisely track and communicate with spacecraft across hundreds of millions of kilometres. At 1.5 million km, data from Aditya-L1 travels at the speed of light and arrives at IDSN with a <strong style="color:rgba(255,255,255,0.8);">~5-second delay</strong> — but the processing pipeline is designed for near real-time space weather alerts, meaning a solar event detected by Aditya-L1 can trigger a global warning within minutes. Without IDSN, Aditya-L1 would be silent.</p>
+  </div>
+</div>
+<div class="next-mission">
+  <div>
+    <div class="next-label">Next Mission</div>
+    <div class="next-title">Chandrayaan-1 — Water on the Moon</div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:0.1em;margin-top:6px;">India's First Lunar Mission · 2008</div>
+  </div>
+  <div>
+    <a href="mission-chandrayaan1.html" class="btn-red">Explore Mission →</a>
+    <a href="../missions.html" class="btn-outline">All Missions</a>
+  </div>
+</div>
+<footer><a href="../index.html" class="footer-logo">ANTRIK<span>SH</span></a><div class="footer-credit">Data sourced from ISRO open data</div><div class="footer-copyright">© 2026 Antriksh. All rights reserved.</div></footer>
+<script>
+const sc=document.getElementById('stars-canvas');const sCtx=sc.getContext('2d');sc.width=window.innerWidth;sc.height=window.innerHeight;
+const stars=Array.from({length:200},()=>({x:Math.random()*sc.width,y:Math.random()*sc.height,r:Math.random()*1.1,phase:Math.random()*Math.PI*2,speed:Math.random()*0.003+0.001}));
+function drawStars(t){sCtx.clearRect(0,0,sc.width,sc.height);stars.forEach(s=>{const a=0.15+0.35*Math.sin(t*s.speed+s.phase);sCtx.beginPath();sCtx.arc(s.x,s.y,s.r,0,Math.PI*2);sCtx.fillStyle=`rgba(255,255,255,${a})`;sCtx.fill();});requestAnimationFrame(drawStars);}
+requestAnimationFrame(drawStars);
+window.addEventListener('resize',()=>{sc.width=window.innerWidth;sc.height=window.innerHeight;});
+const sections=document.querySelectorAll('.content-section');const navLinks=document.querySelectorAll('.mission-nav a');
+window.addEventListener('scroll',()=>{let current='';sections.forEach(s=>{if(window.scrollY>=s.offsetTop-200)current=s.id;});navLinks.forEach(a=>{a.classList.remove('active');if(a.getAttribute('href')==='#'+current)a.classList.add('active');});});
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';}});},{threshold:0.05});
+document.querySelectorAll('.spec-item,.discovery-card,.timeline-item').forEach((el,i)=>{el.style.opacity='0';el.style.transform='translateY(20px)';el.style.transition=`opacity 0.5s ease ${i*0.04}s,transform 0.5s ease ${i*0.04}s`;obs.observe(el);});
+</script>
+<script>
+(function(){
+  var btn = document.getElementById('nav-hamburger');
+  var ul = document.querySelector('.nav-links');
+  if (!btn || !ul) return;
+  btn.addEventListener('click', function(){
+    btn.classList.toggle('open');
+    ul.classList.toggle('mobile-open');
+    document.body.style.overflow = ul.classList.contains('mobile-open') ? 'hidden' : '';
+  });
+  ul.querySelectorAll('li').forEach(function(li){
+    if (!li.querySelector('.dropdown')) return;
+    li.classList.add('has-dropdown');
+    var topLink = li.querySelector(':scope > a');
+    var toggle = document.createElement('span');
+    toggle.className = 'nav-toggle';
+    toggle.textContent = '+';
+    if (topLink) topLink.appendChild(toggle);
+    topLink && topLink.addEventListener('click', function(e){
+      if (window.innerWidth > 768) return;
+      e.preventDefault();
+      var open = li.classList.toggle('mobile-expanded');
+      toggle.textContent = open ? '−' : '+';
+    });
+  });
+  // close menu when a dropdown link is tapped
+  ul.querySelectorAll('.dropdown a').forEach(function(a){
+    a.addEventListener('click', function(){
+      if (window.innerWidth > 768) return;
+      btn.classList.remove('open');
+      ul.classList.remove('mobile-open');
+      document.body.style.overflow = '';
+    });
+  });
+})();
+</script>
+</body>
+</html>

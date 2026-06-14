@@ -1,0 +1,271 @@
+﻿/* Antriksh — responsive overrides for tablet and mobile */
+
+.nav-toggle { display: none; }
+
+/* hamburger button — hidden on desktop */
+.nav-hamburger {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  cursor: pointer;
+  background: none;
+  border: none;
+  padding: 6px;
+  z-index: 300;
+}
+.nav-hamburger span {
+  display: block;
+  width: 24px;
+  height: 2px;
+  background: var(--white);
+  transition: all 0.3s ease;
+}
+.nav-hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-hamburger.open span:nth-child(2) { opacity: 0; }
+.nav-hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+@media (max-width: 1024px) {
+  html, body { overflow-x: hidden; max-width: 100vw; }
+}
+
+/* tablet: ≤1024px */
+@media (max-width: 1024px) {
+  nav { padding: 16px 32px; }
+
+  .stats-bar { padding: 0 32px; }
+  .stat-item { padding: 24px 0; padding-left: 28px; }
+
+  .section { padding: 80px 32px; }
+  .timeline-teaser { padding: 80px 32px; }
+  .missions-container { padding: 48px 32px 80px; }
+  .page-hero { padding: 120px 32px 48px; }
+  .content-section { padding: 64px 32px; }
+  footer { padding: 32px; }
+  .filter-bar { padding: 20px 32px; }
+
+  .two-col { grid-template-columns: 1fr; gap: 48px; }
+  .two-col-wide { grid-template-columns: 1fr; gap: 48px; }
+
+  .specs-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* mobile: ≤768px */
+@media (max-width: 768px) {
+
+  /* nav */
+  nav { padding: 14px 20px; }
+
+  .nav-hamburger { display: flex; }
+
+  .nav-links {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.97);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    z-index: 200;
+    overflow-y: auto;
+  }
+
+  .nav-links.mobile-open { display: flex; }
+
+  .nav-links li {
+    padding-bottom: 0;
+    margin-bottom: 0;
+    width: 100%;
+    text-align: center;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .nav-links > li > a {
+    display: block;
+    padding: 18px 24px;
+    font-size: 13px;
+    color: rgba(255,255,255,0.8) !important;
+  }
+
+  .nav-live { display: none; }
+
+  /* mobile dropdown — collapsible */
+  .dropdown {
+    position: static !important;
+    opacity: 1 !important;
+    pointer-events: all !important;
+    transform: none !important;
+    background: rgba(255,255,255,0.03) !important;
+    border: none !important;
+    border-top: 1px solid rgba(255,255,255,0.06) !important;
+    padding: 0 !important;
+    min-width: 0 !important;
+    display: none !important;
+  }
+  .nav-links li.mobile-expanded > .dropdown { display: block !important; }
+
+  .dropdown a {
+    font-size: 11px !important;
+    padding: 13px 32px !important;
+    color: rgba(255,255,255,0.65) !important;
+    text-align: center !important;
+  }
+  .dropdown a:hover { padding-left: 32px !important; background: none !important; }
+
+  .dropdown-header {
+    color: var(--white) !important;
+    font-size: 12px !important;
+    padding: 14px 32px !important;
+    border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+    background: rgba(252,61,33,0.06) !important;
+  }
+
+  /* expand/collapse toggle indicator */
+  .nav-toggle {
+    display: inline-block;
+    margin-left: 8px;
+    color: var(--red);
+    font-size: 16px;
+    line-height: 1;
+    font-family: monospace;
+  }
+
+  /* hero */
+  #hero { padding: 80px 20px 56px; overflow: hidden; }
+  .hero-content { max-width: 100%; overflow: hidden; }
+  #hero-video, #hero-img-bg { left: 0; right: 0; width: 100%; }
+  .hero-gradient { left: 0; right: 0; width: 100%; }
+  .hero-title { font-size: clamp(48px, 12vw, 90px); line-height: 0.9; word-break: break-word; }
+  .hero-title--news { font-size: clamp(26px, 6.5vw, 48px); line-height: 1.05; }
+  .hero-desc { font-size: 14px; max-width: 100%; }
+  .hero-cta { flex-direction: column; align-items: flex-start; gap: 16px; margin-top: 28px; }
+  .btn-primary { padding: 14px 24px; font-size: 11px; }
+  .hero-dots { left: 20px; bottom: 20px; }
+  .scroll-indicator { display: none; }
+
+  /* stats bar */
+  .stats-bar {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 0 20px;
+  }
+  .stat-item { padding: 20px 0; padding-left: 16px; border-right: none; border-bottom: 1px solid rgba(255,255,255,0.06); }
+  .stat-item:nth-child(odd) { border-right: 1px solid rgba(255,255,255,0.06); }
+  .stat-item:nth-child(3), .stat-item:nth-child(4) { border-bottom: none; }
+  .stat-number { font-size: 36px; }
+
+  /* sections */
+  .section { padding: 60px 20px; }
+  .section-title { font-size: 40px; }
+  .section-header { flex-direction: column; align-items: flex-start; gap: 16px; }
+  .timeline-teaser { padding: 60px 20px; }
+
+  /* mission cards grid */
+  .missions-grid:not(.missions-container .missions-grid) {
+    grid-template-columns: 1fr;
+  }
+  .mission-card { min-height: 280px; }
+  .mission-card:first-child { min-height: 340px; }
+  .mission-card:first-child .mission-card-title { font-size: 40px; }
+
+  /* missions page grid */
+  .missions-container { padding: 32px 20px 60px; }
+  .missions-container .missions-grid { grid-template-columns: 1fr; }
+  .mission-card-inner { padding: 24px; }
+  .mission-name { font-size: 28px; }
+
+  /* filter bar */
+  .filter-bar { padding: 16px 20px; gap: 8px; }
+  .filter-btn { font-size: 9px; padding: 8px 14px; }
+
+  /* page hero */
+  .page-hero { padding: 100px 20px 40px; }
+  .page-title { font-size: clamp(48px, 11vw, 80px); }
+
+  /* mission detail pages */
+  .mission-hero { padding: 0 20px 60px; overflow: hidden; }
+  .mission-hero-title { font-size: clamp(42px, 11vw, 90px); overflow: hidden; }
+  .mission-hero-sub { font-size: 15px; max-width: 100%; }
+  .hero-stats { flex-wrap: wrap; }
+  .hero-stat { border-right: none; border-bottom: 1px solid rgba(255,255,255,0.08); padding: 16px 20px; flex: 1 1 45%; }
+  .hero-stat:last-child { border-bottom: none; }
+  .breadcrumb { padding-top: 90px; flex-wrap: wrap; gap: 6px; }
+  .mission-nav { top: 56px; }
+  .content-section { padding: 48px 20px; }
+  .two-col { grid-template-columns: 1fr; gap: 32px; }
+  .two-col-wide { grid-template-columns: 1fr; gap: 32px; }
+  .specs-grid { grid-template-columns: 1fr 1fr; gap: 1px; }
+
+  /* heroes page */
+  .heroes-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 1px !important; }
+  .hero-card-name { font-size: 22px !important; }
+  .bio-body { grid-template-columns: 1fr !important; gap: 32px !important; }
+  .elite-grid { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* timeline page */
+  .timeline-strip { gap: 0; overflow-x: auto; padding-bottom: 8px; }
+  .timeline-node { min-width: 80px; padding: 0 4px; }
+  .timeline-year { font-size: 10px !important; }
+
+  /* rockets page */
+  .rockets-grid { grid-template-columns: 1fr !important; }
+  .rocket-header { grid-template-columns: 1fr !important; gap: 32px !important; }
+  .rocket-specs { grid-template-columns: repeat(2, 1fr) !important; }
+
+  /* isropedia page */
+  .topics-grid { grid-template-columns: 1fr !important; }
+  .topic-card { padding: 28px 20px !important; }
+
+  /* applications page */
+  .apps-grid { grid-template-columns: 1fr !important; }
+  .app-block { grid-template-columns: 1fr !important; direction: ltr !important; }
+  .app-block.reverse { direction: ltr !important; }
+  .app-visual { min-height: 200px !important; border-right: none !important; border-bottom: 1px solid rgba(255,255,255,0.06) !important; border-left: none !important; }
+  .services-grid { grid-template-columns: repeat(2, 1fr) !important; }
+  .stat-strip { grid-template-columns: repeat(2, 1fr) !important; padding: 0 !important; }
+  .stat-strip-item { padding: 20px 16px !important; }
+  .stat-strip-number { font-size: 36px !important; }
+
+  /* launch services page */
+  .country-grid { grid-template-columns: repeat(3, 1fr) !important; }
+  .milestone { grid-template-columns: 80px 1fr !important; }
+  .nsil-grid { grid-template-columns: 1fr !important; }
+  /* tables need horizontal scroll on narrow screens */
+  .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .table-scroll table { min-width: 480px; font-size: 12px; }
+  .table-scroll table th, .table-scroll table td { padding: 10px 12px !important; }
+
+  /* about page */
+  .what-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+  .stats-side { grid-template-columns: 1fr 1fr !important; }
+  .features-grid { grid-template-columns: 1fr !important; }
+  .credits-grid { grid-template-columns: 1fr !important; gap: 8px !important; }
+  .credits-grid > * { grid-column: auto !important; }
+
+  /* eyes on space teaser two-col */
+  .eyes-teaser { grid-template-columns: 1fr !important; padding: 60px 20px !important; gap: 40px !important; }
+  .eyes-visual { max-width: 100% !important; }
+
+  /* earth page — sidebar stacks below globe on mobile */
+  .earth-sidebar { width: 100% !important; position: relative !important; height: auto !important; max-height: 40vh; overflow-y: auto; }
+  .earth-layout { flex-direction: column !important; }
+
+  /* footer */
+  footer { flex-direction: column; align-items: flex-start; gap: 12px; padding: 28px 20px; }
+  .footer-links { flex-wrap: wrap; gap: 12px; }
+
+  /* general */
+  .highlight-box { padding: 20px; }
+  .section-body { font-size: 15px; }
+  .section-tag { font-size: 9px; }
+}
+
+/* very small screens: ≤390px (iPhone SE etc.) */
+@media (max-width: 390px) {
+  .hero-title { font-size: 52px; }
+  .page-title { font-size: 44px; }
+  .mission-hero-title { font-size: 44px; }
+  .stats-bar { grid-template-columns: 1fr 1fr; }
+  .heroes-grid { grid-template-columns: 1fr !important; }
+  .specs-grid { grid-template-columns: 1fr; }
+  .countries-grid { grid-template-columns: repeat(2, 1fr) !important; }
+}

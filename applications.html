@@ -1,0 +1,598 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Space Applications — Antriksh</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
+
+  :root {
+    --black: #000000;
+    --white: #ffffff;
+    --red: #FC3D21;
+    --blue: #06038D;
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { background: var(--black); color: var(--white); font-family: 'Space Grotesk', sans-serif; overflow-x: hidden; }
+
+  #stars-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+
+  /* NAV */
+  nav { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: flex; align-items: center; justify-content: space-between; padding: 20px 48px; background: linear-gradient(to bottom, rgba(0,0,0,0.9), transparent); }
+  .nav-logo { font-family: 'Bebas Neue', sans-serif; font-size: 22px; letter-spacing: 3px; color: var(--white); text-decoration: none; }
+  .nav-logo span { color: var(--red); }
+  .nav-links { display: flex; gap: 36px; list-style: none; }
+  .nav-links a { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 1.5px; color: rgba(255,255,255,0.8); text-decoration: none; text-transform: uppercase; transition: color 0.2s; }
+  .nav-links a:hover { color: var(--white); }
+  .nav-links li { position: relative; padding-bottom: 20px; margin-bottom: -20px; }
+  .nav-links li:hover > .dropdown { opacity: 1; pointer-events: all; transform: translateY(0); }
+  .dropdown { position: absolute; top: 100%; left: 0; background: rgba(5,5,10,0.97); border: 1px solid rgba(255,255,255,0.08); padding: 12px 0; min-width: 200px; opacity: 0; pointer-events: none; transform: translateY(8px); transition: all 0.2s ease; z-index: 200; }
+  .dropdown a { display: block; padding: 8px 20px; font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1px; color: rgba(255,255,255,0.75); text-decoration: none; text-transform: uppercase; transition: all 0.15s; }
+  .dropdown a:hover { color: var(--white) !important; background: rgba(252,61,33,0.08); padding-left: 28px; }
+  .nav-links li:last-child > .dropdown { left: auto; right: 0; }
+  .dropdown-header { color: var(--white) !important; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 4px; padding-bottom: 12px !important; }
+
+  /* LAYOUT */
+  section { position: relative; z-index: 1; padding: 120px 48px; }
+
+  /* HERO */
+  #hero { min-height: 100vh; display: flex; align-items: center; padding-top: 160px; }
+  .hero-tag { font-family: 'Space Mono', monospace; font-size: 11px; letter-spacing: 3px; color: var(--red); text-transform: uppercase; margin-bottom: 24px; }
+  .hero-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(72px, 10vw, 140px); line-height: 0.9; letter-spacing: 2px; margin-bottom: 32px; }
+  .hero-title span { color: var(--red); }
+  .hero-sub { font-family: 'Space Mono', monospace; font-size: 13px; letter-spacing: 1px; color: rgba(255,255,255,0.75); max-width: 600px; line-height: 1.8; text-transform: uppercase; }
+  .scroll-indicator { margin-top: 60px; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; }
+  .scroll-indicator span { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 2px; color: rgba(255,255,255,0.5); text-transform: uppercase; }
+  .scroll-line { width: 1px; height: 48px; background: linear-gradient(to bottom, var(--red), transparent); animation: scrollDrop 1.8s ease-in-out infinite; }
+  @keyframes scrollDrop { 0%{transform:translateY(0);opacity:1} 80%{transform:translateY(10px);opacity:0} 81%{transform:translateY(0);opacity:0} 100%{transform:translateY(0);opacity:1} }
+
+  /* INTRO STAT STRIP */
+  .stat-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.06); margin-bottom: 80px; }
+  .stat-item { padding: 40px 32px; background: var(--black); }
+  .stat-num { font-family: 'Bebas Neue', sans-serif; font-size: clamp(48px, 6vw, 72px); color: var(--red); line-height: 1; }
+  .stat-label { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 2px; color: rgba(255,255,255,0.6); text-transform: uppercase; margin-top: 8px; }
+
+  /* SECTION HEADER */
+  .sec-tag { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 3px; color: var(--red); text-transform: uppercase; margin-bottom: 16px; }
+  .sec-title { font-family: 'Bebas Neue', sans-serif; font-size: clamp(42px, 5vw, 64px); letter-spacing: 2px; margin-bottom: 48px; }
+  .sec-title span { color: var(--red); }
+
+  /* APPLICATION CARDS — full-bleed alternating layout */
+  .app-block { display: grid; grid-template-columns: 1fr 1fr; gap: 0; margin-bottom: 2px; border: 1px solid rgba(255,255,255,0.06); min-height: 420px; }
+  .app-block.reverse { direction: rtl; }
+  .app-block.reverse > * { direction: ltr; }
+  .app-visual { background: rgba(255,255,255,0.03); display: flex; align-items: center; justify-content: center; font-size: 120px; border-right: 1px solid rgba(255,255,255,0.06); position: relative; overflow: hidden; }
+  .app-block.reverse .app-visual { border-right: none; border-left: 1px solid rgba(255,255,255,0.06); }
+  .app-visual-bg { position: absolute; inset: 0; opacity: 0.04; font-size: 280px; display: flex; align-items: center; justify-content: center; filter: blur(2px); }
+  .app-content { padding: 56px 48px; display: flex; flex-direction: column; justify-content: center; }
+  .app-sat-tag { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--red); text-transform: uppercase; margin-bottom: 12px; border-left: 2px solid var(--red); padding-left: 10px; }
+  .app-name { font-family: 'Bebas Neue', sans-serif; font-size: 48px; letter-spacing: 2px; margin-bottom: 4px; }
+  .app-subtitle { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1px; color: rgba(255,255,255,0.6); text-transform: uppercase; margin-bottom: 24px; }
+  .app-desc { font-size: 15px; color: rgba(255,255,255,0.7); line-height: 1.85; margin-bottom: 28px; }
+  .app-impacts { display: flex; flex-direction: column; gap: 10px; }
+  .impact-item { display: flex; align-items: flex-start; gap: 12px; }
+  .impact-bullet { width: 6px; height: 6px; background: var(--red); flex-shrink: 0; margin-top: 6px; }
+  .impact-text { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 0.5px; color: rgba(255,255,255,0.7); line-height: 1.7; }
+  .impact-text strong { color: rgba(255,255,255,0.85); }
+
+  /* GROUND SERVICES GRID */
+  .services-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: rgba(255,255,255,0.06); }
+  .service-card { background: var(--black); padding: 40px 32px; border: 1px solid rgba(255,255,255,0.06); transition: background 0.2s; }
+  .service-card:hover { background: rgba(252,61,33,0.04); }
+  .service-icon { font-size: 32px; margin-bottom: 20px; }
+  .service-name { font-family: 'Bebas Neue', sans-serif; font-size: 28px; letter-spacing: 1px; margin-bottom: 6px; }
+  .service-sub { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--red); text-transform: uppercase; margin-bottom: 16px; }
+  .service-desc { font-size: 13px; color: rgba(255,255,255,0.75); line-height: 1.8; }
+
+  /* CALLOUT BANNER */
+  .callout { background: rgba(252,61,33,0.06); border: 1px solid rgba(252,61,33,0.2); border-left: 4px solid var(--red); padding: 40px 48px; margin: 80px 0; }
+  .callout-label { font-family: 'Space Mono', monospace; font-size: 9px; letter-spacing: 3px; color: var(--red); text-transform: uppercase; margin-bottom: 12px; }
+  .callout-text { font-family: 'Bebas Neue', sans-serif; font-size: clamp(24px, 3vw, 36px); letter-spacing: 1px; line-height: 1.3; }
+
+  /* PHOTO CAROUSEL inside app-visual */
+  .app-carousel { position: relative; overflow: hidden; display: block; }
+  .carousel-img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity 0.7s ease; }
+  .carousel-img.active { opacity: 1; }
+  .carousel-img.single { position: relative; opacity: 1; height: 100%; min-height: 420px; }
+  .carousel-dots { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 7px; z-index: 5; }
+  .c-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.3); transition: background 0.3s; cursor: pointer; }
+  .c-dot.active { background: var(--red); }
+
+  /* GROUND SERVICES LOGO */
+  .service-logo { height: 52px; width: auto; max-width: 130px; object-fit: contain; margin-bottom: 20px; filter: brightness(0.9); }
+  .service-logo-img-wrap { height: 64px; display: flex; align-items: center; margin-bottom: 20px; }
+
+  /* REVEAL */
+  .reveal { opacity: 0; transform: translateY(32px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* FOOTER */
+  footer { position: relative; z-index: 1; border-top: 1px solid rgba(255,255,255,0.08); padding: 48px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+  .footer-logo { font-family: 'Bebas Neue', sans-serif; font-size: 32px; letter-spacing: 4px; }
+  .footer-logo span { color: var(--red); }
+  .footer-links { display: flex; gap: 32px; list-style: none; flex-wrap: wrap; justify-content: center; }
+  .footer-links a { font-family: 'Space Mono', monospace; font-size: 10px; letter-spacing: 1.5px; color: rgba(255,255,255,0.6); text-decoration: none; text-transform: uppercase; transition: color 0.2s; }
+  .footer-links a:hover { color: var(--white); }
+  .footer-credit { font-family: 'Space Mono', monospace; font-size: 9px; color: rgba(255,255,255,0.4); letter-spacing: 1px; }
+</style>
+<link rel="stylesheet" href="responsive.css">
+</head>
+<body>
+<canvas id="stars-canvas"></canvas>
+
+<nav>
+  <a href="index.html" class="nav-logo">ANTRIK<span>SH</span></a>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  <ul class="nav-links">
+    <li>
+      <a href="missions.html">Missions</a>
+      <div class="dropdown">
+        <a href="missions.html" class="dropdown-header">Missions →</a>
+        <a href="missions.html#active">Active Missions</a>
+        <a href="missions.html#completed">Completed Missions</a>
+        <a href="missions.html#upcoming">Upcoming Missions</a>
+        <a href="missions.html#human">Human Spaceflight</a>
+        <a href="missions.html#lunar">Lunar Missions</a>
+        <a href="missions.html#interplanetary">Interplanetary</a>
+      </div>
+    </li>
+    <li>
+      <a href="timeline.html">Timeline</a>
+      <div class="dropdown">
+        <a href="timeline.html" class="dropdown-header">Timeline →</a>
+        <a href="timeline.html#1960s">1960s — The Beginning</a>
+        <a href="timeline.html#1980s">1980s — First Launches</a>
+        <a href="timeline.html#2000s">2000s — Moon & Beyond</a>
+        <a href="timeline.html#2020s">2020s — New Frontiers</a>
+        <a href="timeline.html#2030s">2030+ — Future Missions</a>
+      </div>
+    </li>
+    <li>
+      <a href="rockets.html">Rockets</a>
+      <div class="dropdown">
+        <a href="rockets.html" class="dropdown-header">Launch Vehicles →</a>
+        <a href="rockets.html#pslv">PSLV</a>
+        <a href="rockets.html#gslv">GSLV</a>
+        <a href="rockets.html#lvm3">LVM3 / HLVM3</a>
+        <a href="rockets.html#sslv">SSLV</a>
+        <a href="rockets.html#rlv">RLV (Reusable)</a>
+        <a href="launch-services.html">Launch Services</a>
+      </div>
+    </li>
+    <li>
+      <a href="heroes.html">Heroes</a>
+      <div class="dropdown">
+        <a href="heroes.html" class="dropdown-header">Science Heroes →</a>
+        <a href="heroes.html#sarabhai">Vikram Sarabhai</a>
+        <a href="heroes.html#kalam">A.P.J. Abdul Kalam</a>
+        <a href="heroes.html#karidhal">Ritu Karidhal</a>
+        <a href="heroes.html#somanath">S. Somanath</a>
+        <a href="heroes.html#all-scientists">All Scientists</a>
+      </div>
+    </li>
+    <li>
+      <a href="isropedia.html">ISRO-pedia</a>
+      <div class="dropdown">
+        <a href="isropedia.html" class="dropdown-header">ISRO-pedia →</a>
+        <a href="isropedia.html#concepts">Space Concepts</a>
+        <a href="isropedia.html#rockets">How Rockets Work</a>
+        <a href="isropedia.html#mechanics">Orbital Mechanics</a>
+        <a href="isropedia.html#career">How to Become a Scientist</a>
+        <a href="isropedia.html#glossary">ISRO Glossary</a>
+      </div>
+    </li>
+    <li>
+      <a href="eyes.html">Eyes on Space</a>
+      <div class="dropdown">
+        <a href="eyes.html" class="dropdown-header">Eyes on Space →</a>
+        <a href="earth.html">Eyes On Earth</a>
+        <a href="vikram.html">Vikram: The Final Descent</a>
+        <a href="pragyan.html">Pragyan's Walk</a>
+        <a href="isslive.html">ISS Live Position</a>
+        <a href="nextlaunch.html">Next Launch</a>
+      </div>
+    </li>
+    <li>
+      <a href="applications.html">ISRO Today</a>
+      <div class="dropdown">
+        <a href="applications.html" class="dropdown-header">ISRO Today →</a>
+        <a href="applications.html">Space Applications</a>
+        <a href="launch-services.html">Launch Services</a>
+        <a href="about.html">About Antriksh</a>
+      </div>
+    </li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div>
+    <div class="hero-tag">// ISRO IN YOUR LIFE</div>
+    <h1 class="hero-title">SPACE<br><span>APPLI</span>CATIONS</h1>
+    <p class="hero-sub">Every weather forecast. Every crop insurance claim. Every fishing boat that came home safe. ISRO made it possible — you just never knew.</p>
+    <div class="scroll-indicator">
+      <div class="scroll-line"></div>
+      <span>Scroll</span>
+    </div>
+  </div>
+</section>
+
+<!-- STAT STRIP -->
+<section style="padding-top:0; padding-bottom:80px;">
+  <div class="stat-strip reveal">
+    <div class="stat-item">
+      <div class="stat-num" data-target="100">0</div>
+      <div class="stat-label">Million+ farmers covered by ISRO crop data</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" data-target="400">0</div>
+      <div class="stat-label">Thousand+ fishermen use ISRO ocean advisories</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" data-target="500">0</div>
+      <div class="stat-label">Districts mapped for disaster response</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" data-target="2">0</div>
+      <div class="stat-label">Billion people under ISRO weather coverage</div>
+    </div>
+  </div>
+</section>
+
+<!-- AGRICULTURE -->
+<section id="agriculture" style="padding-top:0;">
+  <div class="sec-tag">// APPLICATION 01</div>
+  <div class="sec-title">AGRI<span>CULTURE</span></div>
+
+  <div class="app-block reveal">
+    <div class="app-visual app-carousel" id="car-crop">
+      <img src="photos/isro%20today/crop_mapping1.jpeg" class="carousel-img active" alt="Crop Mapping">
+      <img src="photos/isro%20today/crop_mapping2.png" class="carousel-img" alt="Crop Mapping">
+      <img src="photos/isro%20today/crop_mapping3.jpeg" class="carousel-img" alt="Crop Mapping">
+      <div class="carousel-dots">
+        <span class="c-dot active"></span><span class="c-dot"></span><span class="c-dot"></span>
+      </div>
+    </div>
+    <div class="app-content">
+      <div class="app-sat-tag">RESOURCESAT-2A · CARTOSAT-3 · EOS-04</div>
+      <div class="app-name">CROP MAPPING</div>
+      <div class="app-subtitle">Fasal Bima Yojana · Krishi Decision Support</div>
+      <p class="app-desc">ISRO's RESOURCESAT satellites photograph every district in India every 24 days. The images are classified into crop types — wheat, rice, cotton, sugarcane — across the entire subcontinent. This isn't just data. This is the backbone of India's ₹30,000 crore Pradhan Mantri Fasal Bima Yojana crop insurance scheme.</p>
+      <div class="app-impacts">
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>100M+ farmers</strong> have claims settled using satellite-verified crop loss data</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>LISS-IV camera</strong> at 5.8m resolution can distinguish a healthy paddy field from a stressed one</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Bhuvan Krishi</strong> portal delivers field-level advisories to farmers via SMS and app</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Drought mapping</strong> — EOS-04 SAR sees through monsoon clouds to confirm crop failure</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-block reverse reveal">
+    <div class="app-visual app-carousel" id="car-water">
+      <img src="photos/isro%20today/water_resources.gif" class="carousel-img single" alt="Water Resources">
+    </div>
+    <div class="app-content">
+      <div class="app-sat-tag">RESOURCESAT-2A · CARTOSAT-3 · RISAT-2BR1</div>
+      <div class="app-name">WATER RESOURCES</div>
+      <div class="app-subtitle">Reservoir Monitoring · Groundwater Mapping</div>
+      <p class="app-desc">India has 5,000+ reservoirs. ISRO monitors water levels across all of them through the National Wetland Inventory and Assessment — a program with no ground-based equivalent at this scale. Groundwater depletion maps from GRACE satellite data help states prioritise irrigation policy before wells run dry.</p>
+      <div class="app-impacts">
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Flood inundation maps</strong> generated within hours of a flood event, used by NDRF for rescue prioritisation</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Snow melt estimation</strong> from Himalayas for river flow forecasting — critical for Ganga basin states</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>RISAT-2BR1 SAR</strong> maps soil moisture — detecting drought-prone areas before crops fail</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WEATHER & DISASTER -->
+<section id="weather" style="padding-top:40px;">
+  <div class="sec-tag">// APPLICATION 02</div>
+  <div class="sec-title">WEATHER &amp; <span>DISASTER</span></div>
+
+  <div class="app-block reveal">
+    <div class="app-visual app-carousel" id="car-cyclone">
+      <img src="photos/isro%20today/weather_and_disaster.jpeg" class="carousel-img active" alt="Cyclone Warning">
+      <img src="photos/isro%20today/weather_and_disaster1.jpg" class="carousel-img" alt="Weather Disaster">
+      <div class="carousel-dots">
+        <span class="c-dot active"></span><span class="c-dot"></span>
+      </div>
+    </div>
+    <div class="app-content">
+      <div class="app-sat-tag">INSAT-3D · INSAT-3DR · INSAT-3DS</div>
+      <div class="app-name">CYCLONE WARNING</div>
+      <div class="app-subtitle">India Meteorological Department · IMD Cyclone Alerts</div>
+      <p class="app-desc">India went from losing 10,000+ lives per major cyclone in the 1970s to fewer than 100 today. The change: INSAT geostationary satellites giving IMD 15-minute imagery updates of cyclone tracks. When Cyclone Fani approached Odisha in 2019, ISRO data enabled the evacuation of 1.2 million people in 48 hours. Zero deaths from storm surge.</p>
+      <div class="app-impacts">
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>6-day cyclone track forecasts</strong> with 80%+ accuracy — from INSAT-3D atmospheric sounding data</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Every weather broadcast in India</strong> uses INSAT cloud imagery — DD Weather, IMD, private channels</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Search & Rescue transponder</strong> on INSAT-3DR detects distress beacons from ships and aircraft</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-block reverse reveal">
+    <div class="app-visual app-carousel" id="car-disaster">
+      <img src="photos/isro%20today/weather_and_disaster1.jpg" class="carousel-img active" alt="Disaster Response">
+      <img src="photos/isro%20today/weather_and_disaster.jpeg" class="carousel-img" alt="Disaster Response">
+      <div class="carousel-dots">
+        <span class="c-dot active"></span><span class="c-dot"></span>
+      </div>
+    </div>
+    <div class="app-content">
+      <div class="app-sat-tag">RESOURCESAT · CARTOSAT · RISAT-2BR1</div>
+      <div class="app-name">DISASTER RESPONSE</div>
+      <div class="app-subtitle">NDMA Support · Emergency Mapping · NRSC Rapid Response</div>
+      <p class="app-desc">When Uttarakhand floods, when Odisha is hit by a cyclone, when an earthquake strikes Nepal — ISRO's National Remote Sensing Centre activates emergency mapping within 12 hours. Pre- and post-disaster satellite images are distributed to NDMA, state governments, and the Indian Army for rescue coordination. No other country does this at this speed for this cost.</p>
+      <div class="app-impacts">
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Kedarnath 2013:</strong> ISRO flood maps guided helicopter rescue routes when roads were impassable</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>500+ districts</strong> mapped for disaster risk — landslide zones, flood plains, earthquake faults</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Forest fire alerts</strong> from MODIS data processed by NRSC — active fire locations updated daily</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FISHERIES & OCEAN -->
+<section id="fisheries" style="padding-top:40px;">
+  <div class="sec-tag">// APPLICATION 03</div>
+  <div class="sec-title">FISHERIES &amp; <span>OCEAN</span></div>
+
+  <div class="app-block reveal">
+    <div class="app-visual app-carousel" id="car-fish">
+      <img src="photos/isro%20today/fisheries_and_ocean.jpg" class="carousel-img active" alt="Fisheries">
+      <img src="photos/isro%20today/fisheries_and_ocean1.jpg" class="carousel-img" alt="Fisheries">
+      <img src="photos/isro%20today/fisheries_and_ocean2.jpg" class="carousel-img" alt="Fisheries">
+      <div class="carousel-dots">
+        <span class="c-dot active"></span><span class="c-dot"></span><span class="c-dot"></span>
+      </div>
+    </div>
+    <div class="app-content">
+      <div class="app-sat-tag">OCEANSAT-3 · INSAT-3DR</div>
+      <div class="app-name">FISHING ZONE ADVISORY</div>
+      <div class="app-subtitle">Potential Fishing Zone · 400,000 Fishermen</div>
+      <p class="app-desc">OCEANSAT-3 measures ocean chlorophyll concentration and sea surface temperature from space. Where chlorophyll blooms, phytoplankton thrive. Where phytoplankton thrive, fish follow. ISRO converts this data into weekly Potential Fishing Zone (PFZ) advisories — precise coordinates of where fish are likely to be. Fishermen receive this on their phones via SMS in Tamil, Telugu, Kannada, Malayalam, and Odia.</p>
+      <div class="app-impacts">
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>400,000+ fishermen</strong> across 9 coastal states use PFZ advisories weekly</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Fuel savings of 30–50%</strong> reported by boats using PFZ advisories — less time searching</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Safety at sea:</strong> rough sea forecasts from INSAT data distributed with PFZ to prevent disasters</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Oil spill detection</strong> — RISAT SAR imagery identifies pollution in Indian Ocean shipping lanes</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- NAVIGATION -->
+<section id="navigation" style="padding-top:40px;">
+  <div class="sec-tag">// APPLICATION 04</div>
+  <div class="sec-title">NAVI<span>GATION</span></div>
+
+  <div class="app-block reverse reveal">
+    <div class="app-visual app-carousel" id="car-navic">
+      <img src="photos/isro%20today/navic.jpg" class="carousel-img active" alt="NavIC">
+      <img src="photos/isro%20today/navic1.jpg" class="carousel-img" alt="NavIC">
+      <img src="photos/isro%20today/navic2.jpg" class="carousel-img" alt="NavIC">
+      <div class="carousel-dots">
+        <span class="c-dot active"></span><span class="c-dot"></span><span class="c-dot"></span>
+      </div>
+    </div>
+    <div class="app-content">
+      <div class="app-sat-tag">NavIC-1 THROUGH NavIC-7 · GAGAN</div>
+      <div class="app-name">NavIC</div>
+      <div class="app-subtitle">Navigation with Indian Constellation · India's own GPS</div>
+      <p class="app-desc">NavIC is India's regional navigation satellite system — 7 satellites providing position accuracy better than 20 metres over India and 1,500 km around it. Unlike GPS (which the US can deny to any country), NavIC is India's sovereign navigation capability. It is already in Qualcomm chipsets, Indian smartphones, trucks, tractors, fishing boats, and emergency beacons.</p>
+      <div class="app-impacts">
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Qualcomm Snapdragon</strong> added NavIC support in 2019 — now in hundreds of millions of phones</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>GAGAN</strong> (GPS-Aided GEO Augmented Navigation) — used by Indian aviation for precision approaches</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Timing service:</strong> NavIC provides atomic clock timing to Indian banks, stock exchanges, and telecom</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Defence:</strong> NavIC operates independently of foreign systems — critical infrastructure sovereignty</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- URBAN & INFRASTRUCTURE -->
+<section id="urban" style="padding-top:40px;">
+  <div class="sec-tag">// APPLICATION 05</div>
+  <div class="sec-title">URBAN &amp; <span>INFRASTRUCTURE</span></div>
+
+  <div class="app-block reveal">
+    <div class="app-visual app-carousel" id="car-city">
+      <img src="photos/isro%20today/city_planning.gif" class="carousel-img single" alt="City Planning">
+    </div>
+    <div class="app-content">
+      <div class="app-sat-tag">CARTOSAT-3 · RESOURCESAT-2A</div>
+      <div class="app-name">CITY PLANNING</div>
+      <div class="app-subtitle">Urban Mapping · Infrastructure Monitoring · Smart Cities</div>
+      <p class="app-desc">Cartosat-3 images at 0.25 metre resolution — sharp enough to see individual vehicles on roads. Every major infrastructure project in India — highways, railways, urban expansion, coastal erosion — is monitored by ISRO satellites. The Survey of India's national mapping programme runs on Cartosat data. So do India's Smart Cities, forest cover reports, and coastal regulation zone assessments.</p>
+      <div class="app-impacts">
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Bhuvan platform</strong> — ISRO's Google Maps equivalent, with India-specific layers unavailable elsewhere</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Forest cover India report:</strong> published biennially using RESOURCESAT data, mandated by Parliament</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Encroachment detection:</strong> Cartosat imagery used by courts and state governments for land disputes</div></div>
+        <div class="impact-item"><div class="impact-bullet"></div><div class="impact-text"><strong>Glacier retreat monitoring:</strong> Himalayan glacier areas tracked annually — water security data for 700M people</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CALLOUT -->
+<section style="padding-top:0; padding-bottom:0;">
+  <div class="callout reveal">
+    <div class="callout-label">// The invisible infrastructure</div>
+    <div class="callout-text">Before ISRO, India was dependent on foreign satellite imagery, foreign weather data, foreign navigation. Today, India owns the infrastructure that keeps 1.4 billion people fed, warned, guided, and connected. The satellites are up there right now, working. The price of building them was a fraction of what importing the services would have cost.</div>
+  </div>
+</section>
+
+<!-- GROUND SERVICES -->
+<section id="services">
+  <div class="sec-tag">// ISRO PLATFORMS</div>
+  <div class="sec-title">GROUND <span>SERVICES</span></div>
+  <div class="services-grid reveal">
+    <div class="service-card">
+      <div class="service-logo-img-wrap"><img src="photos/isro%20today/bhuvanLogo.png" alt="Bhuvan" class="service-logo"></div>
+      <div class="service-name">BHUVAN</div>
+      <div class="service-sub">ISRO's Geoportal</div>
+      <div class="service-desc">India's national geospatial platform. Satellite imagery, thematic maps, disaster layers, crop health, air quality — all from ISRO satellites. The Indian alternative to Google Earth, with layers no foreign platform carries.</div>
+    </div>
+    <div class="service-card">
+      <div class="service-logo-img-wrap"><img src="photos/isro%20today/mosdaclogo.png" alt="MOSDAC" class="service-logo"></div>
+      <div class="service-name">MOSDAC</div>
+      <div class="service-sub">Meteorological & Oceanographic Satellite Data Archival Centre</div>
+      <div class="service-desc">Real-time meteorological and ocean data from INSAT and OCEANSAT satellites. Used by IMD, fisheries departments, port authorities, offshore oil operators, and researchers worldwide.</div>
+    </div>
+    <div class="service-card">
+      <div class="service-logo-img-wrap"><img src="photos/isro%20today/vedas_logo.png" alt="VEDAS" class="service-logo"></div>
+      <div class="service-name">VEDAS</div>
+      <div class="service-sub">Visualisation of Earth observation Data & Archival System</div>
+      <div class="service-desc">ISRO's Earth observation data archive — decades of satellite imagery accessible to researchers, state governments, and developers. Over 4 million scenes archived and growing.</div>
+    </div>
+    <div class="service-card">
+      <div class="service-logo-img-wrap"><img src="photos/isro%20today/samudra.jpg" alt="SAMUDRA" class="service-logo" style="border-radius:4px;"></div>
+      <div class="service-name">SAMUDRA</div>
+      <div class="service-sub">Ocean State Forecast · INCOIS</div>
+      <div class="service-desc">ISRO's ocean state forecast service — providing daily predictions of wave height, sea surface temperature, ocean currents, and potential fishing zones. Data from OCEANSAT-3 feeds INCOIS (Indian National Centre for Ocean Information Services), reaching 400,000+ fishermen and offshore operations across 9 coastal states.</div>
+    </div>
+    <div class="service-card">
+      <div class="service-logo-img-wrap"><img src="photos/isro%20today/gsat.jpeg" alt="GSAT" class="service-logo" style="border-radius:4px;"></div>
+      <div class="service-name">GSAT SERVICES</div>
+      <div class="service-sub">Communication Satellites</div>
+      <div class="service-desc">ISRO's GSAT communication satellites provide DTH television, VSAT internet, and telemedicine services across India — including to areas where no fibre reaches. Enabled India's digital inclusion mission.</div>
+    </div>
+    <div class="service-card">
+      <div class="service-logo-img-wrap"><img src="photos/isro%20today/edusat.png" alt="EDUSAT" class="service-logo"></div>
+      <div class="service-name">EDUSAT</div>
+      <div class="service-sub">Educational Satellite</div>
+      <div class="service-desc">Dedicated to distance education. Live interactive classes broadcast to 50,000+ classrooms in rural India — teachers in cities, students in villages, one satellite bridging both. Still operational.</div>
+    </div>
+    <div class="service-card">
+      <div class="service-logo-img-wrap"><img src="photos/isro%20today/telemedicine.jpeg" alt="Telemedicine" class="service-logo" style="border-radius:4px;"></div>
+      <div class="service-name">TELEMEDICINE</div>
+      <div class="service-sub">ISRO Telemedicine Network</div>
+      <div class="service-desc">ISRO's satellite network connects 300+ remote hospitals and health centres to specialist doctors in cities. A patient in a Himalayan village can get a cardiologist consultation via ISRO's link. Running since 2001.</div>
+    </div>
+    <div class="service-card">
+      <div class="service-logo-img-wrap"><img src="photos/isro%20today/logoBhoonidhi.png" alt="Bhoonidhi" class="service-logo"></div>
+      <div class="service-name">BHOONIDHI</div>
+      <div class="service-sub">National Remote Sensing Data Policy · NRSC</div>
+      <div class="service-desc">ISRO's National Remote Sensing Centre data portal — India's centralised repository of satellite-derived earth observation data. Serves government departments, researchers, and private sector with high-resolution imagery, GIS layers, and thematic products from CARTOSAT, RESOURCESAT, and EOS series satellites.</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">ANTRIK<span>SH</span></div>
+  <ul class="footer-links">
+    <li><a href="missions.html">Missions</a></li>
+    <li><a href="timeline.html">Timeline</a></li>
+    <li><a href="rockets.html">Rockets</a></li>
+    <li><a href="heroes.html">Heroes</a></li>
+    <li><a href="isropedia.html">ISRO-pedia</a></li>
+    <li><a href="eyes.html">Eyes on Space</a></li>
+    <li><a href="applications.html">Space Applications</a></li>
+    <li><a href="launch-services.html">Launch Services</a></li>
+    <li><a href="about.html">About</a></li>
+  </ul>
+  <div class="footer-credit">Data sourced from ISRO & NASA open data</div>
+</footer>
+
+<script>
+// STARS
+const starsCanvas = document.getElementById('stars-canvas');
+const sCtx = starsCanvas.getContext('2d');
+starsCanvas.width = window.innerWidth;
+starsCanvas.height = window.innerHeight;
+window.addEventListener('resize', () => { starsCanvas.width = window.innerWidth; starsCanvas.height = window.innerHeight; drawStars(); });
+const stars = Array.from({length:300}, () => ({ x: Math.random()*starsCanvas.width, y: Math.random()*starsCanvas.height, r: Math.random()*1.2+0.2, phase: Math.random()*Math.PI*2 }));
+function drawStars() {
+  sCtx.clearRect(0,0,starsCanvas.width,starsCanvas.height);
+  const t = Date.now()/1000;
+  stars.forEach(s => {
+    const a = 0.2 + 0.5*Math.abs(Math.sin(t*0.4+s.phase));
+    sCtx.beginPath(); sCtx.arc(s.x,s.y,s.r,0,Math.PI*2);
+    sCtx.fillStyle=`rgba(255,255,255,${a})`; sCtx.fill();
+  });
+  requestAnimationFrame(drawStars);
+}
+drawStars();
+
+// REVEAL
+const revealEls = document.querySelectorAll('.reveal');
+const revealObs = new IntersectionObserver(entries => {
+  entries.forEach((e,i) => { if(e.isIntersecting){ setTimeout(()=>e.target.classList.add('visible'), i*80); } });
+}, { threshold: 0.08 });
+revealEls.forEach(el => revealObs.observe(el));
+
+// CAROUSELS
+document.querySelectorAll('.app-carousel').forEach(car => {
+  const imgs = car.querySelectorAll('.carousel-img:not(.single)');
+  const dots = car.querySelectorAll('.c-dot');
+  if (!imgs.length || imgs.length < 2) return;
+  let idx = 0;
+  function goTo(n) {
+    imgs[idx].classList.remove('active'); dots[idx]?.classList.remove('active');
+    idx = (n + imgs.length) % imgs.length;
+    imgs[idx].classList.add('active'); dots[idx]?.classList.add('active');
+  }
+  dots.forEach((d,i) => d.addEventListener('click', () => goTo(i)));
+  setInterval(() => goTo(idx + 1), 3200);
+});
+
+// STAT COUNTERS
+const statNums = document.querySelectorAll('[data-target]');
+const statObs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if(e.isIntersecting && !e.target.dataset.counted) {
+      e.target.dataset.counted = true;
+      const target = +e.target.dataset.target;
+      gsap.fromTo(e.target, {innerText:0}, {innerText:target, duration:1.8, ease:'power2.out', snap:{innerText:1}, onUpdate:function(){ e.target.innerText = Math.round(gsap.getProperty(e.target,'innerText')); }});
+    }
+  });
+}, {threshold:0.5});
+statNums.forEach(el => statObs.observe(el));
+</script>
+<script>
+(function(){
+  var btn = document.getElementById('nav-hamburger');
+  var ul = document.querySelector('.nav-links');
+  if (!btn || !ul) return;
+  btn.addEventListener('click', function(){
+    btn.classList.toggle('open');
+    ul.classList.toggle('mobile-open');
+    document.body.style.overflow = ul.classList.contains('mobile-open') ? 'hidden' : '';
+  });
+  // + / - toggle for dropdowns on mobile
+  ul.querySelectorAll('li').forEach(function(li){
+    if (!li.querySelector('.dropdown')) return;
+    li.classList.add('has-dropdown');
+    var topLink = li.querySelector(':scope > a');
+    var toggle = document.createElement('span');
+    toggle.className = 'nav-toggle';
+    toggle.textContent = '+';
+    if (topLink) topLink.appendChild(toggle);
+    topLink && topLink.addEventListener('click', function(e){
+      if (window.innerWidth > 768) return;
+      e.preventDefault();
+      var open = li.classList.toggle('mobile-expanded');
+      toggle.textContent = open ? '−' : '+';
+    });
+  });
+  // clicking a dropdown link closes the whole menu
+  ul.querySelectorAll('.dropdown a').forEach(function(a){
+    a.addEventListener('click', function(){
+      if (window.innerWidth > 768) return;
+      btn.classList.remove('open');
+      ul.classList.remove('mobile-open');
+      document.body.style.overflow = '';
+    });
+  });
+})();
+</script>
+</body>
+</html>

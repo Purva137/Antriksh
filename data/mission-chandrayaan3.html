@@ -1,0 +1,367 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chandrayaan-3 — Antriksh</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
+  :root{--black:#000000;--white:#ffffff;--red:#FC3D21;--blue:#06038D;}
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--black);color:var(--white);font-family:'Space Grotesk',sans-serif;overflow-x:hidden;}
+  #stars-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:20px 48px;background:rgba(0,0,0,0.92);border-bottom:1px solid rgba(255,255,255,0.06);}
+  .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.12em;color:var(--white);text-decoration:none;}
+  .nav-logo span{color:var(--red);}
+  .nav-links{display:flex;gap:36px;list-style:none;}
+  .nav-links li{position:relative;padding-bottom:20px;margin-bottom:-20px;}
+  .nav-links a{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.8);text-decoration:none;transition:color 0.3s;}
+  .nav-links a:hover{color:var(--white);}
+  .nav-links li:hover>.dropdown{opacity:1;pointer-events:all;transform:translateY(0);}
+  .dropdown{position:absolute;top:100%;left:0;background:rgba(5,5,10,0.97);border:1px solid rgba(255,255,255,0.08);border-top:2px solid var(--red);padding:16px 0;min-width:200px;opacity:0;pointer-events:none;transform:translateY(4px);transition:all 0.2s ease;z-index:200;}
+  .dropdown a{display:block;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.7)!important;padding:10px 20px;text-decoration:none;transition:all 0.2s;} .nav-links li:last-child>.dropdown{left:auto;right:0;}
+  .dropdown a:hover{color:var(--white)!important;background:rgba(252,61,33,0.08);padding-left:28px;}
+  .nav-live{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;color:var(--red);text-transform:uppercase;}
+  .live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.4);}}
+  .mission-hero{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:0 48px 80px;overflow:hidden;}
+  .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 60% 30%, rgba(80,50,10,0.35) 0%, rgba(0,0,0,0) 60%), radial-gradient(ellipse at 20% 80%, rgba(6,3,141,0.12) 0%, rgba(0,0,0,0) 50%);}
+  .hero-grid-lines{position:absolute;inset:0;background-image:linear-gradient(rgba(6,3,141,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(6,3,141,0.03) 1px,transparent 1px);background-size:60px 60px;}
+  .breadcrumb{position:relative;z-index:2;padding-top:120px;display:flex;align-items:center;gap:12px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.45);}
+  .breadcrumb a{color:rgba(255,255,255,0.45);text-decoration:none;transition:color 0.3s;}
+  .breadcrumb a:hover{color:rgba(255,255,255,0.8);}
+  .breadcrumb span{color:rgba(255,255,255,0.3);}
+  .mission-hero-content{position:relative;z-index:2;}
+  .mission-status-badge{display:inline-flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(150,150,255,0.8);margin-bottom:20px;}
+  .mission-hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(60px,11vw,150px);line-height:0.85;letter-spacing:0.02em;margin-bottom:24px;}
+  .mission-hero-sub{font-size:18px;font-weight:300;color:rgba(255,255,255,0.7);max-width:600px;line-height:1.7;margin-bottom:48px;}
+  .hero-stats{display:flex;gap:0;border:1px solid rgba(255,255,255,0.08);}
+  .hero-stat{padding:20px 32px;border-right:1px solid rgba(255,255,255,0.08);}
+  .hero-stat:last-child{border-right:none;}
+  .hero-stat-value{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--white);line-height:1;}
+  .hero-stat-value span{color:var(--red);}
+  .hero-stat-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-top:4px;}
+  .mission-nav{position:sticky;top:69px;z-index:90;background:rgba(0,0,0,0.95);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;gap:0;overflow-x:auto;}
+  .mission-nav a{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.55);text-decoration:none;padding:18px 28px;border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.3s;}
+  .mission-nav a:hover,.mission-nav a.active{color:var(--white);border-bottom-color:var(--red);}
+  .content-section{position:relative;z-index:1;padding:80px 48px;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .section-tag{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--red);margin-bottom:12px;}
+  .section-title{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:0.03em;line-height:1;margin-bottom:32px;}
+  .section-body{font-size:16px;color:rgba(255,255,255,0.75);line-height:1.9;max-width:760px;}
+  .section-body p{margin-bottom:20px;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start;}
+  .two-col-wide{display:grid;grid-template-columns:1.4fr 1fr;gap:80px;align-items:start;}
+  .highlight-box{background:rgba(6,3,141,0.08);border:1px solid rgba(6,3,141,0.25);border-left:3px solid var(--blue);padding:28px 32px;margin:32px 0;}
+  .highlight-box-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:12px;}
+  .highlight-box-text{font-size:15px;color:rgba(255,255,255,0.85);line-height:1.8;}
+  .specs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:32px;}
+  .spec-item{background:#080808;border:1px solid rgba(255,255,255,0.04);padding:24px;}
+  .spec-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:8px;}
+  .spec-value{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);line-height:1;}
+  .spec-unit{font-family:'Space Mono',monospace;font-size:11px;color:rgba(255,255,255,0.55);margin-top:4px;}
+  .timeline-item{display:flex;gap:32px;padding:28px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .timeline-item:last-child{border-bottom:none;}
+  .timeline-date{font-family:'Space Mono',monospace;font-size:11px;color:var(--red);letter-spacing:0.1em;min-width:140px;padding-top:3px;}
+  .timeline-content-title{font-size:15px;font-weight:500;color:var(--white);margin-bottom:6px;}
+  .timeline-content-desc{font-size:13px;color:rgba(255,255,255,0.6);line-height:1.7;}
+  .discoveries-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;margin-top:32px;}
+  .discovery-card{background:#080808;border:1px solid rgba(255,255,255,0.04);padding:28px;transition:border-color 0.3s;}
+  .discovery-card:hover{border-color:rgba(252,61,33,0.15);}
+  .discovery-icon{font-size:32px;margin-bottom:12px;}
+  .discovery-title{font-size:15px;font-weight:500;color:var(--white);margin-bottom:8px;}
+  .discovery-desc{font-size:13px;color:rgba(255,255,255,0.6);line-height:1.7;}
+  .next-mission{position:relative;z-index:1;padding:60px 48px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.06);}
+  .next-label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.4);}
+  .next-title{font-family:'Bebas Neue',sans-serif;font-size:36px;margin-top:8px;}
+  .btn-red{display:inline-flex;align-items:center;gap:12px;background:var(--red);color:var(--white);font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;padding:16px 32px;text-decoration:none;transition:all 0.3s;}
+  .btn-red:hover{background:#ff5540;transform:translateX(4px);}
+  .btn-outline{display:inline-flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;padding:16px 32px;text-decoration:none;transition:all 0.3s;margin-left:16px;}
+  .btn-outline:hover{border-color:rgba(255,255,255,0.6);color:var(--white);}
+  footer{position:relative;z-index:10;padding:40px 48px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;}
+  .footer-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.12em;color:rgba(255,255,255,0.3);text-decoration:none;}
+  .footer-logo span{color:rgba(252,61,33,0.2);}
+  .footer-credit{font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.35);}
+</style>
+<link rel="stylesheet" href="../responsive.css">
+</head>
+<body>
+<canvas id="stars-canvas"></canvas>
+<nav>
+  <a href="../index.html" class="nav-logo">ANTRIK<span>SH</span></a>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  <ul class="nav-links">
+    <li><a href="../missions.html">Missions</a><div class="dropdown"><a href="../missions.html">All Missions →</a><a href="../missions.html">Active Missions</a><a href="../missions.html">Lunar Missions</a></div></li>
+    <li><a href="../timeline.html">Timeline</a><div class="dropdown"><a href="../timeline.html">Full Timeline →</a></div></li>
+    <li><a href="../rockets.html">Rockets</a><div class="dropdown"><a href="../rockets.html">All Rockets →</a></div></li>
+    <li><a href="../heroes.html">Heroes</a><div class="dropdown"><a href="../heroes.html">All Scientists →</a></div></li>
+    <li><a href="../isropedia.html">ISRO-pedia</a><div class="dropdown"><a href="../isropedia.html">Explore →</a></div></li>
+    <li><a href="../eyes.html">Eyes on Space</a><div class="dropdown"><a href="../eyes.html">Live Tracking →</a><a href="../pragyan.html">Pragyan's Walk</a></div></li>
+  </ul>
+  
+</nav>
+
+<div class="mission-hero">
+  <div class="hero-bg"><img src="../photos/chandrayaan3(2).jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.25;z-index:-1;"></div>
+  <div class="hero-grid-lines"></div>
+  <div class="breadcrumb"><a href="../index.html">Antriksh</a><span>/</span><a href="../missions.html">Missions</a><span>/</span>Chandrayaan-3</div>
+  <div class="mission-hero-content">
+    <div class="mission-status-badge">● Historic · Lunar · Aug 23, 2023</div>
+    <h1 class="mission-hero-title">CHANDRAYAAN<span style="color:var(--red);">-3</span></h1>
+    <p class="mission-hero-sub">The mission that made history twice — India became the first nation to land on the Moon's south pole, and the fourth nation ever to achieve a soft lunar landing. Vikram touched down. Pragyan rolled out. The world watched.</p>
+        <a href="https://www.youtube.com/live/DLA_64yz8Ss?si=gXRrqpvyvYBVHEwx" target="_blank" style="display:inline-flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:32px;transition:color 0.2s;" onmouseover="this.style.color='rgba(255,255,255,0.7)'" onmouseout="this.style.color='rgba(255,255,255,0.35)'">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+      Watch: Chandrayaan-3 Soft Landing — Live
+    </a>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-value">1<span>st</span></div><div class="hero-stat-label">Nation · Moon South Pole</div></div>
+      <div class="hero-stat"><div class="hero-stat-value">4<span>th</span></div><div class="hero-stat-label">Nation · Soft Lunar Landing</div></div>
+      <div class="hero-stat"><div class="hero-stat-value">100<span>m+</span></div><div class="hero-stat-label">Pragyan Rover Distance</div></div>
+      <div class="hero-stat"><div class="hero-stat-value">14</div><div class="hero-stat-label">Days Active on Moon</div></div>
+      <div class="hero-stat"><div class="hero-stat-value">₹615<span>Cr</span></div><div class="hero-stat-label">Total Mission Cost</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="mission-nav">
+  <a href="#overview" class="active">Overview</a>
+  <a href="#landing">The Landing</a>
+  <a href="#spacecraft">Spacecraft</a>
+  <a href="#discoveries">Discoveries</a>
+  <a href="#timeline">Timeline</a>
+  <a href="#significance">Significance</a>
+</div>
+
+<div class="content-section" id="overview">
+  <div class="two-col-wide">
+    <div>
+      <div class="section-tag">Overview</div>
+      <h2 class="section-title">India Lands on the Moon's South Pole</h2>
+      <div class="section-body">
+        <p>Chandrayaan-3 is ISRO's third lunar mission and India's most celebrated space achievement to date. Where Chandrayaan-2's Vikram lander crash-landed in 2019, Chandrayaan-3 succeeded perfectly — demonstrating end-to-end capability in safe landing and roving on the lunar surface.</p>
+        <p>On August 23, 2023, at 6:04 PM IST, the Vikram lander touched down at 69.37°S latitude near the Moon's south pole — a region no nation had ever reached before. The Pragyan rover rolled out shortly after, spending 14 Earth days exploring the lunar surface, collecting data, and making discoveries that stunned the global scientific community.</p>
+        <p>The mission cost ₹615 crore — less than many Bollywood blockbusters, and a fraction of what any other nation would have spent on a comparable mission.</p>
+      </div>
+      <div class="highlight-box">
+        <div class="highlight-box-title">Why the South Pole?</div>
+        <div class="highlight-box-text">The lunar south pole is scientifically invaluable — permanently shadowed craters may contain water ice billions of years old. Understanding this region is critical for future human lunar bases and long-duration missions. India got there first.</div>
+      </div>
+    </div>
+    <div>
+      <div class="specs-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="spec-item"><div class="spec-label">Launch Date</div><div class="spec-value" style="font-size:18px;font-family:'Space Grotesk';">Jul 14, 2023</div></div>
+        <div class="spec-item"><div class="spec-label">Landing Date</div><div class="spec-value" style="font-size:18px;font-family:'Space Grotesk';">Aug 23, 2023</div></div>
+        <div class="spec-item"><div class="spec-label">Landing Site</div><div class="spec-value" style="font-size:16px;font-family:'Space Grotesk';">69.37°S · South Pole</div></div>
+        <div class="spec-item"><div class="spec-label">Launch Vehicle</div><div class="spec-value" style="font-size:18px;font-family:'Space Grotesk';">LVM3-M4</div></div>
+        <div class="spec-item"><div class="spec-label">Lander Mass</div><div class="spec-value">1,726<div class="spec-unit">kg</div></div></div>
+        <div class="spec-item"><div class="spec-label">Rover Mass</div><div class="spec-value">26<div class="spec-unit">kg</div></div></div>
+        <div class="spec-item"><div class="spec-label">Propulsion Module</div><div class="spec-value">2,148<div class="spec-unit">kg</div></div></div>
+        <div class="spec-item"><div class="spec-label">Lander Module</div><div class="spec-value">1,752<div class="spec-unit">kg</div></div></div>
+        <div class="spec-item"><div class="spec-label">Lander Dry Mass</div><div class="spec-value">626<div class="spec-unit">kg (no fuel)</div></div></div>
+        <div class="spec-item"><div class="spec-label">Mission Cost</div><div class="spec-value" style="font-size:18px;font-family:'Space Grotesk';">₹615 Crore</div></div>
+        <div class="spec-item"><div class="spec-label">Active Duration</div><div class="spec-value">14<div class="spec-unit">Lunar Days</div></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="content-section" id="landing">
+  <div class="section-tag">The Moment</div>
+  <h2 class="section-title">August 23, 2023 — 6:04 PM IST</h2>
+  <div class="two-col">
+    <div class="section-body">
+      <p>The landing sequence began with Vikram firing its engines for the "rough braking phase" — slowing from 1.68 km/s to near zero over 11.5 minutes. This was the 17 minutes of terror that ISRO engineers had spent years preparing for.</p>
+      <p>At an altitude of 800 metres, Vikram switched to its fine braking phase, orienting itself vertically. Four throttleable engines guided it down with precision. At 150 metres, it hovered, scanned the surface for hazards using its Lander Hazard Detection and Avoidance Camera, then completed the final descent.</p>
+      <p>Touchdown. India had landed on the Moon's south pole — the first nation in history to do so. Prime Minister Modi, watching from South Africa, declared August 23 as National Space Day.</p>
+      <p>Within hours, the ramp deployed and Pragyan — a 6-wheeled rover carrying APXS and LIBS instruments — rolled onto the lunar surface for the first time.</p>
+    </div>
+    <div>
+      <div class="highlight-box" style="margin-top:0;">
+        <div class="highlight-box-title">The 17 Minutes of Terror</div>
+        <div class="highlight-box-text">The powered descent phase — from 30 km altitude to surface — was fully autonomous. No signal from Earth could reach the spacecraft in time to correct any error. Vikram's onboard computers made every decision. It executed flawlessly.</div>
+      </div>
+      <div class="highlight-box" style="border-left-color:var(--red);">
+        <div class="highlight-box-title">National Space Day — Aug 23</div>
+        <div class="highlight-box-text">The Government of India declared August 23 as National Space Day — to be observed every year as a celebration of India's scientific achievement and to inspire the next generation of space explorers.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="content-section" id="spacecraft">
+  <div class="section-tag">Spacecraft</div>
+  <h2 class="section-title">Vikram & Pragyan</h2>
+  <div class="two-col">
+    <div>
+      <p style="font-size:15px;color:rgba(255,255,255,0.7);line-height:1.8;margin-bottom:24px;"><strong style="color:var(--white);">Vikram Lander</strong> — named after ISRO founder Vikram Sarabhai. Four throttleable engines. Hazard detection cameras. Five instruments: ChaSTE (temperature), RAMBHA-LP (plasma), ILSA (seismometer), and NASA's <strong style="color:var(--white);">Laser Retroreflector Array (LRA)</strong> — a passive instrument with no moving parts that will remain functional on the Moon for decades, allowing scientists on Earth to fire lasers at it and measure the precise Earth-Moon distance to millimetre accuracy.</p>
+      <p style="font-size:15px;color:rgba(255,255,255,0.7);line-height:1.8;"><strong style="color:var(--white);">Pragyan Rover</strong> — named after the Sanskrit word for wisdom. Six wheels. Solar powered. APXS (Alpha Particle X-ray Spectrometer) and LIBS (Laser-Induced Breakdown Spectroscope) instruments for elemental analysis of the lunar soil.</p>
+    </div>
+    <div class="specs-grid" style="grid-template-columns:1fr 1fr;">
+      <div class="spec-item"><div class="spec-label">Vikram Engines</div><div class="spec-value">4</div><div class="spec-unit">Throttleable</div></div>
+      <div class="spec-item"><div class="spec-label">Rover Wheels</div><div class="spec-value">6</div></div>
+      <div class="spec-item"><div class="spec-label">Rover Power</div><div class="spec-value" style="font-size:18px;font-family:'Space Grotesk';">Solar</div></div>
+      <div class="spec-item"><div class="spec-label">Lander Instruments</div><div class="spec-value">4</div></div>
+      <div class="spec-item"><div class="spec-label">Rover Instruments</div><div class="spec-value">2</div><div class="spec-unit">APXS + LIBS</div></div>
+      <div class="spec-item"><div class="spec-label">Distance Covered</div><div class="spec-value">100<div class="spec-unit">metres+</div></div></div>
+    </div>
+  </div>
+</div>
+
+<div class="content-section" id="discoveries">
+  <div class="section-tag">What India Found</div>
+  <h2 class="section-title">Discoveries That Changed Lunar Science</h2>
+  <div class="discoveries-grid">
+    <div class="discovery-card">
+      <div class="discovery-icon">🔬</div>
+      <div class="discovery-title">Sulfur Confirmed on the Lunar South Pole</div>
+      <div class="discovery-desc">Pragyan's LIBS instrument detected sulfur in the lunar soil near the south pole for the first time. This was unexpected and significant — sulfur's presence changes our understanding of lunar geology and the Moon's volcanic history.</div>
+    </div>
+    <div class="discovery-card">
+      <div class="discovery-icon">🌡️</div>
+      <div class="discovery-title">Temperature Gradient Surprise</div>
+      <div class="discovery-desc">ChaSTE measured a stunning 70°C temperature difference between the surface and just 80mm below it — far steeper than expected. The surface hit ~50°C while the subsurface stayed at –10°C. This data is critical for designing future lunar habitats.</div>
+    </div>
+    <div class="discovery-card">
+      <div class="discovery-icon">🌑</div>
+      <div class="discovery-title">Ancient Terrain — 3.7 Billion Years Old</div>
+      <div class="discovery-desc">Analysis confirmed the Chandrayaan-3 landing site is approximately 3.7 billion years old — among the most ancient lunar terrain ever studied up close. A window into the early Solar System.</div>
+    </div>
+    <div class="discovery-card">
+      <div class="discovery-icon">💧</div>
+      <div class="discovery-title">Evidence Supporting Water Ice Zones</div>
+      <div class="discovery-desc">RAMBHA-LP measured the plasma environment near the south pole, providing data consistent with the presence of permanently shadowed regions that could harbour water ice — the key resource for future human lunar exploration.</div>
+    </div>
+    <div class="discovery-card">
+      <div class="discovery-icon">📳</div>
+      <div class="discovery-title">Moonquakes Detected</div>
+      <div class="discovery-desc">ILSA — the first seismometer on the Moon since Apollo — detected natural seismic activity. A moonquake of unknown origin was recorded, revealing the Moon is geologically more active than previously assumed.</div>
+    </div>
+    <div class="discovery-card">
+      <div class="discovery-icon">⚗️</div>
+      <div class="discovery-title">Aluminium, Iron, Calcium, and More</div>
+      <div class="discovery-desc">APXS and LIBS together confirmed the presence of aluminium, iron, calcium, chromium, titanium, manganese, silicon, and oxygen in the south pole regolith — a comprehensive elemental map no mission had produced at this location before.</div>
+    </div>
+  </div>
+</div>
+
+<div class="content-section" id="timeline">
+  <div class="section-tag">Mission Timeline</div>
+  <h2 class="section-title">From Launch to Discovery</h2>
+  <div class="mission-timeline">
+    <div class="timeline-item"><div class="timeline-date">Jul 14, 2023</div><div><div class="timeline-content-title">Launch — LVM3-M4, Sriharikota</div><div class="timeline-content-desc">Chandrayaan-3 lifts off from SDSC SHAR at 2:35 PM IST. Perfect insertion into Earth parking orbit.</div></div></div>
+    <div class="timeline-item"><div class="timeline-date">Jul–Aug 2023</div><div><div class="timeline-content-title">Earth Orbit Manoeuvres + Trans-Lunar Injection</div><div class="timeline-content-desc">Multiple orbit-raising manoeuvres bring the spacecraft to the required velocity for trans-lunar injection. The spacecraft breaks free of Earth's gravity and begins its journey to the Moon.</div></div></div>
+    <div class="timeline-item"><div class="timeline-date">Aug 5, 2023</div><div><div class="timeline-content-title">Lunar Orbit Insertion</div><div class="timeline-content-desc">Chandrayaan-3 successfully enters lunar orbit. Orbit lowering manoeuvres begin to bring it closer to the surface over the following weeks.</div></div></div>
+    <div class="timeline-item"><div class="timeline-date">Aug 17, 2023</div><div><div class="timeline-content-title">Lander Module Separation</div><div class="timeline-content-desc">Vikram lander separates from the propulsion module at 100 km × 100 km lunar orbit. The two modules part ways — propulsion module remains in orbit, Vikram begins its descent sequence.</div></div></div>
+    <div class="timeline-item"><div class="timeline-date">Aug 23, 2023 · 6:04 PM</div><div><div class="timeline-content-title" style="color:var(--red);">Vikram Lands — History Made</div><div class="timeline-content-desc">Vikram touches down at 69.37°S — Moon's south pole. India becomes the first nation to reach this region. 1.3 billion people watch. The world watches. India cheers.</div></div></div>
+    <div class="timeline-item"><div class="timeline-date">Aug 24, 2023</div><div><div class="timeline-content-title">Pragyan Rolls Out</div><div class="timeline-content-desc">The ramp deploys. Pragyan rolls onto the lunar surface and begins its traverse. LIBS fires its first laser shots at the regolith. Sulfur detected immediately.</div></div></div>
+    <div class="timeline-item"><div class="timeline-date">Aug 24–Sep 2, 2023</div><div><div class="timeline-content-title">14 Days of Science</div><div class="timeline-content-desc">Pragyan covers 100+ metres, analyses soil composition, detects moonquakes, measures temperatures, and maps the plasma environment. Every day brings a new discovery.</div></div></div>
+    <div class="timeline-item" style="border-bottom:none;"><div class="timeline-date">Sep 2, 2023</div><div><div class="timeline-content-title">Sleep Mode — Awaiting Sunrise</div><div class="timeline-content-desc">Vikram and Pragyan enter sleep mode as the 14-day lunar night begins. ISRO attempts revival at the next lunar sunrise — neither responds. ISRO officially classifies them as in a <strong style="color:rgba(255,255,255,0.7);">permanent sleep state</strong>, not destroyed — the electronics were simply not designed with Radioisotope Heater Units (RHUs) to survive the −200°C lunar night. Their data lives on forever.</div></div></div>
+  </div>
+</div>
+
+<div class="content-section" id="significance">
+  <div class="section-tag">Why It Matters</div>
+  <h2 class="section-title">India's Greatest Space Achievement</h2>
+  <div class="discoveries-grid">
+    <div class="discovery-card"><div class="discovery-icon">🌍</div><div class="discovery-title">First Nation to the Moon's South Pole</div><div class="discovery-desc">Russia's Luna-25 tried the same landing zone weeks earlier and crashed. India succeeded. The south pole is the most scientifically valuable region of the Moon — and India owns that milestone.</div></div>
+    <div class="discovery-card"><div class="discovery-icon">💡</div><div class="discovery-title">Inspiration for a Generation</div><div class="discovery-desc">August 23 is now National Space Day. Millions of Indian children watched the landing live. The scientists who built Chandrayaan-3 — including many women — became national heroes overnight.</div></div>
+    <div class="discovery-card"><div class="discovery-icon">🔭</div><div class="discovery-title">Scientific Legacy</div><div class="discovery-desc">The data from Pragyan and Vikram will be studied for decades. ISRO released the datasets publicly — any scientist in the world can analyse Chandrayaan-3's discoveries.</div></div>
+    <div class="discovery-card"><div class="discovery-icon">🚀</div><div class="discovery-title">Foundation for Chandrayaan-4</div><div class="discovery-desc">Chandrayaan-3 proved India can land on the Moon with precision. Chandrayaan-4 will build on this — returning samples from the very terrain Pragyan explored. The journey continues.</div></div>
+  </div>
+</div>
+
+<div class="content-section" id="hidden-successes">
+  <div class="section-tag">Hidden Successes</div>
+  <h2 class="section-title">Three Things the World Missed</h2>
+  <div class="discoveries-grid">
+    <div class="discovery-card">
+      <div class="discovery-icon">🌍</div>
+      <div class="discovery-title">SHAPE — Studying Earth as an Exoplanet</div>
+      <div class="discovery-desc">The Propulsion Module carried a payload most people don't know about — SHAPE (Spectro-polarimetry of Habitable Planet Earth). Still orbiting the Moon, SHAPE studies Earth's reflected light as if it were a distant exoplanet — helping scientists develop techniques to identify habitable planets around other stars. A bonus mission hidden inside Chandrayaan-3.</div>
+    </div>
+    <div class="discovery-card">
+      <div class="discovery-icon">🔄</div>
+      <div class="discovery-title">Propulsion Module Returns to Earth Orbit</div>
+      <div class="discovery-desc">In late 2023, in an unplanned but brilliant manoeuvre, ISRO brought the Propulsion Module back from lunar orbit to Earth orbit — demonstrating the orbital mechanics needed for future sample-return missions. Chandrayaan-4, which will return lunar samples to Earth, is built on what ISRO learned from this return journey. A quiet proof of concept that spoke loudly.</div>
+    </div>
+    <div class="discovery-card">
+      <div class="discovery-icon">🦘</div>
+      <div class="discovery-title">The Hop — Vikram Lifts Off from the Moon</div>
+      <div class="discovery-desc">After the primary mission, Vikram performed a "hop experiment" — firing its engines to lift off from the lunar surface, travelling 30–40 cm horizontally before landing again safely. This proved ISRO can restart engines on the lunar surface — a critical capability for future missions that need to take off from the Moon. India's lander hopped on the Moon. That's extraordinary.</div>
+    </div>
+    <div class="discovery-card">
+      <div class="discovery-icon">📡</div>
+      <div class="discovery-title">IDSN — The Ears That Made It Possible</div>
+      <div class="discovery-desc">Every command sent to Chandrayaan-3 and every byte of data it returned passed through the Indian Deep Space Network (IDSN) at Byalalu, Karnataka — 18-metre and 32-metre dish antennas that track spacecraft across hundreds of thousands of kilometres. Without IDSN, none of this science reaches Earth. The mission's unsung hero.</div>
+    </div>
+  </div>
+</div>
+<div class="next-mission">
+  <div>
+    <div class="next-label">Next Mission</div>
+    <div class="next-title">Mangalyaan — India Reaches Mars</div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:0.1em;margin-top:6px;">Mars Orbiter Mission · First Asian Nation at Mars</div>
+  </div>
+  <div>
+    <a href="mission-mangalyaan.html" class="btn-red">Explore Mission →</a>
+    <a href="../missions.html" class="btn-outline">All Missions</a>
+  </div>
+</div>
+
+<footer>
+  <a href="../index.html" class="footer-logo">ANTRIK<span>SH</span></a>
+  <div class="footer-credit">Data sourced from ISRO open data</div>
+</footer>
+
+<script>
+const sc=document.getElementById('stars-canvas');
+const sCtx=sc.getContext('2d');
+sc.width=window.innerWidth;sc.height=window.innerHeight;
+const stars=Array.from({length:200},()=>({x:Math.random()*sc.width,y:Math.random()*sc.height,r:Math.random()*1.1,phase:Math.random()*Math.PI*2,speed:Math.random()*0.003+0.001}));
+function drawStars(t){sCtx.clearRect(0,0,sc.width,sc.height);stars.forEach(s=>{const a=0.15+0.35*Math.sin(t*s.speed+s.phase);sCtx.beginPath();sCtx.arc(s.x,s.y,s.r,0,Math.PI*2);sCtx.fillStyle=`rgba(255,255,255,${a})`;sCtx.fill();});requestAnimationFrame(drawStars);}
+requestAnimationFrame(drawStars);
+window.addEventListener('resize',()=>{sc.width=window.innerWidth;sc.height=window.innerHeight;});
+const sections=document.querySelectorAll('.content-section');
+const navLinks=document.querySelectorAll('.mission-nav a');
+window.addEventListener('scroll',()=>{let current='';sections.forEach(s=>{if(window.scrollY>=s.offsetTop-200)current=s.id;});navLinks.forEach(a=>{a.classList.remove('active');if(a.getAttribute('href')==='#'+current)a.classList.add('active');});});
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';}});},{threshold:0.05});
+document.querySelectorAll('.spec-item,.discovery-card,.timeline-item').forEach((el,i)=>{el.style.opacity='0';el.style.transform='translateY(20px)';el.style.transition=`opacity 0.5s ease ${i*0.04}s,transform 0.5s ease ${i*0.04}s`;obs.observe(el);});
+</script>
+<script>
+(function(){
+  var btn = document.getElementById('nav-hamburger');
+  var ul = document.querySelector('.nav-links');
+  if (!btn || !ul) return;
+  btn.addEventListener('click', function(){
+    btn.classList.toggle('open');
+    ul.classList.toggle('mobile-open');
+    document.body.style.overflow = ul.classList.contains('mobile-open') ? 'hidden' : '';
+  });
+  ul.querySelectorAll('li').forEach(function(li){
+    if (!li.querySelector('.dropdown')) return;
+    li.classList.add('has-dropdown');
+    var topLink = li.querySelector(':scope > a');
+    var toggle = document.createElement('span');
+    toggle.className = 'nav-toggle';
+    toggle.textContent = '+';
+    if (topLink) topLink.appendChild(toggle);
+    topLink && topLink.addEventListener('click', function(e){
+      if (window.innerWidth > 768) return;
+      e.preventDefault();
+      var open = li.classList.toggle('mobile-expanded');
+      toggle.textContent = open ? '−' : '+';
+    });
+  });
+  // close menu when a dropdown link is tapped
+  ul.querySelectorAll('.dropdown a').forEach(function(a){
+    a.addEventListener('click', function(){
+      if (window.innerWidth > 768) return;
+      btn.classList.remove('open');
+      ul.classList.remove('mobile-open');
+      document.body.style.overflow = '';
+    });
+  });
+})();
+</script>
+</body>
+</html>

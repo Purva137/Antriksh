@@ -1,0 +1,709 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Missions — Antriksh</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
+  :root { --black:#000000; --white:#ffffff; --red:#FC3D21; --blue:#06038D; }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  [id]{scroll-margin-top:100px;}
+  body{background:var(--black);color:var(--white);font-family:'Space Grotesk',sans-serif;overflow-x:hidden;}
+
+  #stars-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:20px 48px;background:rgba(0,0,0,0.92);border-bottom:1px solid rgba(255,255,255,0.06);}
+  .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.12em;color:var(--white);text-decoration:none;}
+  .nav-logo span{color:var(--red);}
+  .nav-links{display:flex;gap:36px;list-style:none;}
+  .nav-links li{position:relative;padding-bottom:20px;margin-bottom:-20px;}
+  .nav-links a{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.8);text-decoration:none;transition:color 0.3s;}
+  .nav-links a:hover{color:var(--white);}
+  .nav-links li:hover>.dropdown{opacity:1;pointer-events:all;transform:translateY(0);}
+  .dropdown{position:absolute;top:100%;left:0;background:rgba(5,5,10,0.97);border:1px solid rgba(255,255,255,0.08);border-top:2px solid var(--red);padding:16px 0;min-width:200px;opacity:0;pointer-events:none;transform:translateY(4px);transition:all 0.2s ease;z-index:200;}
+  .dropdown a{display:block;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.7)!important;padding:10px 20px;text-decoration:none;transition:all 0.2s;} .nav-links li:last-child>.dropdown{left:auto;right:0;}
+  .dropdown a:hover{color:var(--white)!important;background:rgba(252,61,33,0.08);padding-left:28px;}
+  .dropdown-header{color:var(--red)!important;padding:8px 20px 4px!important;}
+  .nav-live{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;color:var(--red);text-transform:uppercase;}
+  .live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.4);}}
+
+  .page-hero{position:relative;z-index:1;padding:140px 48px 60px;border-bottom:1px solid rgba(255,255,255,0.06);}
+  .page-tag{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:var(--red);margin-bottom:16px;}
+  .page-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(60px,8vw,100px);line-height:0.9;letter-spacing:0.02em;}
+  .page-desc{font-size:15px;color:rgba(255,255,255,0.65);margin-top:20px;max-width:560px;line-height:1.7;}
+
+  .filter-bar{position:relative;z-index:1;padding:28px 48px;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(0,0,0,0.5);}
+  .filter-btn{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;padding:10px 20px;border:1px solid rgba(255,255,255,0.15);background:transparent;color:rgba(255,255,255,0.65);cursor:pointer;transition:all 0.25s;}
+  .filter-btn:hover,.filter-btn.active{background:var(--red);border-color:var(--red);color:var(--white);}
+  .filter-count{font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.4);letter-spacing:0.1em;margin-left:auto;}
+
+  .missions-container{position:relative;z-index:1;padding:60px 48px 100px;}
+  .missions-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:2px;}
+
+  .mission-card{position:relative;background:#080808;border:1px solid rgba(255,255,255,0.04);overflow:hidden;cursor:pointer;transition:border-color 0.3s;}
+  .mission-card:hover{border-color:rgba(252,61,33,0.3);}
+  .mission-card-inner{padding:32px;}
+  .mission-card-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:20px;}
+  .mission-year{font-family:'Bebas Neue',sans-serif;font-size:48px;color:rgba(255,255,255,0.26);line-height:1;}
+  .mission-status{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;padding:5px 10px;border-radius:2px;}
+  .status-active{background:rgba(0,200,100,0.1);color:#00c864;border:1px solid rgba(0,200,100,0.2);}
+  .status-historic{background:rgba(6,3,141,0.2);color:rgba(150,150,255,0.8);border:1px solid rgba(6,3,141,0.3);}
+  .status-upcoming{background:rgba(252,61,33,0.1);color:var(--red);border:1px solid rgba(252,61,33,0.2);}
+  .mission-type{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--red);margin-bottom:8px;}
+  .mission-name{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:0.04em;line-height:1;margin-bottom:12px;}
+  .mission-desc{font-size:13px;color:rgba(255,255,255,0.65);line-height:1.7;margin-bottom:24px;}
+  .mission-meta{display:flex;gap:24px;padding-top:20px;border-top:1px solid rgba(255,255,255,0.06);}
+  .meta-item{display:flex;flex-direction:column;gap:4px;}
+  .meta-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.45);}
+  .meta-value{font-family:'Space Mono',monospace;font-size:12px;color:rgba(255,255,255,0.7);}
+  .mission-arrow{position:absolute;bottom:32px;right:32px;width:36px;height:36px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;font-size:14px;opacity:0;transition:opacity 0.3s;text-decoration:none;color:var(--white);}
+  .mission-card:hover .mission-arrow{opacity:1;}
+  .mission-card-bar{height:2px;background:linear-gradient(to right,var(--red),var(--blue));transform:scaleX(0);transform-origin:left;transition:transform 0.4s ease;}
+  .mission-card:hover .mission-card-bar{transform:scaleX(1);}
+
+  .section-divider{position:relative;z-index:1;padding:20px 48px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;gap:16px;}
+  .divider-label{font-family:'Bebas Neue',sans-serif;font-size:32px;color:rgba(255,255,255,0.28);}
+  .divider-line{flex:1;height:1px;background:rgba(255,255,255,0.04);}
+
+  footer{position:relative;z-index:10;padding:40px 48px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;}
+  .footer-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.12em;color:rgba(255,255,255,0.3);}
+  .footer-logo span{color:rgba(252,61,33,0.2);}
+  .footer-credit{font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.35);}
+</style>
+<link rel="stylesheet" href="responsive.css">
+</head>
+<body>
+
+<canvas id="stars-canvas"></canvas>
+
+<nav>
+  <a href="index.html" class="nav-logo">ANTRIK<span>SH</span></a>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  <ul class="nav-links">
+    <li>
+      <a href="missions.html" style="color:var(--white);">Missions</a>
+      <div class="dropdown">
+        <a href="missions.html" class="dropdown-header">Missions →</a>
+        <a href="missions.html#active">Active Missions</a>
+        <a href="missions.html#completed">Completed Missions</a>
+        <a href="missions.html#upcoming">Upcoming Missions</a>
+        <a href="missions.html#human">Human Spaceflight</a>
+        <a href="missions.html#lunar">Lunar Missions</a>
+        <a href="missions.html#interplanetary">Interplanetary</a>
+      </div>
+    </li>
+    <li>
+      <a href="timeline.html">Timeline</a>
+      <div class="dropdown">
+        <a href="timeline.html" class="dropdown-header">Timeline →</a>
+        <a href="timeline.html#1960s">1960s — The Beginning</a>
+        <a href="timeline.html#1980s">1980s — First Launches</a>
+        <a href="timeline.html#2000s">2000s — Moon & Beyond</a>
+        <a href="timeline.html#2020s">2020s — New Frontiers</a>
+        <a href="timeline.html#2030">2030+ — Future Missions</a>
+      </div>
+    </li>
+    <li><a href="rockets.html">Rockets</a>
+      <div class="dropdown">
+        <a href="rockets.html" class="dropdown-header">Launch Vehicles →</a>
+        <a href="rockets.html#pslv">PSLV</a>
+        <a href="rockets.html#gslv">GSLV</a>
+        <a href="rockets.html#lvm3">LVM3 / HLVM3</a>
+        <a href="rockets.html#sslv">SSLV</a>
+        <a href="rockets.html#rlv">RLV (Reusable)</a>
+      </div>
+    </li>
+    <li><a href="heroes.html">Heroes</a>
+      <div class="dropdown">
+        <a href="heroes.html" class="dropdown-header">Science Heroes →</a>
+        <a href="heroes.html#sarabhai">Vikram Sarabhai</a>
+        <a href="heroes.html#kalam">A.P.J. Abdul Kalam</a>
+        <a href="heroes.html#karidhal">Ritu Karidhal</a>
+        <a href="heroes.html#somanath">S. Somanath</a>
+        <a href="heroes.html">All Scientists</a>
+      </div>
+    </li>
+    <li><a href="isropedia.html">ISRO-pedia</a>
+      <div class="dropdown">
+        <a href="isropedia.html" class="dropdown-header">ISRO-pedia →</a>
+        <a href="isropedia.html#eli5">Space Concepts ELI5</a>
+        <a href="isropedia.html#rockets">How Rockets Work</a>
+        <a href="isropedia.html#orbital">Orbital Mechanics</a>
+        <a href="isropedia.html#career">How to Become a Scientist</a>
+        <a href="isropedia.html#glossary">ISRO Glossary</a>
+      </div>
+    </li>
+    <li><a href="eyes.html">Eyes on Space</a>
+      <div class="dropdown">
+        <a href="eyes.html" class="dropdown-header">Live Tracking →</a>
+        <a href="eyes.html#isro">Eyes on ISRO</a>
+        <a href="eyes.html#space">Eyes on Space</a>
+        <a href="eyes.html#iss">ISS Live Position</a>
+        <a href="pragyan.html">Pragyan's Walk</a>
+        <a href="nextlaunch.html">Next Launch</a>
+      </div>
+    <li>
+      <a href="applications.html">ISRO Today</a>
+      <div class="dropdown">
+        <a href="applications.html" class="dropdown-header">ISRO Today →</a>
+        <a href="applications.html">Space Applications</a>
+        <a href="launch-services.html">Launch Services</a>
+        <a href="about.html">About Antriksh</a>
+      </div>
+    </li>
+  </ul>
+</nav>
+
+<div class="page-hero">
+  <div class="page-tag">ISRO Mission Archive</div>
+  <h1 class="page-title">India's<br>Missions</h1>
+  <p class="page-desc">133+ spacecraft missions. 104+ launches. From a borrowed bicycle to the Moon's south pole — every mission, every discovery, right here.</p>
+</div>
+
+<div class="filter-bar">
+  <button class="filter-btn active" onclick="filterMissions('all', this)">All</button>
+  <button class="filter-btn" id="active" onclick="filterMissions('active', this)">Active</button>
+  <button class="filter-btn" id="upcoming" onclick="filterMissions('upcoming', this)">Upcoming</button>
+  <button class="filter-btn" id="completed" onclick="filterMissions('pioneer', this)">Pioneers</button>
+  <button class="filter-btn" id="lunar" onclick="filterMissions('lunar', this)">Lunar</button>
+  <button class="filter-btn" id="interplanetary" onclick="filterMissions('mars', this)">Mars</button>
+  <button class="filter-btn" onclick="filterMissions('solar', this)">Solar</button>
+  <button class="filter-btn" id="human" onclick="filterMissions('human', this)">Human Spaceflight</button>
+  <button class="filter-btn" onclick="filterMissions('earth', this)">Earth Observation</button>
+  <button class="filter-btn" onclick="filterMissions('navigation', this)">Navigation</button>
+  <button class="filter-btn" onclick="filterMissions('science', this)">Space Science</button>
+  <button class="filter-btn" onclick="filterMissions('communication', this)">Communication</button>
+  <span class="filter-count" id="mission-count">Showing all missions</span>
+  <span class="tap-hint" id="tap-hint" style="display:none;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.1em;color:rgba(255,255,255,0.4);margin-left:8px;">· tap a card to view full details</span>
+  <script>if('ontouchstart' in window) document.getElementById('tap-hint').style.display='inline';</script>
+</div>
+
+<div class="missions-container">
+  <div class="missions-grid" id="missions-grid">
+
+    <div class="mission-card" data-category="human upcoming">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2027</div>
+          <span class="mission-status status-upcoming">Upcoming</span>
+        </div>
+        <div class="mission-type">Human Spaceflight · Low Earth Orbit</div>
+        <div class="mission-name">Gaganyaan</div>
+        <div class="mission-desc">India's first crewed orbital spacecraft. Three astronauts to 400km orbit for 3 days. The mission that defines a generation.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Launch Vehicle</span><span class="meta-value">HLVM3</span></div>
+          <div class="meta-item"><span class="meta-label">Orbit</span><span class="meta-value">400 km LEO</span></div>
+          <div class="meta-item"><span class="meta-label">Crew</span><span class="meta-value">3 Astronauts</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-gaganyaan.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="solar active">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2023</div>
+          <span class="mission-status status-active">Active</span>
+        </div>
+        <div class="mission-type">Solar Science · L1 Point</div>
+        <div class="mission-name">Aditya-L1</div>
+        <div class="mission-desc">India's first solar observatory at Lagrange Point 1 — continuously studying the Sun's corona, solar winds, and space weather.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Launch Vehicle</span><span class="meta-value">PSLV-C57</span></div>
+          <div class="meta-item"><span class="meta-label">Location</span><span class="meta-value">L1 Point</span></div>
+          <div class="meta-item"><span class="meta-label">Distance</span><span class="meta-value">1.5M km</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-adityal1.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="lunar historic">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2023_CH3</div>
+          <span class="mission-status status-historic">Historic</span>
+        </div>
+        <div class="mission-type">Lunar · South Pole Landing</div>
+        <div class="mission-name">Chandrayaan-3</div>
+        <div class="mission-desc">First nation to land on Moon's south pole. Discovered sulfur, moonquakes, and evidence of water ice. Vikram lander. Pragyan rover.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Landing</span><span class="meta-value">Aug 23, 2023</span></div>
+          <div class="meta-item"><span class="meta-label">Location</span><span class="meta-value">South Pole</span></div>
+          <div class="meta-item"><span class="meta-label">Rover Walk</span><span class="meta-value">100+ metres</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-chandrayaan3.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="active earth">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2019</div>
+          <span class="mission-status status-active">Active</span>
+        </div>
+        <div class="mission-type">Lunar Orbit · Earth Observation</div>
+        <div class="mission-name">Chandrayaan-2 Orbiter</div>
+        <div class="mission-desc">The orbiter continues mapping the Moon from above, with 8 scientific instruments still operational — far exceeding its planned mission life.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Launch</span><span class="meta-value">Jul 22, 2019</span></div>
+          <div class="meta-item"><span class="meta-label">Status</span><span class="meta-value">Operational</span></div>
+          <div class="meta-item"><span class="meta-label">Orbit</span><span class="meta-value">Lunar</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-chandrayaan2.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="mars historic">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2013</div>
+          <span class="mission-status status-historic">Historic</span>
+        </div>
+        <div class="mission-type">Interplanetary · Mars Orbit</div>
+        <div class="mission-name">Mangalyaan</div>
+        <div class="mission-desc">First Asian nation to reach Mars. First attempt globally to succeed. Built in 15 months. Cost less than the film Gravity. India's Mars moment.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Mars Arrival</span><span class="meta-value">Sep 24, 2014</span></div>
+          <div class="meta-item"><span class="meta-label">Cost</span><span class="meta-value">₹450 Crore</span></div>
+          <div class="meta-item"><span class="meta-label">Duration</span><span class="meta-value">6+ months</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-mangalyaan.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="lunar historic">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2008</div>
+          <span class="mission-status status-historic">Historic</span>
+        </div>
+        <div class="mission-type">Lunar · Orbiter + Impactor</div>
+        <div class="mission-name">Chandrayaan-1</div>
+        <div class="mission-desc">India's first lunar mission. Discovered water molecules on the Moon's surface — one of the most significant lunar discoveries in decades.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Launch</span><span class="meta-value">Oct 22, 2008</span></div>
+          <div class="meta-item"><span class="meta-label">Discovery</span><span class="meta-value">Water on Moon</span></div>
+          <div class="meta-item"><span class="meta-label">Orbits</span><span class="meta-value">3,400+</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-chandrayaan1.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="navigation active">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2016</div>
+          <span class="mission-status status-active">Active</span>
+        </div>
+        <div class="mission-type">Navigation · Indian GPS</div>
+        <div class="mission-name">NavIC (IRNSS)</div>
+        <div class="mission-desc">India's own GPS system — 7 satellites providing accurate positioning across India and 1,500 km beyond its borders. India's independent navigation.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Satellites</span><span class="meta-value">7 Active</span></div>
+          <div class="meta-item"><span class="meta-label">Coverage</span><span class="meta-value">India + 1500km</span></div>
+          <div class="meta-item"><span class="meta-label">Accuracy</span><span class="meta-value">&lt;20 metres</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-navic.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="navigation active">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2025</div>
+          <span class="mission-status status-active">Active</span>
+        </div>
+        <div class="mission-type">Navigation · NavIC 2.0</div>
+        <div class="mission-name">NVS-02</div>
+        <div class="mission-desc">Second-generation NavIC satellite launched January 24, 2025. Adds L1 band for global receiver compatibility. Indigenous atomic clocks. Replaces IRNSS-1E at 111.75°E GSO.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Launch</span><span class="meta-value">Jan 24, 2025</span></div>
+          <div class="meta-item"><span class="meta-label">Vehicle</span><span class="meta-value">GSLV-F15</span></div>
+          <div class="meta-item"><span class="meta-label">Orbit</span><span class="meta-value">111.75°E GSO</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-nvs02.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="earth active">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2025</div>
+          <span class="mission-status status-active">Active</span>
+        </div>
+        <div class="mission-type">Earth Observation · Radar</div>
+        <div class="mission-name">NISAR</div>
+        <div class="mission-desc">Joint ISRO-NASA synthetic aperture radar satellite. Maps Earth's surface every 12 days. Tracks disasters, ice sheets, ecosystem changes globally.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Partner</span><span class="meta-value">NASA + ISRO</span></div>
+          <div class="meta-item"><span class="meta-label">Launch</span><span class="meta-value">Jul 2025</span></div>
+          <div class="meta-item"><span class="meta-label">Resolution</span><span class="meta-value">3–10 metres</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-nisar.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="earth active">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2022</div>
+          <span class="mission-status status-active">Active</span>
+        </div>
+        <div class="mission-type">X-Ray Astronomy · Space Science</div>
+        <div class="mission-name">XPoSat</div>
+        <div class="mission-desc">India's first X-ray polarimetry mission. Studies pulsars, black holes, and active galactic nuclei in a way no other observatory has before.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Launch</span><span class="meta-value">Jan 1, 2024</span></div>
+          <div class="meta-item"><span class="meta-label">Studies</span><span class="meta-value">Black Holes</span></div>
+          <div class="meta-item"><span class="meta-label">Orbit</span><span class="meta-value">650 km LEO</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-xposat.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="upcoming lunar">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2027</div>
+          <span class="mission-status status-upcoming">Upcoming</span>
+        </div>
+        <div class="mission-type">Lunar · Sample Return</div>
+        <div class="mission-name">Chandrayaan-4</div>
+        <div class="mission-desc">India's most ambitious lunar mission — land, collect samples from the Moon's surface, and return them to Earth. A first for India.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Goal</span><span class="meta-value">Sample Return</span></div>
+          <div class="meta-item"><span class="meta-label">Launch</span><span class="meta-value">2027 (est.)</span></div>
+          <div class="meta-item"><span class="meta-label">Partner</span><span class="meta-value">JAXA (LUPEX)</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-chandrayaan4.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="upcoming">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2028</div>
+          <span class="mission-status status-upcoming">Upcoming</span>
+        </div>
+        <div class="mission-type">Space Station · Human Spaceflight</div>
+        <div class="mission-name">Bharatiya Antariksh Station</div>
+        <div class="mission-desc">India's own space station — planned for 2028–2035. 20 tonnes. 400 km orbit. Astronauts staying for 15–20 days in microgravity.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Weight</span><span class="meta-value">20 Tonnes</span></div>
+          <div class="meta-item"><span class="meta-label">Orbit</span><span class="meta-value">400 km</span></div>
+          <div class="meta-item"><span class="meta-label">Timeline</span><span class="meta-value">2028–2035</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-bas.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="historic earth">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2017</div>
+          <span class="mission-status status-historic">Historic</span>
+        </div>
+        <div class="mission-type">Record · PSLV-C37</div>
+        <div class="mission-name">104 Satellites in One Launch</div>
+        <div class="mission-desc">World record — 104 satellites launched in a single rocket in one go. A record that stunned the entire world and redefined ISRO's capabilities.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Satellites</span><span class="meta-value">104</span></div>
+          <div class="meta-item"><span class="meta-label">Date</span><span class="meta-value">Feb 15, 2017</span></div>
+          <div class="meta-item"><span class="meta-label">Record</span><span class="meta-value">World First</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-104satellites.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="historic pioneer">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">1975</div>
+          <span class="mission-status status-historic">Historic</span>
+        </div>
+        <div class="mission-type">Pioneer · India's First Satellite</div>
+        <div class="mission-name">Aryabhata</div>
+        <div class="mission-desc">India's very first satellite — named after the ancient mathematician. Launched by the Soviet Union. The moment India became a spacefaring nation.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Launch</span><span class="meta-value">Apr 19, 1975</span></div>
+          <div class="meta-item"><span class="meta-label">Weight</span><span class="meta-value">360 kg</span></div>
+          <div class="meta-item"><span class="meta-label">Partner</span><span class="meta-value">Soviet Union</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-aryabhata.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="historic pioneer">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">1981</div>
+          <span class="mission-status status-historic">Historic</span>
+        </div>
+        <div class="mission-type">Pioneer · Experimental Communication</div>
+        <div class="mission-name">APPLE</div>
+        <div class="mission-desc">India's first experimental communication satellite — famously transported to the launch site on a bullock cart. A symbol of India's jugaad spirit in space.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Launch</span><span class="meta-value">Jun 19, 1981</span></div>
+          <div class="meta-item"><span class="meta-label">Type</span><span class="meta-value">Geostationary</span></div>
+          <div class="meta-item"><span class="meta-label">Legacy</span><span class="meta-value">Bullock Cart Launch</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-apple.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="historic pioneer">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">1980</div>
+          <span class="mission-status status-historic">Historic</span>
+        </div>
+        <div class="mission-type">Pioneer · First Indian Rocket</div>
+        <div class="mission-name">Rohini (SLV-3)</div>
+        <div class="mission-desc">First satellite launched by India's own rocket SLV-3. A young A.P.J. Abdul Kalam led the mission. India entered the elite club of space-launch nations.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Launch</span><span class="meta-value">Jul 18, 1980</span></div>
+          <div class="meta-item"><span class="meta-label">Led by</span><span class="meta-value">APJ Abdul Kalam</span></div>
+          <div class="meta-item"><span class="meta-label">Rocket</span><span class="meta-value">SLV-3</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-rohini.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="science active">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2015</div>
+          <span class="mission-status status-active">Active</span>
+        </div>
+        <div class="mission-type">Space Science · Multi-Wavelength Observatory</div>
+        <div class="mission-name">AstroSat</div>
+        <div class="mission-desc">India's own space telescope — studies black holes, neutron stars, and galaxies simultaneously in X-ray and UV light. India's Hubble.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Launch</span><span class="meta-value">Sep 28, 2015</span></div>
+          <div class="meta-item"><span class="meta-label">Orbit</span><span class="meta-value">650 km LEO</span></div>
+          <div class="meta-item"><span class="meta-label">Studies</span><span class="meta-value">Black Holes, Stars</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-astrosat.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="upcoming science">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2028</div>
+          <span class="mission-status status-upcoming">Upcoming</span>
+        </div>
+        <div class="mission-type">Interplanetary · Venus Orbiter</div>
+        <div class="mission-name">Shukrayaan</div>
+        <div class="mission-desc">India's first mission to Venus — studying the planet's thick atmosphere, surface, and volcanic activity. ISRO's next interplanetary frontier.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Target</span><span class="meta-value">Venus</span></div>
+          <div class="meta-item"><span class="meta-label">Type</span><span class="meta-value">Orbiter</span></div>
+          <div class="meta-item"><span class="meta-label">Launch</span><span class="meta-value">2028 (est.)</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-shukrayaan.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="earth active communication">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2000–</div>
+          <span class="mission-status status-active">Active</span>
+        </div>
+        <div class="mission-type">Communication · GSAT Series</div>
+        <div class="mission-name">GSAT / INSAT Series</div>
+        <div class="mission-desc">The satellites powering India's TV, radio, internet, and DTH services. 20+ active satellites. Every time you watch TV or use the internet in India — this is why.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Active Sats</span><span class="meta-value">20+</span></div>
+          <div class="meta-item"><span class="meta-label">Coverage</span><span class="meta-value">All of India</span></div>
+          <div class="meta-item"><span class="meta-label">Use</span><span class="meta-value">TV, Internet, DTH</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-gsat.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="earth active">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2003–</div>
+          <span class="mission-status status-active">Active</span>
+        </div>
+        <div class="mission-type">Earth Observation · Agriculture & Mapping</div>
+        <div class="mission-name">Resourcesat / Cartosat</div>
+        <div class="mission-desc">The satellites that map India from space. Used for agriculture monitoring, disaster management, urban planning, and Google Maps-quality imagery of India.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Resolution</span><span class="meta-value">0.25 metres</span></div>
+          <div class="meta-item"><span class="meta-label">Use</span><span class="meta-value">Farming, Maps</span></div>
+          <div class="meta-item"><span class="meta-label">Series</span><span class="meta-value">Cartosat 1–3</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-resourcesat.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="earth active">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">1999–</div>
+          <span class="mission-status status-active">Active</span>
+        </div>
+        <div class="mission-type">Earth Observation · Ocean Science</div>
+        <div class="mission-name">Oceansat Series</div>
+        <div class="mission-desc">Monitors India's oceans — sea surface temperature, wind speed, and ocean colour. Critical for fishermen, cyclone prediction, and climate research.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Monitors</span><span class="meta-value">Indian Ocean</span></div>
+          <div class="meta-item"><span class="meta-label">Helps</span><span class="meta-value">Fishermen, Weather</span></div>
+          <div class="meta-item"><span class="meta-label">Series</span><span class="meta-value">Oceansat 1–3</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-oceansat.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="upcoming science">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2024</div>
+          <span class="mission-status status-historic">Completed</span>
+        </div>
+        <div class="mission-type">Technology Demo · Space Docking</div>
+        <div class="mission-name">SpaDeX</div>
+        <div class="mission-desc">India successfully docked two satellites in space — joining USA, Russia, and China in this elite capability. Essential for future space stations and Moon missions.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Achievement</span><span class="meta-value">Space Docking</span></div>
+          <div class="meta-item"><span class="meta-label">Date</span><span class="meta-value">Early 2025</span></div>
+          <div class="meta-item"><span class="meta-label">Nations</span><span class="meta-value">4th in World</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-spadex.html" class="mission-arrow">→</a>
+    </div>
+
+    <div class="mission-card" data-category="upcoming science">
+      <div class="mission-card-bar"></div>
+      <div class="mission-card-inner">
+        <div class="mission-card-header">
+          <div class="mission-year">2016–</div>
+          <span class="mission-status status-active">Active</span>
+        </div>
+        <div class="mission-type">Technology · Reusable Launch Vehicle</div>
+        <div class="mission-name">RLV-TD</div>
+        <div class="mission-desc">India's reusable rocket program — a winged vehicle that can return and land like a plane. ISRO's answer to SpaceX. Tested successfully, full version in development.</div>
+        <div class="mission-meta">
+          <div class="meta-item"><span class="meta-label">Type</span><span class="meta-value">Winged Vehicle</span></div>
+          <div class="meta-item"><span class="meta-label">Goal</span><span class="meta-value">Reusable Launch</span></div>
+          <div class="meta-item"><span class="meta-label">Status</span><span class="meta-value">In Development</span></div>
+        </div>
+      </div>
+      <a href="./data/mission-rlv.html" class="mission-arrow">→</a>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <a href="index.html" class="footer-logo">ANTRIK<span>SH</span></a>
+  <div class="footer-credit">Data sourced from ISRO open data</div>
+</footer>
+
+<script>
+const sc = document.getElementById('stars-canvas');
+const sCtx = sc.getContext('2d');
+sc.width = window.innerWidth; sc.height = window.innerHeight;
+const stars = Array.from({length:250},()=>({x:Math.random()*sc.width,y:Math.random()*sc.height,r:Math.random()*1.1,phase:Math.random()*Math.PI*2,speed:Math.random()*0.003+0.001}));
+function drawStars(t){sCtx.clearRect(0,0,sc.width,sc.height);stars.forEach(s=>{const a=0.2+0.4*Math.sin(t*s.speed+s.phase);sCtx.beginPath();sCtx.arc(s.x,s.y,s.r,0,Math.PI*2);sCtx.fillStyle=`rgba(255,255,255,${a})`;sCtx.fill();});requestAnimationFrame(drawStars);}
+requestAnimationFrame(drawStars);
+window.addEventListener('resize',()=>{sc.width=window.innerWidth;sc.height=window.innerHeight;});
+
+function filterMissions(cat, btn) {
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const cards = document.querySelectorAll('.mission-card');
+  let count = 0;
+  cards.forEach(card => {
+    const cats = card.dataset.category || '';
+    const show = cat === 'all' || cats.includes(cat);
+    card.style.display = show ? 'block' : 'none';
+    if(show) count++;
+  });
+  document.getElementById('mission-count').textContent = cat === 'all' ? `Showing all missions` : `Showing ${count} missions`;
+}
+
+// apply filter from URL hash on load and hash change
+(function() {
+  const hashFilter = { active:'active', completed:'pioneer', upcoming:'upcoming', human:'human', lunar:'lunar', interplanetary:'mars' };
+  function applyHashFilter() {
+    const hash = location.hash.slice(1);
+    const cat = hashFilter[hash];
+    if (!cat) return;
+    const btn = document.getElementById(hash);
+    if (btn) { filterMissions(cat, btn); btn.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+  }
+  applyHashFilter();
+  window.addEventListener('hashchange', applyHashFilter);
+})();
+
+const obs = new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';}});},{threshold:0.05});
+document.querySelectorAll('.mission-card').forEach((el,i)=>{el.style.opacity='0';el.style.transform='translateY(24px)';el.style.transition=`opacity 0.6s ease ${i*0.05}s, transform 0.6s ease ${i*0.05}s`;obs.observe(el);});
+</script>
+<script>
+(function(){
+  var btn = document.getElementById('nav-hamburger');
+  var ul = document.querySelector('.nav-links');
+  if (!btn || !ul) return;
+  btn.addEventListener('click', function(){
+    btn.classList.toggle('open');
+    ul.classList.toggle('mobile-open');
+    document.body.style.overflow = ul.classList.contains('mobile-open') ? 'hidden' : '';
+  });
+  ul.querySelectorAll('li').forEach(function(li){
+    if (!li.querySelector('.dropdown')) return;
+    li.classList.add('has-dropdown');
+    var topLink = li.querySelector(':scope > a');
+    var toggle = document.createElement('span');
+    toggle.className = 'nav-toggle';
+    toggle.textContent = '+';
+    if (topLink) topLink.appendChild(toggle);
+    topLink && topLink.addEventListener('click', function(e){
+      if (window.innerWidth > 768) return;
+      e.preventDefault();
+      var open = li.classList.toggle('mobile-expanded');
+      toggle.textContent = open ? '−' : '+';
+    });
+  });
+  // close menu when a dropdown link is tapped
+  ul.querySelectorAll('.dropdown a').forEach(function(a){
+    a.addEventListener('click', function(){
+      if (window.innerWidth > 768) return;
+      btn.classList.remove('open');
+      ul.classList.remove('mobile-open');
+      document.body.style.overflow = '';
+    });
+  });
+})();
+</script>
+</body>
+</html>

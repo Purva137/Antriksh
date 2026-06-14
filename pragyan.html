@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Pragyan's Walk — The First Steps</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:#000;color:#fff;font-family:'Space Grotesk',sans-serif;overflow-x:hidden}
+
+#canvas-wrap{position:fixed;inset:0;z-index:0}
+canvas{display:block;width:100%!important;height:100%!important}
+
+#scroll-driver{position:relative;z-index:1;pointer-events:none}
+.scroll-section{height:100vh;display:flex;align-items:center;padding:0 80px}
+
+#progress{position:fixed;left:0;top:0;height:2px;z-index:200;background:#00C8FF;width:0%}
+
+/* ── Top bar ── */
+#topbar{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:20px 40px;
+  background:linear-gradient(to bottom,rgba(0,0,0,.85),transparent);
+}
+.tb-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:.15em;color:#fff}
+.tb-title span{color:#00C8FF}
+.tb-nav{display:flex;gap:12px}
+.tb-btn{
+  font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.1em;
+  color:rgba(255,255,255,.5);text-decoration:none;
+  border:1px solid rgba(255,255,255,.12);padding:6px 14px;border-radius:2px;
+  transition:color .2s,border-color .2s;
+}
+.tb-btn:hover{color:#00C8FF;border-color:#00C8FF}
+
+/* ── Rover HUD ── */
+#rover-hud{
+  position:fixed;bottom:40px;left:50%;transform:translateX(-50%);
+  z-index:100;text-align:center;pointer-events:none;
+}
+#rov-odometer{
+  font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;
+  color:rgba(255,255,255,.35);margin-bottom:4px;
+}
+#rov-discovery{
+  font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:.08em;
+  color:#fff;text-shadow:0 0 30px rgba(0,200,255,.5);
+  transition:opacity .5s;
+}
+#rov-sub{
+  font-family:'Space Mono',monospace;font-size:10px;letter-spacing:.1em;
+  color:#00C8FF;margin-top:6px;
+}
+
+/* ── Telemetry ── */
+#telem{
+  position:fixed;top:90px;left:40px;z-index:100;
+  font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.08em;
+  color:rgba(255,255,255,.3);line-height:1.9;pointer-events:none;
+}
+#telem span{color:rgba(255,255,255,.7)}
+
+/* ── Info card ── */
+.info-card{
+  max-width:360px;
+  background:rgba(4,4,16,.85);
+  border:1px solid rgba(0,200,255,.1);
+  border-left:2px solid #00C8FF;
+  padding:28px 28px 24px;
+  backdrop-filter:blur(16px);
+  pointer-events:all;
+}
+.card-phase{
+  font-family:'Space Mono',monospace;font-size:7px;letter-spacing:.2em;
+  text-transform:uppercase;color:#00C8FF;margin-bottom:10px;
+}
+.card-title{
+  font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.08em;
+  color:#fff;margin-bottom:10px;line-height:1;
+}
+.card-body{
+  font-size:12px;line-height:1.7;color:rgba(255,255,255,.65);
+}
+.card-stat{
+  display:flex;gap:8px;align-items:baseline;
+  margin-top:14px;padding-top:14px;
+  border-top:1px solid rgba(0,200,255,.08);
+}
+.stat-val{font-family:'Space Mono',monospace;font-size:18px;color:#fff}
+.stat-unit{font-family:'Space Mono',monospace;font-size:8px;color:rgba(255,255,255,.35);letter-spacing:.1em}
+
+/* ── Wheel tracks ── */
+#tracks-canvas{
+  position:fixed;inset:0;z-index:2;pointer-events:none;opacity:0.3;
+}
+
+/* ── Final banner ── */
+#final-banner{
+  position:fixed;inset:0;z-index:150;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  pointer-events:none;opacity:0;transition:opacity 1.2s;
+}
+#final-banner.show{opacity:1}
+#final-banner.hide{opacity:0!important}
+#fb-line1{font-family:'Bebas Neue',sans-serif;font-size:70px;letter-spacing:.1em;color:#00C8FF;text-shadow:0 0 30px #00C8FF,0 0 60px #00C8FF,0 0 100px #0088ff}
+#fb-line2{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:.3em;color:#00C8FF;margin-top:8px;text-shadow:0 0 15px #00C8FF,0 0 30px #00C8FF}
+#fb-stat{
+  font-family:'Space Mono',monospace;font-size:9px;letter-spacing:.2em;
+  color:rgba(0,200,255,.8);margin-top:20px;line-height:2;
+}
+
+#scroll-hint{
+  position:fixed;bottom:30px;right:40px;z-index:100;
+  font-family:'Space Mono',monospace;font-size:8px;letter-spacing:.15em;
+  color:rgba(255,255,255,.25);
+  display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+#scroll-hint svg{animation:bounce 2s ease infinite}
+@keyframes bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(6px)}}
+
+</style>
+<link rel="stylesheet" href="responsive.css">
+</head>
+<body>
+
+
+
+<div id="progress"></div>
+
+<div id="topbar">
+  <div class="tb-title"><a href="index.html" style="text-decoration: none; color: white;">ANTRIK<span>SH</span></a>&nbsp;·&nbsp; PRAGYAN'S WALK</div>
+  <div class="tb-nav">
+    <a href="./vikram.html" class="tb-btn">VIKRAM DESCENT</a>
+    <a href="./eyes.html"   class="tb-btn">← BACK TO SPACE</a>
+  </div>
+</div>
+
+<div id="telem">
+  MISSION &nbsp;<span>CHANDRAYAAN-3</span><br>
+  VEHICLE &nbsp;<span>PRAGYAN ROVER</span><br>
+  POWER &nbsp;&nbsp;&nbsp;<span>SOLAR · 50W</span><br>
+  SPEED &nbsp;&nbsp;&nbsp;<span>1 CM/S</span><br>
+  DIST &nbsp;&nbsp;&nbsp;&nbsp;<span id="t-dist">0 M</span><br>
+  SOL &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span id="t-sol">SOL 1</span>
+</div>
+
+<div id="rover-hud">
+  <div id="rov-odometer">DISCOVERY 01 / 06</div>
+  <div id="rov-discovery">RAMP DEPLOYMENT</div>
+  <div id="rov-sub">SOL 1 · SHIV SHAKTI POINT</div>
+</div>
+
+<div id="scroll-hint">
+  SCROLL
+  <svg width="12" height="18" viewBox="0 0 12 18" fill="none">
+    <path d="M6 0v14M1 9l5 5 5-5" stroke="rgba(255,255,255,.25)" stroke-width="1.2"/>
+  </svg>
+</div>
+
+<div id="canvas-wrap"></div>
+<canvas id="tracks-canvas"></canvas>
+
+<!-- Scroll sections — rover discoveries -->
+<div id="scroll-driver">
+  <div class="scroll-section" data-phase="0" style="justify-content:flex-end;padding-right:80px">
+    <div class="info-card">
+      <div class="card-phase">SOL 1 · 24 AUG 2023</div>
+      <div class="card-title">RAMP DEPLOYED</div>
+      <div class="card-body">
+        Two hours after Vikram's touchdown, a ramp unfolds from the lander's belly. Pragyan — meaning "wisdom" in Sanskrit — rolls onto the Moon's surface at 1 cm per second. India's first rover leaves its mark on the lunar south pole.
+      </div>
+      <div class="card-stat">
+        <div><div class="stat-val">6</div><div class="stat-unit">WHEELS</div></div>
+        <div style="margin-left:24px"><div class="stat-val">26</div><div class="stat-unit">KG MASS</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-section" data-phase="1">
+    <div class="info-card">
+      <div class="card-phase">SOL 2 · LIBS INSTRUMENT</div>
+      <div class="card-title">SULFUR CONFIRMED</div>
+      <div class="card-body">
+        Pragyan's Laser-Induced Breakdown Spectroscope (LIBS) fires high-energy laser pulses at the regolith. The plasma emission reveals sulfur, aluminium, calcium, iron, chromium, titanium, manganese and oxygen — and notably, hydrogen is being searched.
+      </div>
+      <div class="card-stat">
+        <div><div class="stat-val">S</div><div class="stat-unit">SULFUR · FIRST DETECT</div></div>
+        <div style="margin-left:24px"><div class="stat-val">532</div><div class="stat-unit">nm LASER</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-section" data-phase="2" style="justify-content:flex-end;padding-right:80px">
+    <div class="info-card">
+      <div class="card-phase">SOL 3 · APXS INSTRUMENT</div>
+      <div class="card-title">ELEMENTAL MAPPING</div>
+      <div class="card-body">
+        The Alpha Particle X-ray Spectrometer (APXS) is deployed against the surface. It fires alpha particles and measures backscattered X-rays to map elemental composition in detail — confirming the unique geochemistry of the lunar south pole.
+      </div>
+      <div class="card-stat">
+        <div><div class="stat-val">10</div><div class="stat-unit">ELEMENTS MAPPED</div></div>
+        <div style="margin-left:24px"><div class="stat-val">14h</div><div class="stat-unit">MEASUREMENT</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-section" data-phase="3">
+    <div class="info-card">
+      <div class="card-phase">SOL 4 · CRATER AVOIDANCE</div>
+      <div class="card-title">PATH REPLANNED</div>
+      <div class="card-body">
+        Pragyan detects a 4-metre wide crater directly in its path. Onboard navigation autonomously replans the route, backing up 2 metres and curving around the hazard — a first for any Indian rover. Safety protocols execute flawlessly.
+      </div>
+      <div class="card-stat">
+        <div><div class="stat-val">4 m</div><div class="stat-unit">CRATER WIDTH</div></div>
+        <div style="margin-left:24px"><div class="stat-val">AUTO</div><div class="stat-unit">AVOIDANCE</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-section" data-phase="4" style="justify-content:flex-end;padding-right:80px">
+    <div class="info-card">
+      <div class="card-phase">SOL 8 · TEMPERATURE DATA</div>
+      <div class="card-title">COLD MOON</div>
+      <div class="card-body">
+        ChaSTE (Chandra's Surface Thermo Physical Experiment) on Vikram measures a surface temperature of +50°C in sunlight — but just 8 cm below, it plunges to −10°C. The thermal gradient is far steeper than scientists expected.
+      </div>
+      <div class="card-stat">
+        <div><div class="stat-val">+50°C</div><div class="stat-unit">SURFACE</div></div>
+        <div style="margin-left:24px"><div class="stat-val">−10°C</div><div class="stat-unit">8cm DEPTH</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="scroll-section" data-phase="5" style="height:100vh;justify-content:center;align-items:flex-end;padding-bottom:80px">
+    <div class="info-card" id="card-last" style="transition:opacity 0.5s">
+      <div class="card-phase">SOL 14 · 2 SEP 2023 · SAFE SLEEP</div>
+      <div class="card-title">INTO SLUMBER</div>
+      <div class="card-body">
+        After 14 Earth days of operations covering 100+ metres, lunar night falls at the south pole. Temperatures drop to −200°C — far beyond Pragyan's operating range. ISRO powers the rover down in safe mode, hoping solar panels will wake it when the Sun returns. Pragyan has already made history.
+      </div>
+      <div class="card-stat">
+        <div><div class="stat-val">100+</div><div class="stat-unit">METRES DRIVEN</div></div>
+        <div style="margin-left:24px"><div class="stat-val">14</div><div class="stat-unit">EARTH DAYS</div></div>
+      </div>
+    </div>
+  </div>
+  <!-- Extra space: banner + free camera exploration -->
+  <div style="height:100vh"></div>
+</div>
+
+<div id="final-banner">
+  <div id="fb-line1">WISDOM WALKS THE MOON</div>
+  <div id="fb-line2">100+ METRES · 14 EARTH DAYS</div>
+  <div id="fb-stat">
+    SULFUR · ALUMINIUM · CALCIUM · IRON · CHROMIUM · TITANIUM · MANGANESE · OXYGEN<br>
+    PRAGYAN ROVER · CHANDRAYAAN-3 · INDIA · 2023
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+<script>
+
+const renderer = new THREE.WebGLRenderer({ antialias:true, logarithmicDepthBuffer:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+document.getElementById('canvas-wrap').appendChild(renderer.domElement);
+
+const scene  = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(45, innerWidth/innerHeight, 0.0001, 5000);
+
+// OrbitControls — disabled until final section
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.enabled = false;
+controls.target.set(0, 0.08, 0);
+controls.minDistance = 0.1;
+controls.maxDistance = 400;
+
+
+const sun = new THREE.DirectionalLight(0xfff8e7, 2.5);
+sun.position.set(8, 6, 4);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048,2048);
+scene.add(sun);
+scene.add(new THREE.AmbientLight(0x112233, 0.5));
+
+// Soft fill from lunar surface reflection
+const fillLight = new THREE.HemisphereLight(0xaabbcc, 0x665544, 0.3);
+scene.add(fillLight);
+
+
+(function(){
+  const N=2500,pos=[],sz=[];
+  for(let i=0;i<N;i++){
+    const t=2*Math.PI*Math.random(),p=Math.acos(2*Math.random()-1),r=400+Math.random()*200;
+    pos.push(r*Math.sin(p)*Math.cos(t),r*Math.cos(p),r*Math.sin(p)*Math.sin(t));
+    sz.push(0.8+Math.random()*2.2);
+  }
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.Float32BufferAttribute(pos,3));
+  geo.setAttribute('size',new THREE.Float32BufferAttribute(sz,1));
+  const mat=new THREE.ShaderMaterial({
+    vertexShader:`attribute float size;void main(){gl_PointSize=size;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}`,
+    fragmentShader:`void main(){float d=length(gl_PointCoord-.5);if(d>.5)discard;gl_FragColor=vec4(1.,1.,1.,1.-smoothstep(.15,.5,d));}`,
+    transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+  });
+  const pts=new THREE.Points(geo,mat);pts.renderOrder=1;scene.add(pts);
+})();
+
+
+const MOON_R = 120; // large radius so surface looks flat
+const moonGeo = new THREE.SphereGeometry(MOON_R, 256, 256);
+const moonMat = new THREE.MeshLambertMaterial({
+  map: new THREE.TextureLoader().load('./textures/8k_moon.jpg'),
+});
+const moon = new THREE.Mesh(moonGeo, moonMat);
+moon.receiveShadow = true;
+moon.position.set(0, -MOON_R, 0); // surface at y=0
+scene.add(moon);
+
+
+const WAYPOINTS = [
+  { x: 0,    z: 0    },
+  { x: 0.4,  z:-0.3  },
+  { x: 0.8,  z:-0.5  },
+  { x: 0.6,  z:-0.9  }, // detour around crater
+  { x: 1.2,  z:-1.1  },
+  { x: 1.6,  z:-1.4  },
+];
+const ROVER_Y = 0.08; // sits on surface
+
+
+const rovGroup = new THREE.Group();
+rovGroup.position.set(0, ROVER_Y, 0);
+scene.add(rovGroup);
+
+// Fallback box while GLB loads
+const rovBox = new THREE.Mesh(
+  new THREE.BoxGeometry(0.2,0.08,0.26),
+  new THREE.MeshLambertMaterial({color:0xddcc88})
+);
+rovGroup.add(rovBox);
+
+// Wheels
+for(let i=0;i<6;i++){
+  const w=new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.04,0.04,12),new THREE.MeshLambertMaterial({color:0x445566}));
+  w.rotation.z=Math.PI/2;
+  const col=i<3?-0.12:0.12,row=[-0.1,0,0.1][i%3];
+  w.position.set(col,-.04,row*1.1);
+  rovGroup.add(w);
+}
+
+const _dracoLoader = new THREE.DRACOLoader();
+_dracoLoader.setDecoderPath('./draco/');
+const _gltfLoader = new THREE.GLTFLoader();
+_gltfLoader.setDRACOLoader(_dracoLoader);
+_gltfLoader.load('./models/pragyan_rover.glb', gltf=>{
+  rovBox.visible=false;
+  rovGroup.children.filter(c=>c!==rovBox).forEach(c=>rovGroup.remove(c));
+  const m=gltf.scene;
+  m.scale.setScalar(0.08);
+  m.traverse(c=>{if(c.isMesh){c.castShadow=true;c.receiveShadow=true;}});
+  rovGroup.add(m);
+}, null, ()=>{});
+
+// Solar panel glint sprite
+(function(){
+  const c=document.createElement('canvas');c.width=c.height=32;
+  const ctx=c.getContext('2d'),g=ctx.createRadialGradient(16,16,0,16,16,16);
+  g.addColorStop(0,'rgba(0,200,255,0.9)');g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=g;ctx.fillRect(0,0,32,32);
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,blending:THREE.AdditiveBlending,depthWrite:false}));
+  sp.scale.set(0.25,0.25,1);sp.position.set(0,0.15,0);
+  rovGroup.add(sp);
+})();
+
+
+const trackPts = [new THREE.Vector3(0, 0.001, 0)];
+const trackGeo = new THREE.BufferGeometry().setFromPoints(trackPts);
+const trackLine = new THREE.Line(trackGeo, new THREE.LineBasicMaterial({color:0x445566,transparent:true,opacity:0.7}));
+scene.add(trackLine);
+
+
+const PHASES = [
+  { dist:'0 M',   sol:'SOL 1',  disc:'01', name:'RAMP DEPLOYMENT',  sub:'SOL 1 · SHIV SHAKTI POINT',
+    camOff:[0,0.4,0.8], rovWP:0 },
+  { dist:'12 M',  sol:'SOL 2',  disc:'02', name:'SULFUR CONFIRMED', sub:'SOL 2 · LIBS INSTRUMENT',
+    camOff:[-0.2,0.35,0.7], rovWP:1 },
+  { dist:'25 M',  sol:'SOL 3',  disc:'03', name:'ELEMENTAL MAPPING',sub:'SOL 3 · APXS READING',
+    camOff:[0.2,0.3,0.65], rovWP:2 },
+  { dist:'38 M',  sol:'SOL 4',  disc:'04', name:'CRATER AVOIDED',   sub:'SOL 4 · AUTO REROUTE',
+    camOff:[0,0.35,0.7], rovWP:3 },
+  { dist:'70 M',  sol:'SOL 8',  disc:'05', name:'THERMAL DATA',     sub:'SOL 8 · CHASTE READING',
+    camOff:[-0.15,0.3,0.65], rovWP:4 },
+  { dist:'100+ M',sol:'SOL 14', disc:'06', name:'INTO SLUMBER',     sub:'SOL 14 · SAFE SLEEP',
+    camOff:[0.1,0.4,0.8], rovWP:5 },
+];
+
+
+let rovTarget  = {x:0, y:ROVER_Y, z:0};
+let camTarget  = {x:0, y:0.4,    z:0.8};
+let lookTarget = {x:0, y:0.1,    z:0};
+let finalShown = false;
+let wheelRot   = 0;
+
+const progressBar = document.getElementById('progress');
+const distEl      = document.getElementById('t-dist');
+const solEl       = document.getElementById('t-sol');
+const discNumEl   = document.getElementById('rov-odometer');
+const discNameEl  = document.getElementById('rov-discovery');
+const discSubEl   = document.getElementById('rov-sub');
+const finalBanner = document.getElementById('final-banner');
+
+function lerp(a,b,t){return a+(b-a)*t}
+function lerp3(a,b,t){return{x:lerp(a.x,b.x,t),y:lerp(a.y,b.y,t),z:lerp(a.z,b.z,t)}}
+
+window.addEventListener('scroll', onScroll);
+function onScroll() {
+  const maxS = document.body.scrollHeight - innerHeight;
+  const t    = maxS > 0 ? Math.min(window.scrollY / maxS, 1) : 0;
+  progressBar.style.width = (t*100)+'%';
+
+  const pT     = t * (PHASES.length-1);
+  const pIdx   = Math.min(Math.floor(pT), PHASES.length-2);
+  const pLocal = pT - pIdx;
+  const ph     = PHASES[pIdx];
+  const phNext = PHASES[pIdx+1] || ph;
+
+  // Update rover position along waypoints
+  const wpA = WAYPOINTS[ph.rovWP];
+  const wpB = WAYPOINTS[phNext.rovWP];
+  rovTarget = {
+    x: lerp(wpA.x, wpB.x, pLocal),
+    y: ROVER_Y,
+    z: lerp(wpA.z, wpB.z, pLocal),
+  };
+
+  // Camera follows rover with offset
+  const offA = ph.camOff, offB = phNext.camOff;
+  const off  = [lerp(offA[0],offB[0],pLocal), lerp(offA[1],offB[1],pLocal), lerp(offA[2],offB[2],pLocal)];
+  camTarget  = {x:rovTarget.x+off[0], y:rovTarget.y+off[1], z:rovTarget.z+off[2]};
+  lookTarget = {x:rovTarget.x, y:rovTarget.y+0.08, z:rovTarget.z};
+
+  // HUD
+  distEl.textContent    = ph.dist;
+  solEl.textContent     = ph.sol;
+  discNumEl.textContent = 'DISCOVERY '+ph.disc+' / 06';
+  discNameEl.textContent= ph.name;
+  discSubEl.textContent = ph.sub;
+
+  const cardLast = document.getElementById('card-last');
+  if (t > 0.88) {
+    const bt = Math.min((t - 0.88) / 0.08, 1);
+    if(cardLast) cardLast.style.opacity = String(1 - bt);
+    if (!finalShown && t > 0.9) {
+      finalShown = true;
+      finalBanner.classList.add('show');
+      // Enable free camera when banner shows
+      controls.enabled = true;
+    }
+  } else {
+    if(cardLast) cardLast.style.opacity = '1';
+    if (finalShown) {
+      finalShown = false;
+      finalBanner.classList.remove('show');
+      controls.enabled = false;
+    }
+  }
+}
+
+
+let _bannerHidden = false;
+let _hideTimer = null;
+function _onFreeCamInteract(){
+  if(!finalShown) return;
+  finalBanner.classList.add('hide');
+  _bannerHidden = true;
+  clearTimeout(_hideTimer);
+  _hideTimer = setTimeout(()=>{
+    finalBanner.classList.remove('hide');
+    _bannerHidden = false;
+  }, 2000); // reappear 2s after interaction stops
+}
+renderer.domElement.addEventListener('pointerdown', _onFreeCamInteract);
+renderer.domElement.addEventListener('wheel', _onFreeCamInteract);
+
+
+const _camPos = new THREE.Vector3(0, 0.4, 0.8);
+const _lookAt = new THREE.Vector3(0, 0.1, 0);
+const _rovPos = new THREE.Vector3(0, ROVER_Y, 0);
+
+function animate(){
+  requestAnimationFrame(animate);
+
+  // Smooth rover movement
+  _rovPos.x += (rovTarget.x - _rovPos.x)*0.05;
+  _rovPos.y += (rovTarget.y - _rovPos.y)*0.05;
+  _rovPos.z += (rovTarget.z - _rovPos.z)*0.05;
+  rovGroup.position.copy(_rovPos);
+
+  // Rover faces direction of travel
+  const dx = rovTarget.x - _rovPos.x;
+  const dz = rovTarget.z - _rovPos.z;
+  if(Math.abs(dx)+Math.abs(dz)>0.0001) {
+    rovGroup.rotation.y = Math.atan2(dx, dz);
+  }
+
+  // Wheel spin when moving
+  const moving = (Math.abs(dx)+Math.abs(dz)) > 0.001;
+  if(moving) wheelRot += 0.05;
+  rovGroup.children.forEach(c=>{
+    if(c.isGroup){c.traverse(m=>{if(m.name&&m.name.includes('wheel'))m.rotation.x=wheelRot;})}
+  });
+
+  // Grow track line
+  const lastPt = trackPts[trackPts.length-1];
+  if(_rovPos.distanceTo(lastPt)>0.02){
+    trackPts.push(_rovPos.clone());
+    trackGeo.setFromPoints(trackPts);
+  }
+
+  // Smooth camera — hand off to OrbitControls in final section
+  if (controls.enabled) {
+    controls.target.lerp(_rovPos, 0.05);
+    controls.update();
+  } else {
+    _camPos.x += (camTarget.x - _camPos.x)*0.06;
+    _camPos.y += (camTarget.y - _camPos.y)*0.06;
+    _camPos.z += (camTarget.z - _camPos.z)*0.06;
+    camera.position.copy(_camPos);
+    _lookAt.x += (lookTarget.x - _lookAt.x)*0.06;
+    _lookAt.y += (lookTarget.y - _lookAt.y)*0.06;
+    _lookAt.z += (lookTarget.z - _lookAt.z)*0.06;
+    camera.lookAt(_lookAt);
+  }
+
+  // Subtle moon rotation
+  moon.rotation.y += 0.00005;
+
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize',()=>{
+  camera.aspect=innerWidth/innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth,innerHeight);
+});
+</script>
+<script>
+(function(){
+  var btn = document.getElementById('nav-hamburger');
+  var ul = document.querySelector('.nav-links');
+  if (!btn || !ul) return;
+  btn.addEventListener('click', function(){
+    btn.classList.toggle('open');
+    ul.classList.toggle('mobile-open');
+    document.body.style.overflow = ul.classList.contains('mobile-open') ? 'hidden' : '';
+  });
+
+  ul.querySelectorAll('li').forEach(function(li){
+    if (!li.querySelector('.dropdown')) return;
+    li.classList.add('has-dropdown');
+    var topLink = li.querySelector(':scope > a');
+    var toggle = document.createElement('span');
+    toggle.className = 'nav-toggle';
+    toggle.textContent = '+';
+    if (topLink) topLink.appendChild(toggle);
+    topLink && topLink.addEventListener('click', function(e){
+      if (window.innerWidth > 768) return;
+      e.preventDefault();
+      var open = li.classList.toggle('mobile-expanded');
+      toggle.textContent = open ? '−' : '+';
+    });
+  });
+  // clicking a dropdown link closes the whole menu
+  ul.querySelectorAll('.dropdown a').forEach(function(a){
+    a.addEventListener('click', function(){
+      if (window.innerWidth > 768) return;
+      btn.classList.remove('open');
+      ul.classList.remove('mobile-open');
+      document.body.style.overflow = '';
+    });
+  });
+})();
+</script>
+</body>
+</html>

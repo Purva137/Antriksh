@@ -1,0 +1,436 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ISRO-pedia — Antriksh</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
+  :root{--black:#000000;--white:#ffffff;--red:#FC3D21;--blue:#06038D;}
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--black);color:var(--white);font-family:'Space Grotesk',sans-serif;overflow-x:hidden;}
+  [id]{scroll-margin-top:110px;}
+  #stars-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:20px 48px;background:rgba(0,0,0,0.92);border-bottom:1px solid rgba(255,255,255,0.06);}
+  .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.12em;color:var(--white);text-decoration:none;}
+  .nav-logo span{color:var(--red);}
+  .nav-links{display:flex;gap:36px;list-style:none;}
+  .nav-links li{position:relative;padding-bottom:20px;margin-bottom:-20px;}
+  .nav-links a{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.8);text-decoration:none;transition:color 0.3s;}
+  .nav-links a:hover{color:var(--white);}
+  .nav-links li:hover>.dropdown{opacity:1;pointer-events:all;transform:translateY(0);}
+  .dropdown{position:absolute;top:100%;left:0;background:rgba(5,5,10,0.97);border:1px solid rgba(255,255,255,0.08);border-top:2px solid var(--red);padding:16px 0;min-width:200px;opacity:0;pointer-events:none;transform:translateY(4px);transition:all 0.2s ease;z-index:200;}
+  .dropdown a{display:block;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.7)!important;padding:10px 20px;text-decoration:none;transition:all 0.2s;} .nav-links li:last-child>.dropdown{left:auto;right:0;}
+  .dropdown a:hover{color:var(--white)!important;background:rgba(252,61,33,0.08);padding-left:28px;}
+  .nav-live{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;color:var(--red);text-transform:uppercase;}
+  .live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.4);}}
+  .page-header{position:relative;z-index:1;border-bottom:1px solid rgba(255,255,255,0.06);overflow:hidden;}
+  .page-header-video-wrap{position:relative;width:100%;height:100vh;background:#000;}
+  .page-header-video-wrap video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;}
+  .page-header-overlay{position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,0.8) 0%,rgba(0,0,0,0.3) 60%,transparent 100%),linear-gradient(to top,rgba(0,0,0,0.7) 0%,transparent 60%);}
+  .page-header-content{position:absolute;bottom:0;left:0;padding:0 48px 60px;}
+  .page-header-tag{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--red);margin-bottom:16px;}
+  .page-header-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(60px,10vw,130px);line-height:0.88;margin-bottom:24px;}
+  .page-header-sub{font-size:17px;color:rgba(255,255,255,0.75);max-width:560px;line-height:1.7;margin-bottom:20px;}
+  .watch-video-link{display:inline-flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.55);text-decoration:none;transition:color 0.2s;}
+  .watch-video-link:hover{color:rgba(255,255,255,0.7);}
+  /* SECTIONS */
+  .concepts-section,.rockets-section,.mechanics-section,.career-section,.glossary-section{position:relative;z-index:1;padding:80px 48px;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .section-tag{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--red);margin-bottom:12px;}
+  .section-title{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:0.03em;line-height:1;margin-bottom:40px;}
+  /* CONCEPTS GRID */
+  .concepts-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;}
+  .concept-card{background:#080808;border:1px solid rgba(255,255,255,0.04);padding:28px;transition:border-color 0.3s;}
+  .concept-card:hover{border-color:rgba(252,61,33,0.15);}
+  .concept-q{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:var(--red);margin-bottom:10px;}
+  .concept-title{font-size:16px;font-weight:500;color:var(--white);margin-bottom:12px;line-height:1.3;}
+  .concept-eli5{font-size:13px;color:rgba(255,255,255,0.75);line-height:1.8;}
+  .concept-detail{font-size:12px;color:rgba(255,255,255,0.5);line-height:1.7;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,0.04);}
+  /* ROCKETS GRID */
+  .rockets-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;margin-top:40px;}
+  .rocket-card{background:#080808;border:1px solid rgba(255,255,255,0.04);padding:28px;transition:border-color 0.3s;}
+  .rocket-card:hover{border-color:rgba(252,61,33,0.15);}
+  .rocket-title{font-family:'Bebas Neue',sans-serif;font-size:24px;margin-bottom:16px;color:var(--white);}
+  .rocket-content{font-size:13px;color:rgba(255,255,255,0.7);line-height:1.8;}
+  .rocket-spec{font-family:'Space Mono',monospace;font-size:11px;color:var(--red);margin:12px 0;padding:12px;background:rgba(252,61,33,0.05);border-left:3px solid var(--red);}
+  /* MECHANICS SECTION */
+  .mechanics-subsection{margin-bottom:48px;}
+  .subsection-title{font-family:'Bebas Neue',sans-serif;font-size:28px;margin-bottom:24px;color:var(--white);}
+  .mechanics-card{background:#080808;border:1px solid rgba(255,255,255,0.04);padding:28px;margin-bottom:16px;transition:border-color 0.3s;}
+  .mechanics-card:hover{border-color:rgba(252,61,33,0.15);}
+  .mechanics-card h4{font-size:18px;color:var(--white);margin-bottom:12px;}
+  .mechanics-text{font-size:13px;color:rgba(255,255,255,0.7);line-height:1.8;margin-bottom:10px;}
+  .mechanics-detail{font-size:12px;color:rgba(255,255,255,0.5);padding-top:10px;border-top:1px solid rgba(255,255,255,0.04);}
+  /* ISRO CENTRES TABLE */
+  .centres-table{width:100%;margin-top:30px;border-collapse:collapse;background:#080808;border:1px solid rgba(255,255,255,0.04);}
+  .centres-table th{background:rgba(252,61,33,0.1);border:1px solid rgba(255,255,255,0.04);padding:16px;text-align:left;font-weight:600;color:var(--red);font-family:'Space Mono',monospace;font-size:11px;text-transform:uppercase;}
+  .centres-table td{border:1px solid rgba(255,255,255,0.04);padding:16px;color:rgba(255,255,255,0.8);font-size:12px;}
+  .centres-table tr:hover{background:rgba(252,61,33,0.03);}
+  /* CAREER GRID */
+  .career-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;margin-top:40px;}
+  .career-card{background:#080808;border:1px solid rgba(255,255,255,0.04);padding:28px;border-left:3px solid var(--blue);display:flex;flex-direction:column;}
+  .career-pillar-num{font-family:'Bebas Neue',sans-serif;font-size:56px;color:rgba(6,3,141,0.3);line-height:1;margin-bottom:10px;}
+  .career-role{font-family:'Bebas Neue',sans-serif;font-size:28px;margin-bottom:6px;}
+  .career-degree{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--red);margin-bottom:16px;}
+  .career-desc{font-size:13px;color:rgba(255,255,255,0.65);line-height:1.8;flex:1;}
+  .icrb-btn{display:inline-block;margin-top:20px;padding:13px 18px;background:var(--red);color:var(--white);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.1em;text-transform:uppercase;text-decoration:none;transition:background 0.2s;align-self:flex-start;}
+  .icrb-btn:hover{background:#ff5540;}
+  /* GLOSSARY */
+  .glossary-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;margin-top:40px;}
+  .glossary-item{background:#080808;border:1px solid rgba(255,255,255,0.04);padding:20px 24px;transition:all 0.3s;}
+  .glossary-item:hover{border-color:var(--red);background:rgba(252,61,33,0.05);}
+  .glossary-term{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.7);margin-bottom:6px;}
+  .glossary-def{font-size:13px;color:rgba(255,255,255,0.55);line-height:1.7;}
+  footer{position:relative;z-index:10;padding:40px 48px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;}
+  .footer-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.12em;color:rgba(255,255,255,0.3);text-decoration:none;}
+  .footer-logo span{color:rgba(252,61,33,0.2);}
+  .footer-credit{font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.35);}
+</style>
+<link rel="stylesheet" href="responsive.css">
+</head>
+<body>
+<canvas id="stars-canvas"></canvas>
+<nav>
+  <a href="index.html" class="nav-logo">ANTRIK<span>SH</span></a>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  <ul class="nav-links">
+    <li><a href="missions.html">Missions</a><div class="dropdown"><a href="missions.html">All Missions →</a></div></li>
+    <li><a href="timeline.html">Timeline</a><div class="dropdown"><a href="timeline.html">Full Timeline →</a></div></li>
+    <li><a href="rockets.html">Rockets</a><div class="dropdown"><a href="rockets.html">All Rockets →</a></div></li>
+    <li><a href="heroes.html">Heroes</a><div class="dropdown"><a href="heroes.html">All Scientists →</a></div></li>
+    <li><a href="isropedia.html">ISRO-pedia</a><div class="dropdown">
+      <a href="isropedia.html#concepts">Space Concepts ELI5</a>
+      <a href="isropedia.html#rockets">How Rockets Work</a>
+      <a href="isropedia.html#mechanics">Orbital Mechanics</a>
+      <a href="isropedia.html#career">How to Become a Scientist</a>
+      <a href="isropedia.html#glossary">ISRO Glossary</a>
+    </div></li>
+    <li><a href="eyes.html">Eyes on Space</a><div class="dropdown"><a href="eyes.html">Live Tracking →</a></div></li>
+  </ul>
+  
+</nav>
+
+<div class="page-header">
+  <div class="page-header-video-wrap">
+    <video autoplay muted loop playsinline>
+      <source src="./videos/Evolution of ISRO.mp4" type="video/mp4">
+    </video>
+    <div class="page-header-overlay"></div>
+    <div class="page-header-content">
+      <div class="page-header-tag">Space, Explained Simply</div>
+      <h1 class="page-header-title">ISRO<span style="color:var(--red);">pedia</span></h1>
+      <p class="page-header-sub">What is a Lagrange point? How does a rocket actually work? What does "cryogenic" mean? And how do you become a space scientist in India? Everything you wanted to ask but didn't know who to ask.</p>
+      <a href="https://www.isro.gov.in/NSPD2024/assets/video/new/Evolution%20of%20ISRO.mp4" target="_blank" class="watch-video-link">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+        Watch Full Video
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ELI5 CONCEPTS -->
+<div class="concepts-section" id="concepts">
+  <div class="section-tag">Concepts · Explained Simply</div>
+  <h2 class="section-title">How Does Space Work?</h2>
+  <div class="concepts-grid">
+
+    <div class="concept-card">
+      <div class="concept-q">ELI5</div>
+      <div class="concept-title">What is an Orbit?</div>
+      <div class="concept-eli5">Imagine throwing a ball so fast that by the time it falls toward the ground, the Earth's surface curves away. The ball keeps falling — but it never hits. That's an orbit. A satellite is always falling toward Earth, just fast enough that it keeps missing.</div>
+      <div class="concept-detail">Orbital velocity at 400 km altitude ≈ 7.8 km/s — 23 times the speed of sound. At this speed, one orbit around Earth takes ~90 minutes.</div>
+    </div>
+
+    <div class="concept-card">
+      <div class="concept-q">ELI5</div>
+      <div class="concept-title">What is a Geostationary Orbit?</div>
+      <div class="concept-eli5">Most satellites move across the sky. But if you put a satellite at exactly 36,000 km altitude, it orbits once in 24 hours — the same time Earth rotates. To someone on the ground, it appears to hover in one spot. That's how a satellite TV dish points at a fixed point in the sky.</div>
+      <div class="concept-detail">All of India's GSAT and INSAT communication and weather satellites sit in GEO — 36,000 km directly above the equator. This requires India's Master Control Facility to periodically perform station-keeping burns to maintain the exact orbital slot.</div>
+    </div>
+
+    <div class="concept-card">
+      <div class="concept-q">ELI5</div>
+      <div class="concept-title">What is a Lagrange Point?</div>
+      <div class="concept-eli5">Between any two massive objects — like the Sun and Earth — there are five special spots where the gravitational pulls balance perfectly. A spacecraft parked at one of these spots barely needs any fuel to stay there. Aditya-L1 is at the Sun-Earth L1 point — 1.5 million km from Earth, always facing the Sun.</div>
+      <div class="concept-detail">L1 is technically <strong style="color:rgba(255,255,255,0.8);">meta-stable</strong> — more like a saddle than a bowl. Gravity balances, but not stably: a spacecraft nudged sideways will drift away unless corrected. This is why Aditya-L1 performs station-keeping thruster burns every few weeks to stay in its halo orbit. Without them, it would gradually spiral away from L1.</div>
+    </div>
+
+    <div class="concept-card">
+      <div class="concept-q">ELI5</div>
+      <div class="concept-title">What Does "Cryogenic" Mean in Rockets?</div>
+      <div class="concept-eli5">Rocket engines burn fuel with oxygen. But carrying oxygen as a gas wastes space — it needs to be compressed 800x. The solution: cool it until it liquefies. Liquid oxygen is −183°C. Liquid hydrogen is −253°C. "Cryogenic" means extremely cold. India's CE-20 engine on LVM3 uses both — and India mastered this technology itself after it was denied to us.</div>
+      <div class="concept-detail"><strong style="color:rgba(255,255,255,0.8);">CE-20 Engine Specs:</strong> Thrust: 196 kN (vacuum), Specific Impulse: 434 seconds (vacuum), Propellants: LH2/LOX at 6:1 mass ratio, Combustion Temp: 3,643 K. Only 6 countries/agencies have indigenous cryogenic rocket engines: USA, Russia, France/ESA, Japan, China, India.</div>
+    </div>
+
+    <div class="concept-card">
+      <div class="concept-q">ELI5</div>
+      <div class="concept-title">What is a Hohmann Transfer?</div>
+      <div class="concept-eli5">Getting from one orbit to another in space is not like driving — you can't just turn. The most fuel-efficient way to move between orbits is an elliptical "bridge" orbit. You fire your engine once to enter the ellipse, coast halfway around the solar system, then fire again to enter the destination orbit. Mangalyaan used this to reach Mars — but with an additional Indian trick: instead of a single direct Trans-Mars Injection from low orbit, ISRO first spent 25 days doing <strong style="color:rgba(255,255,255,0.75);">gradual Earth orbit-raising burns</strong>, climbing to a very high Earth orbit before the final departure burn. This "slingshot" approach — using multiple smaller burns instead of one massive one — works around the size limitation of India's rockets and is a key reason ISRO missions cost a fraction of equivalent NASA missions.</div>
+      <div class="concept-detail">Mangalyaan's Trans-Mars Injection burn was 1,328 seconds. Before that, ISRO performed six Earth orbit-raising manoeuvres over 25 days — incrementally building velocity rather than launching from low orbit directly.</div>
+    </div>
+
+    <div class="concept-card">
+      <div class="concept-q">ELI5</div>
+      <div class="concept-title">What is a Gravitational Slingshot?</div>
+      <div class="concept-eli5">A spacecraft approaching a planet is like a tennis ball bouncing off a racket. If the planet is moving, the spacecraft gains or loses speed by interacting with the planet's gravity. Mars Orbiter Mission (Mangalyaan) used Earth's gravity to gain extra velocity for free — without using rocket fuel. The spacecraft swung around Earth just above the atmosphere, got "flung" by Earth's gravity, and exited with higher energy. This is why Mangalyaan used gradual Earth orbit-raising burns: each raise brought it closer to the Sun, and the final swing-by released maximum velocity toward Mars.</div>
+      <div class="concept-detail"><strong style="color:rgba(255,255,255,0.8);">Mangalyaan Trajectory:</strong> 5 Earth orbit-raising maneuvers over 25 days, final perigee raised to 189 km, gravity assist at Earth gave ~1.7 km/s velocity gain, final hyperbolic excess velocity toward Mars: 3.2 km/s, total mission cost: $74 million (cheaper than the Hollywood film "Gravity").</div>
+    </div>
+
+    <div class="concept-card">
+      <div class="concept-q">ELI5</div>
+      <div class="concept-title">What is Aerobraking?</div>
+      <div class="concept-eli5">When a spacecraft arrives at another planet, it's travelling very fast. Slowing down with engines uses enormous amounts of fuel. Instead, you can graze the planet's upper atmosphere — the thin air creates drag and slows you down over many orbits, like a feather gradually settling. Shukrayaan will use this at Venus. It's free deceleration — but one miscalculation means burning up.</div>
+      <div class="concept-detail">Aerobraking can save hundreds of kg of propellant mass — potentially the difference between a mission that's feasible and one that isn't. Venus has a dense atmosphere (92x Earth's pressure at surface), so Shukrayaan's aerobraking will need precision guidance to avoid overheating or skipping back to space.</div>
+    </div>
+
+    <div class="concept-card">
+      <div class="concept-q">ELI5</div>
+      <div class="concept-title">What is Orbital Docking?</div>
+      <div class="concept-eli5">Two spacecraft meeting in orbit are both travelling at 7.8 km/s. For one to attach to the other, it must match speed, direction, and position exactly — then approach at a few centimetres per second. The final approach is fully autonomous — signals from Earth are too slow. SpaDeX proved India can do this. It is the technology that makes space stations possible.</div>
+      <div class="concept-detail">India became the 4th country to achieve autonomous orbital docking in early 2025, after USSR (1967), USA (1966), and China (2011). SpaDeX demonstrated rendezvous, proximity operations, and docking with two identical spacecraft in a 400 km orbit.</div>
+    </div>
+
+    <div class="concept-card">
+      <div class="concept-q">ELI5</div>
+      <div class="concept-title">What is a Sun-Synchronous Orbit?</div>
+      <div class="concept-eli5">Most Earth observation satellites use a special orbit where they always cross the equator at the same local time of day — so the lighting on the ground is consistent in every image. This is a Sun-Synchronous Orbit (SSO). Resourcesat, Cartosat, and Oceansat all use SSO — it means their images of India are always taken at the same sun angle, making comparisons across months and years meaningful.</div>
+      <div class="concept-detail">SSO satellites orbit at ~97° inclination — slightly retrograde. Earth's oblateness causes the orbit to precess at the same rate Earth orbits the Sun — hence "sun-synchronous." Typical SSO altitude: 600-800 km, typical local solar time: 10:30 AM (polar passes), orbital period: ~99 minutes.</div>
+    </div>
+
+    <div class="concept-card">
+      <div class="concept-q">ELI5</div>
+      <div class="concept-title">What is an Orbital Slot?</div>
+      <div class="concept-eli5">Geostationary satellites sit 36,000 km above the equator. If you put two satellites at the same longitude, they interfere with each other — their signals jam. So the International Telecommunications Union allocates specific "slots" — positions along the geostationary arc — to each country. India owns eight GEO slots. Each slot must be carefully managed: satellites drift over time, so periodic "station-keeping" maneuvers nudge them back into their assigned slot before they drift 0.1° out of position. If India lets a satellite drift into another country's slot, international incidents can happen.</div>
+      <div class="concept-detail">India's GEO slots: 31.5°E (GSAT-29), 45°E (GSAT-15), 55°E (GSAT-18), 74°E (INSAT-3D/INSAT-3DR weather), 83°E (GSAT-31), 93.5°E (INSAT-4A), 104°E (reserve), 124°E (reserve). Each satellite performs 10-15 station-keeping burns per year to maintain ±0.1° accuracy.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- HOW ROCKETS WORK -->
+<div class="rockets-section" id="rockets">
+  <div class="section-tag">Deep Dive</div>
+  <h2 class="section-title">How Rockets Work: The Physics</h2>
+  <div class="rockets-grid">
+
+    <div class="rocket-card">
+      <div class="rocket-title">Payload Fairings: Protecting What Matters</div>
+      <div class="rocket-content">The payload fairing is a protective shell that wraps around the satellite during launch. Inside the rocket, the satellite experiences extreme vibration, thermal stress, and pressure waves. The fairing protects it until the rocket reaches space, then is jettisoned.
+      <div class="rocket-spec"><strong>PSLV-XL Fairing:</strong> Diameter: 2.8 m | Material: Carbon-fiber composite (CFRP) | Mass: ~1 tonne (empty) | Jettison Altitude: ~115 km | Jettison Speed: ~5 km/s</div>
+      Fairings must be lightweight (every kg saved = more payload capacity) but strong enough to withstand Mach 2.5+ aerodynamic forces and 1000°C+ heating. Modern fairings use carbon-fiber-epoxy composites with internal sandwich structure (honeycomb aluminum or foam core) for strength without weight.</div>
+    </div>
+
+    <div class="rocket-card">
+      <div class="rocket-title">Stages Explained: Solid vs Liquid vs Cryogenic</div>
+      <div class="rocket-content"><strong style="color:var(--red);">Solid Rocket Boosters:</strong> Pre-packed fuel (ammonium perchlorate + aluminum + polymer binder) ignited by electric match. Cannot be throttled or re-ignited mid-flight. PSLV's two solid strap-on boosters each produce 4,800 kN thrust.
+      <div class="rocket-spec">ISP (Solid): 260 sec | Thrust: ~4,800 kN | Burn Time: 45-50 sec | Cannot be stopped</div>
+
+      <strong style="color:var(--red);">Liquid Rocket Engines:</strong> Liquid fuel (hydrazine, UDMH) + liquid oxidizer (N2O4, LOX) injected into combustion chamber. Throttle-able, can be re-ignited. Used in PSLV's 2nd/4th stages (Vikas engine) and LVM3's upper stages.
+      <div class="rocket-spec">ISP (Vikas/LS-200): 295 sec | Thrust: 745 kN | Regeneratively cooled | Can restart multiple times</div>
+
+      <strong style="color:var(--red);">Cryogenic Engines:</strong> Liquid hydrogen + liquid oxygen at −253°C and −183°C. Highest ISP, most efficient. Used in LVM3's third stage (CE-20). Requires cryogenic plumbing, insulation, and ground support.
+      <div class="rocket-spec">ISP (CE-20): 434 sec | Thrust: 196 kN | Requires deep cooling | Only advanced nations operate these</div></div>
+    </div>
+
+    <div class="rocket-card">
+      <div class="rocket-title">Specific Impulse (ISP): Efficiency of Rockets</div>
+      <div class="rocket-content">ISP is how many seconds a 1 kg mass of propellant can produce 1 kg of thrust. Higher ISP = more efficient = greater payload capacity for the same rocket size. Cryogenic engines achieve ~1.7x better ISP than solid boosters, which is why they're used for primary payload insertion even though they're complex and expensive.
+      <div class="rocket-spec"><strong>ISP Comparison:</strong><br>Solid: 260 sec | Vikas (LL): 295 sec | Cryogenic: 434 sec</div>
+      A PSLV using only solid stages couldn't reach the payload masses it does today. The liquid Vikas engines provide the efficiency that makes 10,000+ km/s velocity changes possible on a budget.</div>
+    </div>
+
+    <div class="rocket-card">
+      <div class="rocket-title">Structural Design: Thrust Structure & Interstage</div>
+      <div class="rocket-content">A rocket is a tube of propellant with engines attached. The challenge: distributing lateral loads (side forces during ascent), bending moments, and the structural weight itself. PSLV uses aluminum-lithium alloy stages (Al-Li 2195) for high strength-to-weight ratio.
+      <div class="rocket-spec"><strong>PSLV Stage Details:</strong><br>Stage 1 (Solid): ~140 tonnes propellant, 2.2 m diameter, 44 sec burn<br>Stage 2 (Liquid): ~42 tonnes propellant, 2.4 m diameter, 150 sec burn<br>Stage 3 (Solid): ~7 tonnes propellant, 1.0 m diameter, 70 sec burn<br>Stage 4 (Liquid): ~2 tonnes propellant, 1.0 m diameter, 400+ sec burn</div>
+      Interstage structures connect stages and manage thermal gradients (Stages 3 & 4 operate at −183°C; Stages 1 & 2 operate at +25°C ambient → 1000°C+ combustion).</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ORBITAL MECHANICS DEEP DIVE -->
+<div class="mechanics-section" id="mechanics">
+  <div class="section-tag">Advanced Topics</div>
+  <h2 class="section-title">Orbital Mechanics: From Theory to SpaDeX</h2>
+
+  <div class="mechanics-subsection">
+    <h3 class="subsection-title">Rendezvous & Proximity Operations (SpaDeX Mission)</h3>
+    <div class="mechanics-card">
+      <h4>What is Rendezvous?</h4>
+      <div class="mechanics-text">Two spacecraft starting at different altitudes need to meet at the same point in space, traveling at the same velocity. SpaDeX (SPace Docking Experiment) launched two identical 340 kg spacecraft in December 2024 to demonstrate this. The "Chaser" spacecraft autonomously caught up to the "Target" spacecraft in a 400 km circular orbit.</div>
+      <div class="mechanics-detail"><strong>Rendezvous Phases:</strong> (1) Phase 1: Chaser in lower orbit (399 km), slightly faster → gradually gains altitude over 4+ orbits; (2) Phase 2: Reaches ~2 km range, enters "Hold Point"; (3) Phase 3: Closes to 225 m, then 120 m (hands-off), then 100 m; (4) Phase 4: Final approach under autonomous guidance, speeds reduced to cm/s; (5) Phase 5: Contact & docking. Entire process took 4 days.</div>
+    </div>
+
+    <div class="mechanics-card">
+      <h4>Why Autonomous Docking Matters</h4>
+      <div class="mechanics-text">Earth-to-satellite communication has ~1.3 second round-trip delay. At orbital speeds of 7.8 km/s, this means the spacecraft could travel 20 km in the time it takes to send a command and see the result. Therefore, the final 1 km of approach and all docking must be fully autonomous, using onboard sensors (LIDAR, cameras, GPS-like systems) and pre-programmed logic.</div>
+      <div class="mechanics-detail"><strong>SpaDeX Autonomous Systems:</strong> LIDAR (Light Detection and Ranging) for distance measurement, relative GPS to track both spacecraft, star trackers for attitude (orientation), onboard computer running real-time guidance algorithms. No ground intervention in final 1 km. This autonomy is non-negotiable for future space stations and Moon bases.</div>
+    </div>
+
+    <div class="mechanics-card">
+      <h4>Docking Systems Engineering</h4>
+      <div class="mechanics-text">The actual attachment is more complex than it sounds. Two spacecraft approaching at 0.1 m/s must be mechanically captured by a docking adapter without bouncing off or crashing. SpaDeX used India's own androgynous docking mechanism — designed so either spacecraft can be the "active" chaser or "passive" target, and either can dock to the other.</div>
+      <div class="mechanics-detail"><strong>Docking Sequence:</strong> Approach phase (~0.1 m/s) → contact → capture (hooks engage) → load-sharing (alignment to ±5°) → rigidization (latches lock) → leak check (air-sealed interface) → umbilical connection (power, data, fluids if applicable). Time from contact to full docking: ~10-30 minutes depending on system.</div>
+    </div>
+  </div>
+
+  <div class="mechanics-subsection">
+    <h3 class="subsection-title">Orbital Perturbations & Station-Keeping</h3>
+    <div class="mechanics-card">
+      <h4>Why Orbits Decay</h4>
+      <div class="mechanics-text">Satellites don't orbit in a perfect vacuum. Even at 400 km altitude, there's a trace atmosphere that creates drag. Solar wind, Earth's magnetic field, and uneven gravity (Earth is lumpy, not spherical) all perturb orbits. Geostationary satellites "drift" toward the equator (~3° per year for abandoned satellites, called "GEO graveyard"). Active satellites need regular correction burns.</div>
+      <div class="mechanics-detail"><strong>Perturbation Sources:</strong> Atmospheric drag (LEO < 1000 km) — ~0.5 km/day decay | Solar radiation pressure — affects light, large-area satellites | Lunar/solar gravity — ~1% effect on GEO | Earth's oblateness (J2 term) — causes precession / nodal regression used by SSO.</div>
+    </div>
+
+    <div class="mechanics-card">
+      <h4>Station-Keeping Maneuvers</h4>
+      <div class="mechanics-text">India's Master Control Facility (MCF) at Hassan monitors all geostationary satellites. When a satellite drifts more than ±0.1° in longitude from its assigned slot, MCF sends commands to fire thrusters (usually hydrazine). Each ~10-20 m/s burn (5-10 seconds of thruster fire) costs propellant but keeps the satellite in its slot and avoids international interference disputes.</div>
+      <div class="mechanics-detail"><strong>GSAT Station-Keeping (annual):</strong> 10-15 burns/year, ~50-100 kg propellant/year per satellite, requires 2-3 days per maneuver sequence (plan → execute → verify). GEO satellites carry enough propellant for 15+ years of active service before being moved to GEO graveyard at +300 km altitude. This "end-of-life disposal" is an international norm to prevent collision debris.</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- CAREER SECTION -->
+<div class="career-section" id="career">
+  <div class="section-tag">The Hard Truth</div>
+  <h2 class="section-title">How to Become a Scientist</h2>
+
+  <div class="career-grid">
+
+    <div class="career-card">
+      <div class="career-pillar-num">01</div>
+      <div class="career-role">Scientist / Engineer 'SC'</div>
+      <div class="career-degree">The ICRB Route</div>
+      <div class="career-desc">
+        <strong style="color:rgba(255,255,255,0.8);">Requirements:</strong> BE/B.Tech in a specialised engineering discipline with a minimum aggregate of 65% or 6.84/10 CGPA.<br><br>
+        <strong style="color:rgba(255,255,255,0.8);">Process:</strong> Annual centralised written exam — 80 technical questions — followed by a final interview. Conducted by the ISRO Centralised Recruitment Board (ICRB).
+      </div>
+      <a href="https://www.isro.gov.in/Careers.html" target="_blank" rel="noopener noreferrer" class="icrb-btn">GO TO OFFICIAL ICRB RECRUITMENT PORTAL →</a>
+    </div>
+
+    <div class="career-card">
+      <div class="career-pillar-num">02</div>
+      <div class="career-role">The Fast-Track</div>
+      <div class="career-degree">IIST Admission</div>
+      <div class="career-desc">
+        <strong style="color:rgba(255,255,255,0.8);">Entry:</strong> Strictly through JEE Advanced ranking. The Indian Institute of Space Science and Technology (IIST), Thiruvananthapuram — the only space-focused university in Asia.<br><br>
+        <strong style="color:rgba(255,255,255,0.8);">Advantage:</strong> B.Tech students maintaining a CGPA above 7.5 are directly absorbed into ISRO as Scientists, bypassing the ICRB entrance exam entirely.
+      </div>
+    </div>
+
+    <div class="career-card">
+      <div class="career-pillar-num">03</div>
+      <div class="career-role">Advanced R&amp;D</div>
+      <div class="career-degree">Scientist 'SD' Post</div>
+      <div class="career-desc">
+        <strong style="color:rgba(255,255,255,0.8);">Requirements:</strong> Ph.D. or specialised M.Tech in niche fields — Cryogenics, Material Science, Atmospheric Physics, RF Engineering, and related disciplines.<br><br>
+        <strong style="color:rgba(255,255,255,0.8);">Selection:</strong> Based on GATE scores, specialised project interviews, and academic history. For researchers who want to build the next CE-20 engine or design India's next planetary mission.
+      </div>
+    </div>
+
+    <div class="career-card">
+      <div class="career-pillar-num">04</div>
+      <div class="career-role">Technical &amp; Ground Support</div>
+      <div class="career-degree">Diploma / ITI Route</div>
+      <div class="career-desc">
+        <strong style="color:rgba(255,255,255,0.8);">Posts:</strong> Technical Assistant, Technician 'B', Draughtsman 'B'.<br><br>
+        <strong style="color:rgba(255,255,255,0.8);">Route:</strong> Recruitment for those holding Diplomas or ITI certificates in specific trades — electronics, mechanical, civil, and related disciplines. ISRO's launch infrastructure and ground operations depend on this workforce.
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- GLOSSARY EXPANDED -->
+<div class="glossary-section" id="glossary">
+  <div class="section-tag">Quick Reference</div>
+  <h2 class="section-title">SPACE GLOSSARY</h2>
+  <div class="glossary-grid">
+    <div class="glossary-item"><div class="glossary-term">LEO</div><div class="glossary-def">Low Earth Orbit — 200 to 2,000 km altitude. Where ISS, Hubble, and most Earth observation satellites operate.</div></div>
+    <div class="glossary-item"><div class="glossary-term">GEO</div><div class="glossary-def">Geostationary Earth Orbit — 35,786 km altitude, equatorial. Communication and weather satellites appear fixed in the sky.</div></div>
+    <div class="glossary-item"><div class="glossary-term">SSO</div><div class="glossary-def">Sun-Synchronous Orbit — passes over same location at same solar time each day. Used by Earth observation satellites for consistent lighting.</div></div>
+    <div class="glossary-item"><div class="glossary-term">GTO</div><div class="glossary-def">Geostationary Transfer Orbit — an elliptical orbit used as a stepping stone to GEO. Satellites fire their engines at GTO's highest point to circularise into GEO.</div></div>
+    <div class="glossary-item"><div class="glossary-term">PSLV / LVM3</div><div class="glossary-def">India's primary launch vehicles. PSLV for medium payloads (up to 3,800 kg to LEO). LVM3 for heavy payloads (up to 10,000 kg to LEO).</div></div>
+    <div class="glossary-item"><div class="glossary-term">IDSN</div><div class="glossary-def">Indian Deep Space Network at Byalalu, Karnataka — 18m and 32m dish antennas that communicate with ISRO's deep space missions like Mangalyaan and Chandrayaan.</div></div>
+    <div class="glossary-item"><div class="glossary-term">SAR</div><div class="glossary-def">Synthetic Aperture Radar — microwave radar that creates high-resolution images regardless of weather or darkness. Used by NISAR and Cartosat-3 SAR variant.</div></div>
+    <div class="glossary-item"><div class="glossary-term">InSAR</div><div class="glossary-def">Interferometric SAR — comparing two SAR images to detect millimetre-scale surface movements. NISAR's core science technique for earthquake and volcano monitoring.</div></div>
+    <div class="glossary-item"><div class="glossary-term">Periapsis / Apoapsis</div><div class="glossary-def">Lowest and highest points of an elliptical orbit. Named with prefix for the body being orbited: Perigee/Apogee (Earth), Periareion/Apoareion (Mars), Periselene/Aposelene (Moon).</div></div>
+    <div class="glossary-item"><div class="glossary-term">TLI / TMI</div><div class="glossary-def">Trans-Lunar Injection / Trans-Mars Injection — the critical engine burn that sends a spacecraft out of Earth orbit toward the Moon or Mars.</div></div>
+    <div class="glossary-item"><div class="glossary-term">ECLSS</div><div class="glossary-def">Environment Control and Life Support System — technology that recycles air and water on a space station. India is developing indigenous ECLSS for BAS (Bharatiya Antariksh Station).</div></div>
+    <div class="glossary-item"><div class="glossary-term">MCF</div><div class="glossary-def">Master Control Facility — at Hassan (Karnataka) and Bhopal (MP). Manages all GEO satellites: station-keeping, orbit-raising, payload control. Without MCF, India's DTH and weather satellites drift.</div></div>
+    <div class="glossary-item"><div class="glossary-term">PFZ</div><div class="glossary-def">Potential Fishing Zone — advisories derived from Oceansat data identifying optimal fishing locations. Sent as SMS to 4 million+ Indian fishermen daily by INCOIS.</div></div>
+    <div class="glossary-item"><div class="glossary-term">NavIC</div><div class="glossary-def">Navigation with Indian Constellation — India's regional GPS alternative. 8 satellites in GEO+GSO orbits cover India and 1,500 km radius. Accuracy: 5-10 meters (10m better than GPS for India). Military uses encrypted, 1m accuracy.</div></div>
+    <div class="glossary-item"><div class="glossary-term">GAGAN</div><div class="glossary-def">GPS Aided Geo Augmented Navigation — space-based augmentation system. Ground stations track GPS errors, uplink corrections to GEO satellites, which rebroadcast to receivers. Used in aviation, shipping. Accuracy: 1-3 meters.</div></div>
+    <div class="glossary-item"><div class="glossary-term">Bhuvan</div><div class="glossary-def">India's national GIS portal (bhuvan.nrsc.gov.in) — free access to satellite imagery, maps, 3D terrain. Developed by NRSC, used for urban planning, disaster response, agriculture monitoring, flood management.</div></div>
+    <div class="glossary-item"><div class="glossary-term">SSA</div><div class="glossary-def">Space Situational Awareness — tracking objects in orbit (satellites, debris, rocket stages). Important for collision avoidance and identifying new satellites. India is developing indigenous SSA capabilities via ground radars and optical sensors.</div></div>
+    <div class="glossary-item"><div class="glossary-term">ISTRAC</div><div class="glossary-def">ISRO Telemetry, Tracking & Command Network at Bengaluru — ground station network that communicates with all ISRO spacecraft. Coordinates with international partners' ground stations for global coverage.</div></div>
+    <div class="glossary-item"><div class="glossary-term">ISP</div><div class="glossary-def">Specific Impulse — measure of rocket engine efficiency. Defined as thrust in seconds × gravitational constant / (mass flow rate). Higher ISP means less fuel needed to reach a given velocity. Cryogenic engines: 430+ sec, Solid: 260 sec.</div></div>
+    <div class="glossary-item"><div class="glossary-term">ΔV (Delta-V)</div><div class="glossary-def">Change in velocity required for an orbital maneuver (measured in km/s). LEO insertion: 9.7 km/s from Earth's surface. Mars transfer: 3+ km/s additional from LEO. Moon transfer: 3.3 km/s additional.</div></div>
+    <div class="glossary-item"><div class="glossary-term">Payload Fairing</div><div class="glossary-def">Protective aerodynamic shell surrounding the satellite. Protects from vibration, thermal stress, and acoustic energy during ascent. Jettisoned at ~115 km altitude once aerodynamic heating ends. Must be lightweight carbon-fiber composite.</div></div>
+    <div class="glossary-item"><div class="glossary-term">Station-Keeping</div><div class="glossary-def">Periodic thruster burns to maintain a satellite's assigned orbital slot and counteract perturbations (atmospheric drag, gravity irregularities, solar pressure). GEO satellites: 10-15 burns/year. LEO satellites: continuous re-boosting.</div></div>
+    <div class="glossary-item"><div class="glossary-term">Androgynous Docking</div><div class="glossary-def">Docking mechanism that works bidirectionally — either spacecraft can be the chaser or target. Proven by SpaDeX in 2025. Enables modular space station construction and autonomous rendezvous operations.</div></div>
+    <div class="glossary-item"><div class="glossary-term">CoM / CoG</div><div class="glossary-def">Center of Mass / Center of Gravity — critical for spacecraft stability. Mass distribution must be balanced; unbalanced CoM causes tumbling and control fuel waste. Calculated by ISRO before every launch.</div></div>
+    <div class="glossary-item"><div class="glossary-term">Thermal Control</div><div class="glossary-def">Managing satellite temperatures in space. Sun-facing side reaches +120°C; shadow side drops to −180°C. Solution: multi-layer insulation (MLI), radiators, heaters, louvers. Passive control via materials; active via thermostats + heaters.</div></div>
+    <div class="glossary-item"><div class="glossary-term">IRU / IMU</div><div class="glossary-def">Inertial Reference Unit / Inertial Measurement Unit — gyroscopes & accelerometers that measure spacecraft orientation and acceleration. IRU maintains attitude (pointing direction) for instruments; IMU guides thrusters during maneuvers.</div></div>
+    <div class="glossary-item"><div class="glossary-term">SpaDeX</div><div class="glossary-def">Space Docking Experiment — two 340 kg spacecraft launched December 2024, demonstrating autonomous orbital rendezvous and docking in a 400 km orbit. India became the 4th nation to achieve this after USSR, USA, and China. Foundational technology for Bharatiya Antariksh Station and future Moon missions.</div></div>
+    <div class="glossary-item"><div class="glossary-term">Cryogenic Stage (CE-20)</div><div class="glossary-def">LVM3's upper stage engine burning liquid hydrogen (−253°C) and liquid oxygen (−183°C). Thrust: 196 kN, ISP: 434 seconds. Mastered indigenously after technology denial from the West — only 6 agencies globally operate cryogenic engines. Enables India's heavy-lift capability to GTO.</div></div>
+  </div>
+</div>
+
+<footer>
+  <a href="index.html" class="footer-logo">ANTRIK<span>SH</span></a>
+  <div class="footer-credit">Space, explained for every Indian</div>
+</footer>
+
+<script>
+const sc=document.getElementById('stars-canvas');const sCtx=sc.getContext('2d');sc.width=window.innerWidth;sc.height=window.innerHeight;
+const stars=Array.from({length:200},()=>({x:Math.random()*sc.width,y:Math.random()*sc.height,r:Math.random()*1.1,phase:Math.random()*Math.PI*2,speed:Math.random()*0.003+0.001}));
+function drawStars(t){sCtx.clearRect(0,0,sc.width,sc.height);stars.forEach(s=>{const a=0.15+0.35*Math.sin(t*s.speed+s.phase);sCtx.beginPath();sCtx.arc(s.x,s.y,s.r,0,Math.PI*2);sCtx.fillStyle=`rgba(255,255,255,${a})`;sCtx.fill();});requestAnimationFrame(drawStars);}
+requestAnimationFrame(drawStars);
+window.addEventListener('resize',()=>{sc.width=window.innerWidth;sc.height=window.innerHeight;});
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';}});},{threshold:0.05});
+document.querySelectorAll('.concept-card,.rocket-card,.mechanics-card,.career-card,.glossary-item,.centres-table').forEach((el,i)=>{el.style.opacity='0';el.style.transform='translateY(20px)';el.style.transition=`opacity 0.45s ease ${i*0.04}s,transform 0.45s ease ${i*0.04}s`;obs.observe(el);});
+</script>
+<script>
+(function(){
+  var btn = document.getElementById('nav-hamburger');
+  var ul = document.querySelector('.nav-links');
+  if (!btn || !ul) return;
+  btn.addEventListener('click', function(){
+    btn.classList.toggle('open');
+    ul.classList.toggle('mobile-open');
+    document.body.style.overflow = ul.classList.contains('mobile-open') ? 'hidden' : '';
+  });
+  // + / - toggle for dropdowns on mobile
+  ul.querySelectorAll('li').forEach(function(li){
+    if (!li.querySelector('.dropdown')) return;
+    li.classList.add('has-dropdown');
+    var topLink = li.querySelector(':scope > a');
+    var toggle = document.createElement('span');
+    toggle.className = 'nav-toggle';
+    toggle.textContent = '+';
+    if (topLink) topLink.appendChild(toggle);
+    topLink && topLink.addEventListener('click', function(e){
+      if (window.innerWidth > 768) return;
+      e.preventDefault();
+      var open = li.classList.toggle('mobile-expanded');
+      toggle.textContent = open ? '−' : '+';
+    });
+  });
+  // clicking a dropdown link closes the whole menu
+  ul.querySelectorAll('.dropdown a').forEach(function(a){
+    a.addEventListener('click', function(){
+      if (window.innerWidth > 768) return;
+      btn.classList.remove('open');
+      ul.classList.remove('mobile-open');
+      document.body.style.overflow = '';
+    });
+  });
+})();
+</script>
+</body>
+</html>

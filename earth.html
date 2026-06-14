@@ -1,0 +1,1614 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Antriksh · Eyes on Earth</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&family=Bebas+Neue&display=swap" rel="stylesheet"/>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --accent:#FC3D21;
+  --green:#00e676;
+  --sb-w:216px;
+  --nav-h:52px;
+  --bot-h:44px;
+  --card:rgba(6,8,20,0.96);
+  --border:rgba(255,255,255,0.07);
+  --muted:rgba(255,255,255,0.40);
+  --text:#e2e6f0;
+}
+html,body{width:100%;height:100%;background:#000;color:var(--text);
+  font-family:'Space Grotesk',sans-serif;overflow:hidden;user-select:none}
+
+#c{position:fixed;inset:0;z-index:0}
+#lbl{position:fixed;inset:0;pointer-events:none;z-index:40}
+
+nav{position:fixed;top:0;left:0;right:0;height:var(--nav-h);z-index:200;
+  display:flex;align-items:center;padding:0 20px;
+  background:linear-gradient(to bottom,rgba(0,0,0,0.88),transparent);pointer-events:none}
+.logo{display:flex;align-items:center;gap:10px;font-family:'Bebas Neue',sans-serif;
+  font-size:20px;letter-spacing:2.5px;color:#fff;pointer-events:all;text-decoration:none}
+.logo-orb{width:26px;height:26px;background:radial-gradient(circle at 35% 35%,#5af,#007bcc);
+  border-radius:50%;box-shadow:0 0 10px #00a8ff70;flex-shrink:0;position:relative;overflow:hidden}
+.logo-orb::after{content:'';position:absolute;top:3px;left:5px;width:7px;height:4px;
+  background:rgba(255,255,255,0.3);border-radius:50%;transform:rotate(-20deg)}
+
+#sidebar{position:fixed;left:0;top:var(--nav-h);bottom:var(--bot-h);
+  width:var(--sb-w);z-index:100;
+  background:rgba(4,5,14,0.96);backdrop-filter:blur(16px);
+  border-right:1px solid var(--border);display:flex;flex-direction:column;
+  overflow:hidden;transition:transform .28s cubic-bezier(.4,0,.2,1)}
+#sb-scroll{overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.08) transparent}
+#sb-scroll::-webkit-scrollbar{width:3px}
+#sb-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,.10);border-radius:2px}
+#sidebar.hidden{transform:translateX(calc(-1 * var(--sb-w)))}
+
+#sb-toggle{position:fixed;left:0;top:calc(var(--nav-h) + 12px);z-index:101;
+  width:28px;height:28px;background:rgba(6,8,20,0.9);border:1px solid var(--border);
+  border-left:none;border-radius:0 5px 5px 0;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--muted);font-size:15px;transition:color .15s,background .15s,left .28s cubic-bezier(.4,0,.2,1)}
+#sb-toggle:hover{color:#fff;background:rgba(20,22,40,0.98)}
+#sb-toggle.shifted{left:var(--sb-w)}
+
+.sb-sect{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2.5px;
+  color:rgba(255,255,255,0.44);padding:14px 18px 6px;text-transform:uppercase;flex-shrink:0}
+.sb-item{display:flex;align-items:center;gap:11px;padding:10px 18px;cursor:pointer;
+  border-left:2px solid transparent;color:var(--muted);font-size:12.5px;font-weight:500;
+  transition:color .14s,background .14s,border-color .14s;flex-shrink:0;white-space:nowrap}
+.sb-item:hover{color:rgba(255,255,255,.82);background:rgba(255,255,255,.03)}
+.sb-item.active{color:#fff;border-left-color:var(--accent);background:rgba(252,61,33,.07)}
+.sb-ic{font-size:14px;flex-shrink:0;width:18px;text-align:center}
+
+#agency-toggle{display:flex;gap:0;padding:10px 14px 8px;flex-shrink:0;border-bottom:1px solid var(--border)}
+.ag-btn{flex:1;padding:7px 0;font-family:'Space Mono',monospace;font-size:10px;font-weight:700;
+  letter-spacing:1.5px;text-align:center;cursor:pointer;border-radius:6px;
+  border:1px solid transparent;color:var(--muted);transition:all .18s;user-select:none}
+.ag-btn.active-nasa{color:#fff;background:rgba(0,120,255,0.18);border-color:rgba(0,120,255,0.4)}
+.ag-btn.active-isro{color:#fff;background:rgba(255,153,51,0.18);border-color:rgba(255,153,51,0.45)}
+.ag-btn:not(.active-nasa):not(.active-isro):hover{background:rgba(255,255,255,.05);color:rgba(255,255,255,.7)}
+
+#nasa-panel{overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.08) transparent}
+#nasa-panel::-webkit-scrollbar{width:3px}
+#nasa-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,.10);border-radius:2px}
+
+#isro-panel{overflow-y:auto;flex:1;display:none;scrollbar-width:thin;scrollbar-color:rgba(255,153,51,.15) transparent}
+#isro-panel::-webkit-scrollbar{width:3px}
+#isro-panel::-webkit-scrollbar-thumb{background:rgba(255,153,51,.20);border-radius:2px}
+#isro-panel .sb-sect{color:rgba(255,165,80,0.55)}
+#isro-panel .sb-item{color:rgba(255,200,130,0.6)}
+#isro-panel .sb-item:hover{color:rgba(255,210,150,1);background:rgba(255,153,51,0.06)}
+#isro-panel .sb-item.active{color:#fff;border-left-color:#ff9933;background:rgba(255,153,51,0.13)}
+
+#layer-panel{padding:14px 18px;border-top:1px solid var(--border);display:none;
+  flex-direction:column;gap:5px;flex-shrink:0}
+.lp-name{font-size:13px;font-weight:700;color:#fff}
+.lp-src{font-size:9px;color:var(--accent);letter-spacing:.5px;text-transform:uppercase}
+.lp-desc{font-size:10.5px;color:var(--muted);line-height:1.75;margin-top:3px}
+.cb-bar{height:6px;border-radius:3px;margin-top:8px}
+.cb-lbl{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;
+  font-size:8px;color:var(--muted);margin-top:3px}
+
+.sb-foot{margin-top:auto;padding:12px 18px;border-top:1px solid var(--border);
+  font-size:10.5px;color:var(--muted);flex-shrink:0}
+.sb-foot b{color:#fff}
+
+#bot{position:fixed;bottom:0;left:0;right:0;height:var(--bot-h);z-index:200;
+  background:rgba(4,5,14,0.96);backdrop-filter:blur(14px);
+  border-top:1px solid var(--border);
+  display:flex;align-items:center;padding:0 20px;gap:12px}
+#live-btn{display:flex;align-items:center;gap:7px;cursor:pointer;
+  background:rgba(0,0,0,0.4);border:1px solid rgba(0,230,118,0.25);
+  border-radius:100px;padding:5px 14px 5px 10px;transition:background .15s}
+#live-btn:hover{background:rgba(0,230,118,0.06)}
+.live-dot{width:7px;height:7px;background:var(--green);border-radius:50%;flex-shrink:0;
+  animation:pg 1.6s ease-in-out infinite;box-shadow:0 0 5px var(--green)}
+@keyframes pg{0%,100%{opacity:1;box-shadow:0 0 5px var(--green)}50%{opacity:.45;box-shadow:0 0 12px var(--green)}}
+.live-lbl{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;
+  color:var(--green);letter-spacing:2px}
+.live-t{font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,.6);
+  letter-spacing:1px;margin-left:3px}
+.bot-sep{flex:1}
+.bot-btn{width:32px;height:32px;border-radius:7px;border:1px solid var(--border);
+  background:rgba(255,255,255,.04);cursor:pointer;display:flex;align-items:center;
+  justify-content:center;font-size:16px;transition:background .15s,border-color .15s;
+  color:#fff}
+.bot-btn:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.16)}
+.bot-btn.on{border-color:var(--accent);background:rgba(252,61,33,.12)}
+#speed-badge{font-family:'Space Mono',monospace;font-size:9px;font-weight:700;
+  color:rgba(255,255,255,.5);letter-spacing:1px;display:none}
+#speed-badge.show{display:block}
+
+#speed-panel{position:fixed;bottom:calc(var(--bot-h) + 10px);left:50%;
+  transform:translateX(-50%);background:var(--card);
+  border:1px solid var(--border);border-radius:12px;padding:20px 24px;
+  z-index:300;backdrop-filter:blur(18px);width:300px;display:none;
+  box-shadow:0 16px 48px rgba(0,0,0,.7)}
+#speed-panel.show{display:block}
+.sp-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
+.sp-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:#fff}
+#sp-close{background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:50%;
+  width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+  cursor:pointer;color:var(--muted);font-size:13px;transition:background .15s,color .15s}
+#sp-close:hover{background:rgba(255,255,255,.14);color:#fff}
+.sp-tabs{display:flex;gap:4px;background:rgba(255,255,255,.05);
+  border-radius:7px;padding:3px;margin-bottom:16px}
+.sp-tab{flex:1;padding:6px;border-radius:5px;font-size:11.5px;font-weight:600;
+  text-align:center;cursor:pointer;color:var(--muted);transition:all .15s}
+.sp-tab.active{background:var(--accent);color:#fff}
+#sp-custom{display:none;flex-direction:column;gap:10px}
+#sp-custom.show{display:flex}
+.sp-speed-row{display:flex;align-items:center;justify-content:center;gap:16px}
+.sp-val{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:2px;
+  color:#fff;text-align:center;min-width:80px}
+.sp-unit{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);
+  letter-spacing:1px;text-align:center;margin-top:-6px}
+.sp-pm{width:34px;height:34px;border-radius:7px;border:1px solid var(--border);
+  background:rgba(255,255,255,.06);cursor:pointer;font-size:20px;color:#fff;
+  display:flex;align-items:center;justify-content:center;
+  transition:background .15s,border-color .15s;flex-shrink:0}
+.sp-pm:hover{background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.2)}
+.sp-presets{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.sp-pre{font-family:'Space Mono',monospace;font-size:10px;font-weight:700;
+  padding:4px 10px;border-radius:5px;border:1px solid var(--border);
+  color:var(--muted);cursor:pointer;letter-spacing:.5px;transition:all .15s}
+.sp-pre:hover,.sp-pre.on{border-color:var(--accent);color:var(--accent);
+  background:rgba(252,61,33,.08)}
+.sp-time{margin-top:4px;font-family:'Space Mono',monospace;font-size:9.5px;
+  color:var(--muted);text-align:center;letter-spacing:.5px}
+.sp-time b{color:rgba(255,255,255,.75)}
+
+.sat-label{position:absolute;display:flex;align-items:center;gap:5px;
+  font-family:'Space Mono',monospace;font-size:9.5px;letter-spacing:.4px;
+  white-space:nowrap;text-shadow:0 0 8px currentColor,0 1px 4px #000;
+  transform:translate(9px,-50%);pointer-events:none;transition:opacity .18s}
+.sat-label .d{width:6px;height:6px;border-radius:50%;background:currentColor;
+  box-shadow:0 0 6px currentColor;flex-shrink:0}
+
+#sat-view{position:fixed;bottom:calc(var(--bot-h) + 16px);right:20px;
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:18px 20px;z-index:150;backdrop-filter:blur(16px);
+  max-width:286px;display:none;pointer-events:all}
+.sv-cat{font-size:8.5px;font-weight:700;letter-spacing:2.5px;color:var(--accent);
+  text-transform:uppercase;margin-bottom:4px}
+.sv-name{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:2px;
+  color:#fff;line-height:1.05;margin-bottom:4px}
+.sv-orbit{font-family:'Space Mono',monospace;font-size:9px;color:var(--muted);margin-bottom:12px}
+.sv-row{font-size:11px;color:var(--muted);line-height:1.85}
+.sv-row b{color:rgba(255,255,255,.88)}
+.sv-about{font-size:11px;color:var(--muted);line-height:1.72;margin-top:8px;
+  display:-webkit-box;-webkit-line-clamp:4;line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+#sv-back{display:inline-flex;align-items:center;gap:5px;margin-top:12px;
+  background:rgba(252,61,33,.08);border:1px solid rgba(252,61,33,.25);border-radius:5px;
+  color:rgba(252,61,33,.85);font-size:9px;font-weight:700;letter-spacing:1.5px;
+  padding:5px 12px;cursor:pointer;font-family:'Space Mono',monospace;
+  transition:background .15s,color .15s,border-color .15s}
+#sv-back:hover{background:rgba(252,61,33,.18);color:var(--accent);border-color:var(--accent)}
+
+#layer-card{position:fixed;bottom:calc(var(--bot-h) + 16px);right:20px;
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:16px 20px;z-index:149;backdrop-filter:blur(16px);
+  max-width:272px;display:none;pointer-events:none;
+  box-shadow:0 12px 40px rgba(0,0,0,.6)}
+#layer-card.show{display:block}
+.lc-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;
+  color:#fff;line-height:1.1;margin-bottom:3px}
+.lc-src{font-size:8.5px;font-weight:700;letter-spacing:2px;color:var(--accent);
+  text-transform:uppercase;margin-bottom:8px}
+.lc-desc{font-size:11px;color:var(--muted);line-height:1.75;
+  display:-webkit-box;-webkit-line-clamp:4;line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.lc-bar{height:5px;border-radius:3px;margin-top:10px}
+.lc-lbl{display:flex;justify-content:space-between;font-family:'Space Mono',monospace;
+  font-size:8px;color:var(--muted);margin-top:3px}
+
+#hint{position:fixed;bottom:calc(var(--bot-h) + 14px);left:50%;
+  transform:translateX(-50%);font-family:'Space Mono',monospace;font-size:10px;
+  color:rgba(255,255,255,.3);letter-spacing:.5px;z-index:80;
+  pointer-events:none;transition:opacity .4s;white-space:nowrap}
+
+#toast{position:fixed;bottom:calc(var(--bot-h) + 54px);left:50%;
+  transform:translateX(-50%);background:var(--card);
+  border:1px solid rgba(252,61,33,.35);border-radius:7px;padding:7px 18px;
+  font-size:11.5px;color:rgba(252,61,33,.9);letter-spacing:.4px;z-index:400;
+  transition:opacity .3s,transform .3s;opacity:0;pointer-events:none;
+  white-space:nowrap;backdrop-filter:blur(12px)}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(-4px)}
+
+#load{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;z-index:999;transition:opacity .7s}
+#load.out{opacity:0;pointer-events:none}
+.lg{width:72px;height:72px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%,#fc6d21,#a01800);
+  box-shadow:0 0 36px #fc3d2155;animation:spin 3s linear infinite;margin-bottom:20px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.lt{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:6px;
+  color:rgba(255,255,255,.8);margin-bottom:6px}
+.ls{font-size:11px;color:var(--muted);letter-spacing:2px;animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.lb{width:180px;height:2px;background:rgba(255,255,255,.08);border-radius:2px;
+  margin-top:18px;overflow:hidden}
+.lf{height:100%;background:linear-gradient(90deg,#a01800,var(--accent));
+  animation:fill 1.8s ease-in-out infinite}
+@keyframes fill{0%{width:0;margin-left:0}50%{width:70%;margin-left:0}100%{width:0;margin-left:100%}}
+
+</style>
+<link rel="stylesheet" href="responsive.css">
+</head>
+<body>
+
+<div id="load"><div class="lg"></div>
+  <div class="lt">ANTRIKSH</div>
+  <div class="ls">INITIALIZING EARTH OBSERVATION</div>
+  <div class="lb"><div class="lf"></div></div>
+</div>
+
+<div id="c"></div>
+<div id="lbl"></div>
+
+<nav>
+  <a href="index.html" class="logo"><div class="logo-orb"></div>ANTRIKSH &nbsp;·&nbsp; EYES ON EARTH</a>
+</nav>
+
+<button id="sb-toggle" class="shifted" title="Toggle sidebar">☰</button>
+
+<div id="sidebar">
+
+  <div id="agency-toggle">
+    <div class="ag-btn active-nasa" id="ag-nasa">NASA</div>
+    <div class="ag-btn" id="ag-isro" style="margin-left:6px">ISRO</div>
+  </div>
+
+  <div id="nasa-panel">
+    <div class="sb-sect">Satellites</div>
+    <div class="sb-item active" data-tab="sat"><span class="sb-ic">🛰</span>Satellites Now</div>
+
+    <div class="sb-sect">Atmosphere</div>
+    <div class="sb-item" data-tab="air"><span class="sb-ic">🌡</span>Air Temperature</div>
+    <div class="sb-item" data-tab="co2"><span class="sb-ic">Co²</span>Carbon Dioxide</div>
+    <div class="sb-item" data-tab="com"><span class="sb-ic">🇨🇴</span>Carbon Monoxide</div>
+    <div class="sb-item" data-tab="no2"><span class="sb-ic">💨</span>Nitrogen Dioxide</div>
+    <div class="sb-item" data-tab="ozo"><span class="sb-ic">☁</span>Ozone</div>
+    <div class="sb-item" data-tab="wvp"><span class="sb-ic">♨</span>Water Vapor</div>
+    <div class="sb-item" data-tab="aer"><span class="sb-ic">🌫</span>Aerosol Index</div>
+
+    <div class="sb-sect">Land &amp; Ocean</div>
+    <div class="sb-item" data-tab="vis"><span class="sb-ic">🌍</span>Visible Earth</div>
+    <div class="sb-item" data-tab="chl"><span class="sb-ic">🌿</span>Chlorophyll</div>
+    <div class="sb-item" data-tab="som"><span class="sb-ic">🌱</span>Soil Moisture</div>
+    <div class="sb-item" data-tab="snw"><span class="sb-ic">❄</span>Snow Cover</div>
+    <div class="sb-item" data-tab="fir"><span class="sb-ic">🔥</span>Fire Hotspots</div>
+
+    <div class="sb-sect">Ocean &amp; Water</div>
+    <div class="sb-item" data-tab="sst"><span class="sb-ic">🌊</span>Sea Surface Temp</div>
+    <div class="sb-item" data-tab="sea"><span class="sb-ic">🧂</span>Ocean Salinity</div>
+    <div class="sb-item" data-tab="pre"><span class="sb-ic">🌧</span>Precipitation</div>
+    <div class="sb-item" data-tab="wst"><span class="sb-ic">💦</span>Water Storage</div>
+
+    <div class="sb-sect">Night</div>
+    <div class="sb-item" data-tab="ngt"><span class="sb-ic">🌙</span>Night Lights</div>
+  </div>
+
+  <div id="isro-panel">
+    <div class="sb-sect">Satellites</div>
+    <div class="sb-item" data-tab="isro-all"><span class="sb-ic">🛰</span>Satellites Now</div>
+
+    <div class="sb-sect">Earth Observation</div>
+    <div class="sb-item" data-tab="isro-eo"><span class="sb-ic">🗺</span>EO Satellites</div>
+    <div class="sb-item" data-tab="isro-ocean"><span class="sb-ic">🌊</span>Ocean Color</div>
+    <div class="sb-item" data-tab="isro-wind"><span class="sb-ic">💨</span>Wind Speed</div>
+    <div class="sb-item" data-tab="isro-rain"><span class="sb-ic">🌧</span>Rainfall Rate</div>
+    <div class="sb-item" data-tab="isro-sst"><span class="sb-ic">🌡</span>Sea Surface Temp</div>
+    <div class="sb-item" data-tab="isro-watervapor"><span class="sb-ic">💧</span>Water Vapour</div>
+    <div class="sb-item" data-tab="isro-outgoing"><span class="sb-ic">☀</span>Outgoing Radiation</div>
+    <div class="sb-item" data-tab="isro-aod"><span class="sb-ic">🌫</span>Aerosol Depth</div>
+
+    <div class="sb-sect">Navigation</div>
+    <div class="sb-item" data-tab="isro-nav"><span class="sb-ic">📡</span>NavIC Constellation</div>
+
+    <div class="sb-sect">Astrophysics</div>
+    <div class="sb-item" data-tab="isro-astro"><span class="sb-ic">🔭</span>Space Observatories</div>
+  </div>
+
+  <div class="sb-foot">🛰 Tracking &nbsp;<b id="sat-n">28</b>&nbsp; satellites<br>
+    <span style="font-size:9.5px;display:block;margin-top:4px;color:rgba(255,255,255,.25)">Click a dot to explore</span>
+  </div>
+</div>
+
+<div id="layer-card">
+  <div class="lc-name" id="lc-name">—</div>
+  <div class="lc-src" id="lc-src">—</div>
+  <div class="lc-desc" id="lc-desc">—</div>
+  <div id="lc-cb"></div>
+</div>
+
+<div id="sat-view">
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="sv-cat" id="sv-cat">MISSIONS</div>
+    <span id="sv-agency" style="font-family:'Space Mono',monospace;font-size:9px;font-weight:700;letter-spacing:1px;color:#ff9933;display:none">🇮🇳 ISRO</span>
+  </div>
+  <div class="sv-name" id="sv-name">—</div>
+  <div class="sv-orbit" id="sv-orbit">—</div>
+  <div class="sv-row"><b>Launch Vehicle</b> · <span id="sv-veh">—</span></div>
+  <div class="sv-row"><b>Location</b> · <span id="sv-loc">—</span></div>
+  <div class="sv-about" id="sv-about">—</div>
+  <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap">
+    <button id="sv-back">← BACK</button>
+    <a id="sv-mission-link" href="#" target="_blank" style="display:none;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:1.5px;color:var(--accent);border:1px solid rgba(252,61,33,0.35);padding:7px 12px;text-decoration:none;text-transform:uppercase;transition:all 0.2s;">VIEW MISSION →</a>
+  </div>
+</div>
+
+<div id="hint">Click any satellite · Scroll to zoom</div>
+
+<div id="bot">
+  <div id="live-btn" title="Click to control simulation speed">
+    <div class="live-dot"></div>
+    <span class="live-lbl">LIVE</span>
+    <span class="live-t" id="live-t">--:--:-- UTC</span>
+  </div>
+  <span id="speed-badge" class="show">1×</span>
+  <div class="bot-sep"></div>
+  <button class="bot-btn on" id="btn-light" title="Toggle lighting">💡</button>
+</div>
+
+<div id="speed-panel">
+  <div class="sp-head">
+    <span class="sp-title">Satellite Speed</span>
+    <button id="sp-close">✕</button>
+  </div>
+  <div class="sp-tabs">
+    <div class="sp-tab active" id="sp-rt">Real-Time</div>
+    <div class="sp-tab" id="sp-cu">Custom</div>
+  </div>
+  <div id="sp-custom">
+    <div class="sp-speed-row">
+      <button class="sp-pm" id="sp-minus">−</button>
+      <div>
+        <div class="sp-val" id="sp-val">1</div>
+        <div class="sp-unit" id="sp-unit">SEC/SEC</div>
+      </div>
+      <button class="sp-pm" id="sp-plus">+</button>
+    </div>
+    <div class="sp-presets">
+      <div class="sp-pre on" data-m="1">1×</div>
+      <div class="sp-pre" data-m="60">1 min/s</div>
+      <div class="sp-pre" data-m="600">10 min/s</div>
+      <div class="sp-pre" data-m="3600">1 hr/s</div>
+      <div class="sp-pre" data-m="86400">1 day/s</div>
+    </div>
+  </div>
+  <div class="sp-time">CURRENT TIME &nbsp;·&nbsp; <b id="sp-time-disp">—</b></div>
+</div>
+
+<div id="toast"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js"></script>
+<script>
+'use strict';
+
+class TimeManager {
+  constructor() {
+    this._sim = Date.now();
+    this._mult = 1;
+    this._real = true;
+    this._last = performance.now();
+  }
+  update() {
+    const now = performance.now();
+    const dt = Math.min((now - this._last) / 1000, 0.5); // cap at 0.5s to prevent jumps
+    this._last = now;
+    if (this._real) { this._sim = Date.now(); }
+    else { this._sim += dt * this._mult * 1000; }
+    return dt;
+  }
+  get sim() { return this._sim; }
+  get simDate() { return new Date(this._sim); }
+  get mult() { return this._mult; }
+  setSpeed(m) {
+    this._mult = m; this._real = (m === 1);
+    if (this._real) this._sim = Date.now();
+  }
+}
+const TM = new TimeManager();
+
+const SATELLITES = [
+  { name:'ISS', color:'#e8e8ff', model:'./sat-models/ISS.glb', cat:'CREWED',
+    launchDate:'1998-11-20', launchVehicle:'Proton-K / Space Shuttle STS-88',
+    launchLocation:'Baikonur / Kennedy Space Center',
+    about:'The International Space Station orbits at ~408 km altitude serving as a laboratory where crews of six conduct scientific research in microgravity.',
+    l1:'1 25544U 98067A   26125.00000000  .00002182  00000-0  40768-4 0  9991',
+    l2:'2 25544  51.6416  45.4867 0002056 338.1164  21.9836 15.49308920497765' },
+  { name:'Terra', color:'#50ff8c', model:'./sat-models/Terra.glb', cat:'EARTH OBS',
+    launchDate:'1999-12-18', launchVehicle:'Atlas IIAS', launchLocation:'Vandenberg AFB, CA',
+    about:'Terra is NASA\'s flagship EOS satellite providing global data on land, biosphere, atmosphere, and oceans continuously since 2000.',
+    l1:'1 25994U 99068A   26125.50000000  .00000051  00000-0  14567-4 0  9992',
+    l2:'2 25994  98.2000  80.1234 0001234 123.4567 236.5433 14.57231230456789' },
+  { name:'Aqua', color:'#44aaff', model:'./sat-models/Aqua.glb', cat:'EARTH OBS',
+    launchDate:'2002-05-04', launchVehicle:'Delta II 7920', launchLocation:'Vandenberg AFB, CA',
+    about:'Aqua carries six instruments studying Earth\'s water cycle — evaporation, precipitation, and recycling. AIRS measures global atmospheric temperature and humidity.',
+    l1:'1 27424U 02022A   26125.50000000  .00000034  00000-0  12345-4 0  9998',
+    l2:'2 27424  98.2000  85.6789 0001890 150.1234 209.9766 14.57098760567890' },
+  { name:'Aura', color:'#ff88cc', model:'./sat-models/Aura.glb', cat:'ATMOSPHERE',
+    launchDate:'2004-07-15', launchVehicle:'Delta II 7920-10L', launchLocation:'Vandenberg AFB, CA',
+    about:'Aura studies atmospheric chemistry measuring ozone, aerosols, and greenhouse gases from the upper troposphere to the mesosphere.',
+    l1:'1 28376U 04026A   26125.50000000  .00000048  00000-0  13890-4 0  9991',
+    l2:'2 28376  98.2000  91.2345 0001456 140.2345 219.8765 14.56987650567890' },
+  { name:'OCO-2', color:'#88ccff', model:'./sat-models/oco2.glb', cat:'CARBON',
+    launchDate:'2014-07-02', launchVehicle:'Delta II 7320-10C', launchLocation:'Vandenberg AFB, CA',
+    about:'OCO-2 makes precise global measurements of atmospheric CO₂ to understand how the carbon cycle is changing in response to climate change.',
+    l1:'1 40059U 14035A   26125.50000000  .00000028  00000-0  98765-5 0  9997',
+    l2:'2 40059  98.2000  82.3456 0001456 125.6789 234.3211 14.57156780678901' },
+  { name:'SMAP', color:'#ffaa55', model:'./sat-models/SMAP.glb', cat:'EARTH OBS',
+    launchDate:'2015-01-31', launchVehicle:'Delta II 7320-10C', launchLocation:'Vandenberg AFB, CA',
+    about:'SMAP measures global soil moisture and land freeze/thaw state every 2–3 days, supporting weather, flood, drought, and agricultural applications.',
+    l1:'1 40376U 15011A   26125.50000000  .00000025  00000-0  89012-5 0  9991',
+    l2:'2 40376  98.1000  83.4567 0001567 130.7890 229.2110 14.63012340890123' },
+  { name:'Suomi NPP', color:'#dddddd', model:'./sat-models/Suomi_NPP.glb', cat:'WEATHER',
+    launchDate:'2011-10-28', launchVehicle:'Delta II 7920-10C', launchLocation:'Vandenberg AFB, CA',
+    about:'Suomi NPP bridges legacy Earth-observation missions carrying VIIRS, CrIS, ATMS, OMPS, and CERES for weather and climate monitoring.',
+    l1:'1 37849U 11061A   26125.50000000  .00000060  00000-0  16234-4 0  9993',
+    l2:'2 37849  98.7200  92.3456 0001200 110.2345 249.8765 14.19543210234567' },
+  { name:'NOAA 21', color:'#ffdd44', model:'./sat-models/noaa20.glb', cat:'WEATHER',
+    launchDate:'2022-11-10', launchVehicle:'Atlas V 401', launchLocation:'Vandenberg SFB, CA',
+    about:'NOAA-21 (JPSS-2) provides global environmental monitoring including atmospheric soundings, cloud imagery, and sea surface temperature.',
+    l1:'1 54234U 22150A   26125.50000000  .00000045  00000-0  13456-4 0  9995',
+    l2:'2 54234  98.7000  95.6789 0001100 105.3456 254.7654 14.19612340345678' },
+  { name:'Sentinel-6', color:'#66bbff', model:'./sat-models/Sentinel6.glb', cat:'OCEANOGRAPHY',
+    launchDate:'2020-11-21', launchVehicle:'Falcon 9', launchLocation:'Vandenberg AFB, CA',
+    about:'Sentinel-6 Michael Freilich continues 30 years of sea surface height altimetry, measuring global sea level rise with millimeter precision.',
+    l1:'1 46984U 20089A   26125.50000000  .00000023  00000-0  12345-5 0  9994',
+    l2:'2 46984  66.0000  50.1234 0000890 100.1234 259.9766 12.89012340234567' },
+  { name:'Landsat 9', color:'#ff8844', model:'./sat-models/Landsat9.glb', cat:'LAND',
+    launchDate:'2021-09-27', launchVehicle:'Atlas V 401', launchLocation:'Vandenberg SFB, CA',
+    about:'Landsat 9 continues 50 years of land observation critical for water management, wildfire analysis, coral reef research, and global agriculture.',
+    l1:'1 49260U 21088A   26125.50000000  .00000032  00000-0  10234-4 0  9996',
+    l2:'2 49260  98.2000  88.9012 0001345 118.5678 241.4322 14.57135680567890' },
+  { name:'PACE', color:'#55ffcc', model:'./sat-models/pace.glb', cat:'OCEAN/AEROSOL',
+    launchDate:'2024-02-08', launchVehicle:'Falcon 9', launchLocation:'Cape Canaveral SFS, FL',
+    about:'PACE studies ocean ecosystems and aerosols, understanding how the ocean and atmosphere exchange CO₂ and how phytoplankton affect Earth\'s climate.',
+    l1:'1 58615U 24035A   26125.50000000  .00000038  00000-0  11234-4 0  9998',
+    l2:'2 58615  98.0000  87.5678 0001234 112.3456 247.6544 14.57432100789012' },
+  { name:'ICESat-2', color:'#aaddff', model:'./sat-models/ICESat2.glb', cat:'CRYOSPHERE',
+    launchDate:'2018-09-15', launchVehicle:'Delta II 7420-10', launchLocation:'Vandenberg AFB, CA',
+    about:'ICESat-2 uses a photon-counting laser to measure ice sheet elevation, sea ice thickness, and forest height with centimeter precision.',
+    l1:'1 43613U 18070A   26125.50000000  .00000042  00000-0  12567-4 0  9992',
+    l2:'2 43613  92.0000  75.2345 0001890 145.9012 214.0988 14.32123450901234' },
+  { name:'GPM', color:'#44ccff', model:'./sat-models/GPM.glb', cat:'PRECIPITATION',
+    launchDate:'2014-02-27', launchVehicle:'H-IIA 202', launchLocation:'Tanegashima Space Center, Japan',
+    about:'GPM Core Observatory measures global rain and snowfall every 30 minutes using microwave and radar instruments for weather and flood monitoring.',
+    l1:'1 39590U 14009A   26125.50000000  .00000035  00000-0  10789-4 0  9993',
+    l2:'2 39590  65.0000  60.3456 0001234 135.2345 224.7655 15.05012341012345' },
+  { name:'GRACE-FO 1', color:'#ff6688', model:'./sat-models/graceFO.glb', cat:'GRAVITY',
+    launchDate:'2018-05-22', launchVehicle:'Falcon 9', launchLocation:'Vandenberg AFB, CA',
+    about:'GRACE Follow-On 1 measures minute changes in Earth\'s gravity field with its twin to track water, ice, and sea level shifts globally.',
+    l1:'1 43476U 18047A   26125.50000000  .00001500  00000-0  28000-4 0  9994',
+    l2:'2 43476  89.0050  70.4000 0001340 178.9000 181.2100 15.24600001123456' },
+  { name:'GRACE-FO 2', color:'#ff99aa', model:'./sat-models/graceFO.glb', cat:'GRAVITY',
+    launchDate:'2018-05-22', launchVehicle:'Falcon 9', launchLocation:'Vandenberg AFB, CA',
+    about:'GRACE Follow-On 2 trails GRACE-FO 1 by ~220 km, connected by a microwave ranging link measuring their separation to within 1 micron.',
+    l1:'1 43477U 18047B   26125.50000000  .00001500  00000-0  28000-4 0  9995',
+    l2:'2 43477  89.0050  70.4000 0001340 179.0000 179.0000 15.24600001234567' },
+  { name:'CYGNSS 1', color:'#ffcc44', model:'./sat-models/CYGNSS.glb', cat:'WEATHER',
+    launchDate:'2016-12-15', launchVehicle:'Pegasus XL', launchLocation:'Atlantic Ocean (Air Launch)',
+    about:'One of eight CYGNSS microsatellites measuring ocean wind speed inside tropical cyclones using reflected GPS signals.',
+    l1:'1 41884U 16078A   26125.50000000  .00000089  00000-0  23456-4 0  9996', l2:'2 41884  35.0000  40.0000 0012345 160.0000 200.0000 15.21234561345678' },
+  { name:'CYGNSS 2', color:'#ffcc44', model:'./sat-models/CYGNSS.glb', cat:'WEATHER',
+    launchDate:'2016-12-15', launchVehicle:'Pegasus XL', launchLocation:'Atlantic Ocean (Air Launch)',
+    about:'One of eight CYGNSS microsatellites measuring ocean wind speed inside tropical cyclones using reflected GPS signals.',
+    l1:'1 41885U 16078B   26125.50000000  .00000089  00000-0  23456-4 0  9994', l2:'2 41885  35.0000  85.0000 0012345 160.0000 200.0000 15.21234561345679' },
+  { name:'CYGNSS 3', color:'#ffcc44', model:'./sat-models/CYGNSS.glb', cat:'WEATHER',
+    launchDate:'2016-12-15', launchVehicle:'Pegasus XL', launchLocation:'Atlantic Ocean (Air Launch)',
+    about:'One of eight CYGNSS microsatellites measuring ocean wind speed inside tropical cyclones using reflected GPS signals.',
+    l1:'1 41886U 16078C   26125.50000000  .00000089  00000-0  23456-4 0  9992', l2:'2 41886  35.0000 130.0000 0012345 160.0000 200.0000 15.21234561345680' },
+  { name:'CYGNSS 4', color:'#ffcc44', model:'./sat-models/CYGNSS.glb', cat:'WEATHER',
+    launchDate:'2016-12-15', launchVehicle:'Pegasus XL', launchLocation:'Atlantic Ocean (Air Launch)',
+    about:'One of eight CYGNSS microsatellites measuring ocean wind speed inside tropical cyclones using reflected GPS signals.',
+    l1:'1 41887U 16078D   26125.50000000  .00000089  00000-0  23456-4 0  9990', l2:'2 41887  35.0000 175.0000 0012345 160.0000 200.0000 15.21234561345681' },
+  { name:'CYGNSS 5', color:'#ffcc44', model:'./sat-models/CYGNSS.glb', cat:'WEATHER',
+    launchDate:'2016-12-15', launchVehicle:'Pegasus XL', launchLocation:'Atlantic Ocean (Air Launch)',
+    about:'One of eight CYGNSS microsatellites measuring ocean wind speed inside tropical cyclones using reflected GPS signals.',
+    l1:'1 41888U 16078E   26125.50000000  .00000091  00000-0  23678-4 0  9997', l2:'2 41888  35.0000 220.0000 0012456 165.3456 194.6544 15.21298761456789' },
+  { name:'CYGNSS 6', color:'#ffcc44', model:'./sat-models/CYGNSS.glb', cat:'WEATHER',
+    launchDate:'2016-12-15', launchVehicle:'Pegasus XL', launchLocation:'Atlantic Ocean (Air Launch)',
+    about:'One of eight CYGNSS microsatellites measuring ocean wind speed inside tropical cyclones using reflected GPS signals.',
+    l1:'1 41889U 16078F   26125.50000000  .00000091  00000-0  23678-4 0  9995', l2:'2 41889  35.0000 265.0000 0012456 165.3456 194.6544 15.21298761456790' },
+  { name:'CYGNSS 7', color:'#ffcc44', model:'./sat-models/CYGNSS.glb', cat:'WEATHER',
+    launchDate:'2016-12-15', launchVehicle:'Pegasus XL', launchLocation:'Atlantic Ocean (Air Launch)',
+    about:'One of eight CYGNSS microsatellites measuring ocean wind speed inside tropical cyclones using reflected GPS signals.',
+    l1:'1 41890U 16078G   26125.50000000  .00000093  00000-0  23890-4 0  9998', l2:'2 41890  35.0000 310.0000 0012567 170.4567 189.5433 15.21312341567890' },
+  { name:'CYGNSS 8', color:'#ffcc44', model:'./sat-models/CYGNSS.glb', cat:'WEATHER',
+    launchDate:'2016-12-15', launchVehicle:'Pegasus XL', launchLocation:'Atlantic Ocean (Air Launch)',
+    about:'One of eight CYGNSS microsatellites measuring ocean wind speed inside tropical cyclones using reflected GPS signals.',
+    l1:'1 41891U 16078H   26125.50000000  .00000093  00000-0  23890-4 0  9996', l2:'2 41891  35.0000 355.0000 0012567 170.4567 189.5433 15.21312341567891' },
+  { name:'SWOT', color:'#aaffcc', model:'./sat-models/swot.glb', cat:'OCEANOGRAPHY',
+    launchDate:'2022-12-16', launchVehicle:'Falcon 9', launchLocation:'Vandenberg SFB, CA',
+    about:'SWOT surveys Earth\'s surface water at unprecedented resolution, measuring ocean height and the height of lakes, rivers, and reservoirs globally.',
+    l1:'1 54754U 22164A   26125.50000000  .00000033  00000-0  10678-4 0  9992',
+    l2:'2 54754  77.6000  96.7890 0001234 122.4567 237.5433 13.69012341234567' },
+  { name:'TEMPO', color:'#ffaaee', model:'./sat-models/tempo.glb', cat:'AIR QUALITY',
+    launchDate:'2023-04-07', launchVehicle:'Falcon 9', launchLocation:'Cape Canaveral SFS, FL',
+    about:'TEMPO monitors hourly air pollution across North America from geostationary orbit, measuring ozone, NO₂, and formaldehyde.',
+    l1:'1 56218U 23046A   26125.50000000  .00000003  00000-0  00000+0 0  9991',
+    l2:'2 56218   0.0500 290.0000 0000500 180.0000 180.0000  1.00273790  9991' },
+  { name:'NISAR', color:'#ffa040', model:'./sat-models/Nisar.glb', cat:'RADAR',
+    launchDate:'2024-03-15', launchVehicle:'GSLV-Mk II', launchLocation:'Satish Dhawan Space Centre, India',
+    about:'NISAR is a joint NASA-ISRO dual-band radar mission mapping nearly all of Earth\'s surface every 12 days, measuring deformation from earthquakes and ice dynamics.',
+    l1:'1 65053U 25163A   26125.50000000  .00000040  00000-0  15000-4 0  9991',
+    l2:'2 65053  98.4000  90.0000 0001000  90.0000 270.0000 14.57000000000001' },
+  { name:'AstroSat', color:'#c490ff', model:null, agency:'ISRO', cat:'ASTROPHYSICS',
+    launchDate:'2015-09-28', launchVehicle:'PSLV-C30', launchLocation:'Satish Dhawan Space Centre, India',
+    about:'India\'s first dedicated multi-wavelength space observatory studying cosmic sources simultaneously in UV, optical, and X-ray wavelengths.',
+    l1:'1 40930U 15052A   26125.50000000  .00000765  00000-0  18765-4 0  9998',
+    l2:'2 40930   5.9989  80.1234 0012345 123.4567 236.5433 14.75892340567890' },
+  { name:'XPoSat', color:'#ff5078', model:null, agency:'ISRO', cat:'ASTROPHYSICS',
+    launchDate:'2024-01-01', launchVehicle:'PSLV-C58', launchLocation:'Satish Dhawan Space Centre, India',
+    about:'ISRO\'s first X-ray polarimetry satellite studying polarization of X-rays from black holes, neutron stars, and active galactic nuclei.',
+    l1:'1 58933U 24001A   26125.50000000  .00000312  00000-0  19876-4 0  9991',
+    l2:'2 58933   5.9700 100.4567 0001234  90.1234 270.0000 14.96543210123456' },
+
+  { name:'OCEANSAT-3', color:'#ffaa44', model:null, agency:'ISRO', cat:'EARTH OBS',
+    launchDate:'2022-11-26', launchVehicle:'PSLV-C54', launchLocation:'Satish Dhawan Space Centre, India',
+    about:'OCEANSAT-3 monitors ocean color, sea surface temperature, and sea surface winds, supporting fisheries forecasting, climate studies, and weather prediction over the Indian Ocean.',
+    l1:'1 54361U 22150B   26125.50000000  .00000060  00000-0  17890-4 0  9993',
+    l2:'2 54361  98.3600  96.4567 0001100 105.5678 254.4322 14.45612340456789' },
+  { name:'Cartosat-3', color:'#ffcc66', model:null, agency:'ISRO', cat:'EARTH OBS',
+    launchDate:'2019-11-27', launchVehicle:'PSLV-C47', launchLocation:'Satish Dhawan Space Centre, India',
+    about:'Cartosat-3 is ISRO\'s highest-resolution Earth-imaging satellite at 0.25 m resolution, supporting urban planning, disaster monitoring, and cartographic applications.',
+    l1:'1 44874U 19078A   26125.50000000  .00000052  00000-0  15432-4 0  9991',
+    l2:'2 44874  97.5000  88.7890 0001200 112.6789 247.3211 14.86543210567890' },
+  { name:'RESOURCESAT-2A', color:'#ffdd88', model:null, agency:'ISRO', cat:'EARTH OBS',
+    launchDate:'2016-12-07', launchVehicle:'PSLV-C36', launchLocation:'Satish Dhawan Space Centre, India',
+    about:'RESOURCESAT-2A monitors land use and crop cover across India with LISS-III and LISS-IV cameras, aiding agriculture, forestry, and water resource management.',
+    l1:'1 41877U 16078J   26125.50000000  .00000041  00000-0  12345-4 0  9998',
+    l2:'2 41877  98.7500  91.2345 0001400 118.9012 241.0988 14.23456780678901' },
+  { name:'RISAT-2BR1', color:'#ff8844', model:null, agency:'ISRO', cat:'EARTH OBS',
+    launchDate:'2019-12-11', launchVehicle:'PSLV-C48', launchLocation:'Satish Dhawan Space Centre, India',
+    about:'RISAT-2BR1 is a synthetic aperture radar satellite providing all-weather, day-and-night imaging for agriculture, disaster management, and national security applications.',
+    l1:'1 44857U 19082A   26125.50000000  .00000058  00000-0  16789-4 0  9994',
+    l2:'2 44857  37.0000  78.9012 0005678 130.1234 229.8766 15.22345670789012' },
+  { name:'EOS-04', color:'#ff9966', model:null, agency:'ISRO', cat:'EARTH OBS',
+    launchDate:'2022-02-14', launchVehicle:'PSLV-C52', launchLocation:'Satish Dhawan Space Centre, India',
+    about:'EOS-04 (RISAT-1A) is a C-band synthetic aperture radar satellite providing high-resolution microwave imagery for agriculture, forestry, and soil moisture monitoring.',
+    l1:'1 51656U 22013A   26125.50000000  .00000048  00000-0  14321-4 0  9996',
+    l2:'2 51656  98.4000  93.5678 0001300 115.7890 244.2110 14.37890120901234' },
+  { name:'INSAT-3DR', color:'#ffbb55', model:null, agency:'ISRO', cat:'WEATHER',
+    launchDate:'2016-09-08', launchVehicle:'GSLV-F05', launchLocation:'Satish Dhawan Space Centre, India',
+    about:'INSAT-3DR is a geostationary meteorological satellite providing weather imagery, atmospheric sounding, and search & rescue services over the Indian subcontinent.',
+    l1:'1 41752U 16057A   26125.50000000  .00000001  00000-0  00000+0 0  9997',
+    l2:'2 41752   0.0400  74.0000 0001234 180.0000 180.0000  1.00273790  9997' },
+
+  { name:'NavIC-1', color:'#00d4ff', model:null, agency:'ISRO', cat:'NAVIGATION',
+    launchDate:'2013-07-01', launchVehicle:'PSLV-C22', launchLocation:'Satish Dhawan Space Centre, India',
+    about:'NavIC-1 (IRNSS-1A) is the first satellite of India\'s regional navigation system, providing positioning accuracy better than 20 m over India and 1500 km around it.',
+    l1:'1 39199U 13034A   26125.50000000  .00000002  00000-0  00000+0 0  9993',
+    l2:'2 39199  29.1000  55.0000 0010000 180.0000 180.0000  1.00273790  9993' },
+  { name:'NavIC-2', color:'#00d4ff', model:null, agency:'ISRO', cat:'NAVIGATION',
+    launchDate:'2014-04-04', launchVehicle:'PSLV-C24', launchLocation:'Satish Dhawan Space Centre, India',
+    about:'NavIC-2 (IRNSS-1B) is the second satellite of the NavIC constellation in an inclined geosynchronous orbit, expanding coverage over South Asia.',
+    l1:'1 39635U 14017A   26125.50000000  .00000002  00000-0  00000+0 0  9994',
+    l2:'2 39635  29.1000 176.0000 0010000 180.0000 180.0000  1.00273790  9994' },
+  { name:'NavIC-3', color:'#00d4ff', model:null, agency:'ISRO', cat:'NAVIGATION',
+    launchDate:'2015-10-16', launchVehicle:'PSLV-C30 (XL)', launchLocation:'Satish Dhawan Space Centre, India',
+    about:'NavIC-3 (IRNSS-1C) occupies a geostationary slot at 129.5°E, forming part of the three-GEO backbone of the NavIC navigation constellation.',
+    l1:'1 40940U 15054A   26125.50000000  .00000001  00000-0  00000+0 0  9998',
+    l2:'2 40940   0.0500 129.5000 0001234 180.0000 180.0000  1.00273790  9998' },
+  { name:'NavIC-4', color:'#00d4ff', model:null, agency:'ISRO', cat:'NAVIGATION',
+    launchDate:'2016-03-28', launchVehicle:'PSLV-C32', launchLocation:'Satish Dhawan Space Centre, India',
+    about:'NavIC-4 (IRNSS-1D) is in an inclined geosynchronous orbit, contributing to the NavIC constellation\'s continuous positioning signal over the Indian subcontinent.',
+    l1:'1 41241U 16009A   26125.50000000  .00000002  00000-0  00000+0 0  9991',
+    l2:'2 41241  28.1000 111.0000 0010000 180.0000 180.0000  1.00273790  9991' },
+  { name:'NavIC-5', color:'#00d4ff', model:null, agency:'ISRO', cat:'NAVIGATION',
+    launchDate:'2016-01-20', launchVehicle:'PSLV-C31', launchLocation:'Satish Dhawan Space Centre, India',
+    about:'NavIC-5 (IRNSS-1E) is an inclined geosynchronous orbit satellite completing the NavIC east-west IGSO pair.',
+    l1:'1 41384U 16003A   26125.50000000  .00000002  00000-0  00000+0 0  9992',
+    l2:'2 41384  28.1000 231.0000 0010000 180.0000 180.0000  1.00273790  9992' },
+  { name:'NavIC-6', color:'#00d4ff', model:null, agency:'ISRO', cat:'NAVIGATION',
+    launchDate:'2016-06-01', launchVehicle:'PSLV-C33', launchLocation:'Satish Dhawan Space Centre, India',
+    about:'NavIC-6 (IRNSS-1F) occupies a geostationary slot at 32.5°E, providing the western anchor of the NavIC GEO backbone over the Indian Ocean.',
+    l1:'1 41469U 16028A   26125.50000000  .00000001  00000-0  00000+0 0  9995',
+    l2:'2 41469   0.0500  32.5000 0001234 180.0000 180.0000  1.00273790  9995' },
+  { name:'NavIC-7', color:'#00d4ff', model:null, agency:'ISRO', cat:'NAVIGATION',
+    launchDate:'2016-04-28', launchVehicle:'PSLV-C33 (XL)', launchLocation:'Satish Dhawan Space Centre, India',
+    about:'NavIC-7 (IRNSS-1G) occupies a geostationary slot at 83°E, completing the NavIC three-GEO satellite backbone directly above the Indian subcontinent.',
+    l1:'1 41589U 16034A   26125.50000000  .00000001  00000-0  00000+0 0  9996',
+    l2:'2 41589   0.0500  83.0000 0001234 180.0000 180.0000  1.00273790  9996' },
+];
+document.getElementById('sat-n').textContent = SATELLITES.length;
+
+const NORAD = {
+  'ISS':25544,'Terra':25994,'Aqua':27424,'Aura':28376,'OCO-2':40059,
+  'SMAP':40376,'Suomi NPP':37849,'NOAA 21':54234,'Sentinel-6':46984,
+  'Landsat 9':49260,'PACE':58615,'ICESat-2':43613,'GPM':39590,
+  'GRACE-FO 1':43476,'GRACE-FO 2':43477,
+  'CYGNSS 1':41884,'CYGNSS 2':41885,'CYGNSS 3':41886,'CYGNSS 4':41887,
+  'CYGNSS 5':41888,'CYGNSS 6':41889,'CYGNSS 7':41890,'CYGNSS 8':41891,
+  'SWOT':54754,'TEMPO':56218,'NISAR':60562,'AstroSat':40930,'XPoSat':58933,
+  'OCEANSAT-3':54361,'Cartosat-3':44874,'RESOURCESAT-2A':41877,'RISAT-2BR1':44857,
+  'EOS-04':51656,'INSAT-3DR':41752,
+  'NavIC-1':39199,'NavIC-2':39635,'NavIC-3':40940,'NavIC-4':41241,
+  'NavIC-5':41384,'NavIC-6':41469,'NavIC-7':41589,
+};
+
+(function fetchLiveTLEs(){
+  const ids = Object.values(NORAD).join(',');
+  fetch(`https://celestrak.org/SATCAT/tle.php?CATNR=${ids}`, {mode:'cors'})
+    .then(r => r.text())
+    .then(txt => {
+      const lines = txt.trim().split('\n').map(l=>l.trim()).filter(Boolean);
+      for(let i=0;i<lines.length-2;i+=3){
+        const name = lines[i].trim();
+        const l1 = lines[i+1], l2 = lines[i+2];
+        if(!l1.startsWith('1')||!l2.startsWith('2')) continue;
+        const catNum = parseInt(l1.substring(2,7));
+        const satName = Object.keys(NORAD).find(k=>NORAD[k]===catNum);
+        if(!satName) continue;
+        const sd = satData.find(s=>s.name===satName);
+        if(!sd) continue;
+        try{
+          sd.satrec = satellite.twoline2satrec(l1, l2);
+          sd.l1 = l1; sd.l2 = l2;
+        }catch(e){}
+      }
+      toast('Live TLEs updated from Celestrak ✓');
+    })
+    .catch(()=>{ /* silently keep hardcoded TLEs */ });
+})();
+
+const GIBS = 'https://gibs.earthdata.nasa.gov/wms/epsg4326/best/wms.cgi';
+const MOSDAC = 'https://mosdac.gov.in/live_data/wms';
+const LAYER_CFG = {
+  sat:{ activeSats:null },
+  vis:{ name:'Visible Earth', src:'MODIS True-Color · NASA GSFC',
+    layer:'BlueMarble_NextGeneration', date:null,
+    desc:'True-color composite built from MODIS imagery. Captures land, ocean, ice, and clouds at 500 m resolution — Earth as it appears from space.',
+    bar:null, activeSats:null },
+  air:{ name:'Air Temperature', src:'MODIS Land Surface Temp · NASA Terra',
+    layer:'MODIS_Terra_Land_Surface_Temp_Day', date:'2024-07-15',
+    desc:'Daytime land surface temperature from Terra\'s MODIS thermal infrared sensors. Bright reds indicate extreme heat; blues show cold regions.',
+    bar:{ grad:'linear-gradient(to right,#040082,#0000ff,#00a2ff,#00ffff,#80ff00,#ffff00,#ff8c00,#ff0000,#800000)', min:'-25°C', max:'55°C' },
+    activeSats:['Aqua','Terra'] },
+  co2:{ name:'Carbon Dioxide', src:'OCO-2 Column CO₂ · NASA JPL',
+    layer:'OCO-2_L3_XCO2_9day_Mean', date:'2023-09-13',
+    fallback:'MODIS_Terra_Aerosol_Optical_Depth_3km',
+    desc:'Column-averaged CO₂ measured by OCO-2. Higher values (warm colors) indicate atmospheric carbon hotspots from fossil fuels and deforestation.',
+    bar:{ grad:'linear-gradient(to right,#0000aa,#0033ff,#00ccff,#ffff00,#ff8800,#ff0000)', min:'390 ppm', max:'420 ppm' },
+    activeSats:['OCO-2'] },
+  pre:{ name:'Precipitation Rate', src:'GPM IMERG Monthly · NASA GSFC',
+    layer:'GPM_3IMERGM_06_precipitationCal', date:'2023-06-01',
+    fallback:'IMERG_Precipitation_Rate',
+    desc:'Monthly precipitation rate from GPM IMERG combining microwave and infrared data. Deep blues show highest rainfall; white near zero.',
+    bar:{ grad:'linear-gradient(to right,#ffffff,#cceeff,#55aaff,#0055ff,#002299,#110033)', min:'0 mm/hr', max:'15+ mm/hr' },
+    activeSats:['GPM'] },
+  sea:{ name:'Ocean Salinity', src:'SMAP · L3 · NASA JPL',
+    layer:'SMAP_L3_Sea_Surface_Salinity_8Day_Running_Mean_v5_0', date:'2023-06-01',
+    fallback:'SMAP_L3_Sea_Surface_Salinity_Monthly_v5_0',
+    desc:'Sea surface salinity from SMAP\'s L-band radiometer. Fresh water (blue) pours from rivers and rainfall. Salty gyres (red) mark evaporation zones and ocean currents like the Gulf Stream.',
+    bar:{ grad:'linear-gradient(to right,#000066,#0000ff,#00aaff,#ffffff,#ffaa00,#cc0000)', min:'30 PSU (fresh)', max:'38 PSU (salty)' },
+    activeSats:['SMAP','Sentinel-6','SWOT'] },
+  sst:{ name:'Sea Surface Temperature', src:'MODIS Aqua · Monthly · NASA OBPG',
+    layer:'MODIS_Aqua_L3_SST_MidIR_9km_Night_Monthly', date:'2024-01-01',
+    desc:'Monthly nighttime sea surface temperature. Shows ocean heat distribution, currents, and upwelling zones globally.',
+    bar:{ grad:'linear-gradient(to right,#000080,#0000ff,#00ffff,#ffff00,#ff8800,#ff0000)', min:'-2°C', max:'32°C' },
+    activeSats:['Aqua'] },
+  ozo:{ name:'Total Column Ozone', src:'OMI · Daily · NASA GSFC',
+    layer:'OMTO3d_003_ColumnAmountO3', date:'2022-01-15',
+    fallback:'OMTO3e_Daily_Ozone_Total_Column',
+    desc:'Total atmospheric ozone from the Ozone Monitoring Instrument. The ozone layer absorbs UV; the ozone hole appears over Antarctica in spring.',
+    bar:{ grad:'linear-gradient(to right,#220033,#6600cc,#0066ff,#00ffff,#ffff00,#ff8800,#ff0000)', min:'200 DU', max:'500 DU' },
+    activeSats:['Suomi NPP','NOAA 21','Aura'] },
+
+  com:{ name:'Carbon Monoxide', src:'MOPITT · Monthly · NASA LaRC',
+    layer:'MOPITT_CO_Monthly_Surface_Mixing_Ratio_Day', date:'2023-01-01',
+    desc:'Surface CO mixing ratio from MOPITT. Carbon monoxide marks incomplete combustion from vehicles, industry, and wildfires — highest over Africa and South Asia.',
+    bar:{ grad:'linear-gradient(to right,#000033,#003399,#0099ff,#ffff00,#ff6600,#cc0000)', min:'0 ppb', max:'200+ ppb' },
+    activeSats:['Terra'] },
+
+  no2:{ name:'Nitrogen Dioxide', src:'OMI · Daily · NASA GSFC',
+    layer:'OMNO2d_003_ColumnAmountNO2TropCS30', date:'2021-06-15',
+    fallback:'OMNO2d_003_ColumnAmountNO2CloudScreened100',
+    desc:'Tropospheric NO₂ column from Aura\'s OMI instrument. Concentrated over power plants, heavy traffic, and industrial zones — a direct marker of air pollution.',
+    bar:{ grad:'linear-gradient(to right,#000044,#0000ff,#00ffff,#ffff00,#ff8800,#ff0000)', min:'0', max:'15×10¹⁵ mol/cm²' },
+    activeSats:['Aura'] },
+
+  wvp:{ name:'Water Vapor', src:'MODIS Terra · Daily · NASA GSFC',
+    layer:'MODIS_Terra_Water_Vapor_5km_Day', date:'2024-07-01',
+    desc:'Total column water vapor in the atmosphere from Terra MODIS near-infrared channels. Humid tropics glow bright; deserts and polar regions appear dark and dry.',
+    bar:{ grad:'linear-gradient(to right,#0a0a2a,#112244,#1144aa,#4499ff,#88ddff,#ffffff)', min:'0 cm', max:'6+ cm' },
+    activeSats:['Terra','Aqua'] },
+
+  aer:{ name:'Aerosol Optical Depth', src:'MODIS Terra · Daily · NASA GSFC',
+    layer:'MODIS_Terra_Aerosol_Optical_Depth_3km', date:'2024-04-01',
+    desc:'Aerosol optical depth measures how much sunlight is blocked by dust, smoke, and pollution. Saharan dust plumes and wildfire smoke are clearly visible.',
+    bar:{ grad:'linear-gradient(to right,#000000,#220033,#440066,#cc6600,#ffaa00,#ffffff)', min:'0 (clear)', max:'2+ (heavy)' },
+    activeSats:['Terra','Aqua'] },
+
+  chl:{ name:'Chlorophyll Concentration', src:'MODIS Aqua · Monthly · NASA OBPG',
+    layer:'MODIS_Aqua_Chlorophyll_A', date:'2022-08-01',
+    desc:'Ocean chlorophyll-a concentration from Aqua MODIS. Bright greens mark phytoplankton blooms and high biological productivity; deep blues are nutrient-poor open ocean.',
+    bar:{ grad:'linear-gradient(to right,#00007f,#0000ff,#00ffff,#00ff00,#ffff00,#ff0000)', min:'0.01 mg/m³', max:'10+ mg/m³' },
+    activeSats:['Aqua','PACE'] },
+
+  som:{ name:'Soil Moisture', src:'SMAP · L3 Passive · NASA JPL',
+    layer:'SMAP_L3_Passive_Soil_Moisture_Option1', date:'2023-08-15',
+    fallback:'SMAP_L3_Active_Passive_Soil_Moisture',
+    desc:'Near-surface soil moisture from SMAP\'s L-band radiometer, sampled every 2–3 days. Critical for drought monitoring, flood prediction, and crop yield forecasting.',
+    bar:{ grad:'linear-gradient(to right,#ffffcc,#c7e9b4,#7fcdbb,#41b6c4,#2c7fb8,#253494)', min:'Dry (0)', max:'Wet (0.5 m³/m³)' },
+    activeSats:['SMAP'] },
+
+  snw:{ name:'Snow & Ice Cover', src:'MODIS Terra · Daily · NASA GSFC',
+    layer:'MODIS_Terra_Snow_Cover_Daily', date:'2023-01-15',
+    fallback:'MODIS_Terra_NDSI_Snow_Cover',
+    desc:'Daily snow and ice cover fraction from Terra MODIS. Tracks seasonal snowpack changes critical to water supply, flood risk, and climate feedback loops.',
+    bar:{ grad:'linear-gradient(to right,#333333,#667788,#aabbcc,#ddeeff,#eef8ff,#ffffff)', min:'No snow', max:'Full cover' },
+    activeSats:['Terra','Suomi NPP'] },
+
+  fir:{ name:'Fire Hotspots', src:'MODIS Terra · Thermal · NASA GSFC',
+    layer:'MODIS_Terra_Thermal_Anomalies_All', date:'2023-08-15',
+    fallback:'MODIS_Terra_Thermal_Anomalies_All_FireLines',
+    desc:'Active fire detections from Terra MODIS thermal infrared. Each point is a confirmed fire pixel — tracking wildfires, agricultural burning, and deforestation globally.',
+    bar:null,
+    activeSats:['Terra','Aqua','Suomi NPP'] },
+
+  wst:{ name:'Water Storage Anomaly', src:'GRACE-FO · Monthly · NASA JPL',
+    layer:'GRACE_Tellus_Monthly_Liquid_Water_Equivalent_Thickness_CSR', date:'2022-06-01',
+    fallback:'GRACE_Tellus_Monthly_Liquid_Water_Equivalent_Thickness_JPL',
+    desc:'Groundwater and total water storage anomaly from GRACE-FO gravity measurements. Blues show water gain; reds show depletion — tracking aquifer and ice sheet changes.',
+    bar:{ grad:'linear-gradient(to right,#8b0000,#ff4500,#ff8c00,#ffffff,#00bfff,#0000cd,#000080)', min:'−20 cm', max:'+20 cm' },
+    activeSats:['GRACE-FO 1','GRACE-FO 2'] },
+
+  'isro-eo':{ name:'ISRO Earth Observation', src:'ISRO · Live Tracking', layer:null,
+    desc:'OCEANSAT-3, Cartosat-3, RESOURCESAT-2A, RISAT-2BR1, EOS-04, INSAT-3DR and NISAR (joint NASA-ISRO) — India\'s eyes on Earth.',
+    bar:null, activeSats:['OCEANSAT-3','Cartosat-3','RESOURCESAT-2A','RISAT-2BR1','EOS-04','INSAT-3DR','NISAR'] },
+  'isro-nav':{ name:'NavIC Constellation', src:'ISRO · Navigation · Live', layer:null,
+    desc:'India\'s regional navigation satellite system — 7 satellites providing positioning accurate to <20 m over India and 1500 km surrounding region.',
+    bar:null, activeSats:['NavIC-1','NavIC-2','NavIC-3','NavIC-4','NavIC-5','NavIC-6','NavIC-7'] },
+  'isro-all':{ name:'All ISRO Satellites', src:'ISRO · Live Tracking', layer:null,
+    desc:'All ISRO satellites tracked live — Earth observation, astrophysics, weather, radar, NavIC navigation, and NISAR (joint NASA-ISRO).',
+    bar:null, activeSats:['OCEANSAT-3','Cartosat-3','RESOURCESAT-2A','RISAT-2BR1','EOS-04','INSAT-3DR','AstroSat','XPoSat','NavIC-1','NavIC-2','NavIC-3','NavIC-4','NavIC-5','NavIC-6','NavIC-7','NISAR'] },
+  'isro-astro':{ name:'ISRO Space Observatories', src:'ISRO · Astrophysics', layer:null,
+    desc:'AstroSat — India\'s first multi-wavelength space observatory. XPoSat — India\'s first X-ray polarimetry mission studying black holes and neutron stars.',
+    bar:null, activeSats:['AstroSat','XPoSat'] },
+  'isro-ocean':{ name:'OCEANSAT-3 · Ocean Color', src:'MOSDAC · ISRO SAC',
+    layer:'OCEANSAT3_OCI_CHL_1DAY', date:'2023-10-01',
+    isroWms:true,
+    fallback:'MODIS_Aqua_Chlorophyll_A', fallbackNasa:true,
+    desc:'Ocean chlorophyll-a concentration from OCEANSAT-3\'s OCI instrument — tracking phytoplankton blooms and marine productivity across the Indian Ocean.',
+    bar:{ grad:'linear-gradient(to right,#000080,#0000ff,#00ffff,#00ff00,#ffff00,#ff8800)', min:'0.01 mg/m³', max:'10 mg/m³' },
+    activeSats:['OCEANSAT-3'] },
+  'isro-rain':{ name:'INSAT-3DR · Rainfall Rate', src:'MOSDAC · ISRO SAC',
+    layer:'INSAT3DR_RAIN_HALF_HOURLY', date:'2024-07-15',
+    isroWms:true,
+    fallback:'GPM_L3_Half_Hourly_G07', fallbackNasa:true,
+    desc:'Half-hourly rainfall rate retrieved from INSAT-3DR\'s imager over the Indian subcontinent — crucial for monsoon tracking and flood early warning.',
+    bar:{ grad:'linear-gradient(to right,#ffffff,#aaddff,#55aaff,#0055ff,#002299,#110033)', min:'0 mm/hr', max:'20+ mm/hr' },
+    activeSats:['INSAT-3DR'] },
+  'isro-sst':{ name:'INSAT-3DR · Sea Surface Temp', src:'MOSDAC · ISRO SAC',
+    layer:'INSAT3DR_SST_DAILY', date:'2024-07-01',
+    isroWms:true,
+    fallback:'GHRSST_L4_MUR_Sea_Surface_Temperature', fallbackNasa:true,
+    desc:'Daily sea surface temperature from INSAT-3DR\'s thermal infrared channel over the Indian Ocean — vital for cyclone intensity forecasting.',
+    bar:{ grad:'linear-gradient(to right,#000080,#0000ff,#00ffff,#ffff00,#ff8800,#ff0000)', min:'20°C', max:'34°C' },
+    activeSats:['INSAT-3DR','OCEANSAT-3'] },
+
+  'isro-wind':{ name:'OCEANSAT-3 · Wind Speed', src:'MOSDAC · ISRO SAC',
+    layer:'OCEANSAT3_OSCAT_WINDSPEED_DAILY', date:'2023-11-01',
+    isroWms:true,
+    fallback:'ASCAT_L2_Coastal_Wind_Speed_12km', fallbackNasa:true,
+    desc:'Daily ocean surface wind speed from OCEANSAT-3\'s OSCAT scatterometer — tracking monsoon onset, tropical cyclone winds, and ocean circulation patterns.',
+    bar:{ grad:'linear-gradient(to right,#000080,#0055ff,#00ccff,#00ff88,#ffff00,#ff4400)', min:'0 m/s', max:'30 m/s' },
+    activeSats:['OCEANSAT-3'] },
+  'isro-aod':{ name:'INSAT-3DR · Aerosol Optical Depth', src:'MOSDAC · ISRO SAC',
+    layer:'INSAT3D_AOD_DAILY', date:'2024-06-01',
+    isroWms:true,
+    fallback:'MODIS_Terra_Aerosol', fallbackNasa:true,
+    desc:'Aerosol optical depth from INSAT-3DR — measuring dust, smoke, and pollution particles suspended in the atmosphere over South Asia and the Indian Ocean.',
+    bar:{ grad:'linear-gradient(to right,#ffffff,#ffffaa,#ffcc00,#ff6600,#cc0000,#660000)', min:'0.0', max:'2.0+' },
+    activeSats:['INSAT-3DR'] },
+  'isro-watervapor':{ name:'INSAT-3DR · Water Vapour', src:'MOSDAC · ISRO SAC',
+    layer:'INSAT3DR_WV_DAILY', date:'2024-07-01',
+    isroWms:true,
+    fallback:'MODIS_Terra_Water_Vapor_5km', fallbackNasa:true,
+    desc:'Upper tropospheric water vapour from INSAT-3DR — a key parameter for monsoon dynamics, cloud formation, and long-range weather prediction over the Indian region.',
+    bar:{ grad:'linear-gradient(to right,#000000,#220044,#660099,#aa00ff,#ffaaff,#ffffff)', min:'Dry', max:'Moist' },
+    activeSats:['INSAT-3DR'] },
+  'isro-outgoing':{ name:'INSAT-3DR · Outgoing Longwave Radiation', src:'MOSDAC · ISRO SAC',
+    layer:'INSAT3DR_OLR_DAILY', date:'2024-07-01',
+    isroWms:true,
+    fallback:'CERES_EBAF_TOA_OLR_All-Sky_Monthly', fallbackNasa:true,
+    desc:'Daily outgoing longwave radiation (OLR) from INSAT-3DR — indicates deep convection and monsoon cloud systems. Low OLR values mark active thunderstorm clusters.',
+    bar:{ grad:'linear-gradient(to right,#ff0000,#ff8800,#ffff00,#00ffff,#0000ff,#000044)', min:'100 W/m²', max:'320 W/m²' },
+    activeSats:['INSAT-3DR'] },
+
+  ngt:{ name:'Night Lights', src:'VIIRS · Day/Night Band · NASA GSFC',
+    layer:'VIIRS_SNPP_DayNightBand_ENCC', date:'2022-01-01',
+    fallback:'VIIRS_Black_Marble_NightLights_3Band_v21_Monthly',
+    desc:'City lights, gas flares, and fishing vessels captured by Suomi NPP\'s Day/Night Band at night. Reveals human activity, urbanization, and electrification globally.',
+    bar:null,
+    activeSats:['Suomi NPP','NOAA 21'] },
+};
+
+function wmsUrl(layer, date, isro) {
+  const t = date || new Date().toISOString().slice(0,10);
+  const base = isro ? MOSDAC : GIBS;
+  return `${base}?SERVICE=WMS&REQUEST=GetMap&VERSION=1.3.0&LAYERS=${encodeURIComponent(layer)}&FORMAT=image%2Fpng&TRANSPARENT=true&WIDTH=2048&HEIGHT=1024&CRS=CRS%3A84&BBOX=-180%2C-90%2C180%2C90&TIME=${t}`;
+}
+
+const W = () => window.innerWidth, H = () => window.innerHeight;
+const renderer = new THREE.WebGLRenderer({ antialias:true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(W(), H());
+document.getElementById('c').appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(42, W()/H(), 0.01, 2000);
+camera.position.set(0, 0.5, 3.2);
+
+const controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true; controls.dampingFactor = 0.06;
+controls.minDistance = 1.25; controls.maxDistance = 22;
+controls.update();
+
+const tl = new THREE.TextureLoader(); tl.crossOrigin = 'anonymous';
+
+// PMREMGenerator gives GLB PBR materials (gold foil, metal, glass) realistic env reflections
+const pmrem = new THREE.PMREMGenerator(renderer);
+pmrem.compileEquirectangularShader();
+tl.load('./textures/8k_stars_milky_way.jpg', t => {
+  const env = pmrem.fromEquirectangular(t).texture;
+  scene.environment = env;
+  t.dispose(); pmrem.dispose();
+});
+
+const SUN_DIR = new THREE.Vector3(1, 0.6, 1).normalize();
+const SUN_DIST = 40;
+
+const ambLight = new THREE.AmbientLight(0xffffff, 0.95); scene.add(ambLight);
+const sunLight = new THREE.DirectionalLight(0xfff8e0, 1.6);
+sunLight.position.copy(SUN_DIR).multiplyScalar(SUN_DIST);
+scene.add(sunLight);
+const fillLight = new THREE.DirectionalLight(0x4466aa, 0.35);
+fillLight.position.copy(SUN_DIR).negate();
+scene.add(fillLight);
+
+let lightsOn = true;
+document.getElementById('btn-light').addEventListener('click', () => {
+  lightsOn = !lightsOn;
+  ambLight.intensity    = lightsOn ? 0.95 : 0.04;
+  sunLight.intensity    = lightsOn ? 1.6  : 0;
+  fillLight.intensity   = lightsOn ? 0.35 : 0;
+  document.getElementById('btn-light').classList.toggle('on', lightsOn);
+});
+
+(function(){
+  const mat = new THREE.MeshBasicMaterial({ side:THREE.BackSide });
+  scene.add(new THREE.Mesh(new THREE.SphereGeometry(800,64,64), mat));
+  tl.load('./textures/8k_stars.jpg', t => { mat.map=t; mat.needsUpdate=true; });
+})();
+
+const sunPos = SUN_DIR.clone().multiplyScalar(SUN_DIST);
+const sunMat = new THREE.MeshBasicMaterial({ color:0xfffde0 });
+const sunSphere = new THREE.Mesh(new THREE.SphereGeometry(0.42, 32, 32), sunMat);
+sunSphere.position.copy(sunPos);
+scene.add(sunSphere);
+
+(function(){
+  const c = document.createElement('canvas'); c.width=c.height=128;
+  const ctx = c.getContext('2d');
+  const g = ctx.createRadialGradient(64,64,0,64,64,64);
+  g.addColorStop(0,'rgba(255,252,180,0.9)');
+  g.addColorStop(0.25,'rgba(255,200,80,0.5)');
+  g.addColorStop(0.6,'rgba(255,120,20,0.15)');
+  g.addColorStop(1,'rgba(255,80,0,0)');
+  ctx.fillStyle=g; ctx.fillRect(0,0,128,128);
+  const tex = new THREE.CanvasTexture(c);
+  const spriteMat = new THREE.SpriteMaterial({map:tex,transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});
+  const sprite = new THREE.Sprite(spriteMat);
+  sprite.position.copy(sunPos);
+  sprite.scale.set(7,7,1);
+  scene.add(sprite);
+})();
+
+// accumulated rotation angle — avoids discontinuities from frame-time spikes
+let earthRotAngle = 0;
+const earthGroup = new THREE.Group();
+earthGroup.rotation.z = THREE.MathUtils.degToRad(23.4);
+scene.add(earthGroup);
+
+const earthMat = new THREE.MeshLambertMaterial({ color:0x2255aa });
+const earthMesh = new THREE.Mesh(new THREE.SphereGeometry(1,64,64), earthMat);
+earthGroup.add(earthMesh);
+tl.load('./textures/8k_earth_daymap.jpg', t => { earthMat.map=t; earthMat.needsUpdate=true; });
+
+const overlayMat = new THREE.MeshBasicMaterial({ transparent:true, opacity:0, depthWrite:false });
+const overlayMesh = new THREE.Mesh(new THREE.SphereGeometry(1.002,64,64), overlayMat);
+earthGroup.add(overlayMesh);
+let overlayTarget = 0;
+
+earthGroup.add(new THREE.Mesh(
+  new THREE.SphereGeometry(1.06,64,64),
+  new THREE.ShaderMaterial({
+    uniforms:{c:{value:new THREE.Color(0x1a6aff)}},
+    vertexShader:'varying vec3 vN;void main(){vN=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+    fragmentShader:'varying vec3 vN;uniform vec3 c;void main(){float i=pow(.65-dot(vN,vec3(0,0,1)),3.);gl_FragColor=vec4(c,i*.85);}',
+    side:THREE.BackSide, blending:THREE.AdditiveBlending, transparent:true, depthWrite:false,
+  })
+));
+
+(function(){
+  const mat = new THREE.LineBasicMaterial({color:0x334466,transparent:true,opacity:.06,depthWrite:false});
+  for(let lat=-60;lat<=60;lat+=30){
+    const p=[],ph=THREE.MathUtils.degToRad(lat);
+    for(let i=0;i<=64;i++){const lm=(i/64)*Math.PI*2;p.push(new THREE.Vector3(1.001*Math.cos(ph)*Math.cos(lm),1.001*Math.sin(ph),-1.001*Math.cos(ph)*Math.sin(lm)));}
+    earthGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(p),mat));
+  }
+  for(let lon=0;lon<360;lon+=30){
+    const p=[],lm=THREE.MathUtils.degToRad(lon);
+    for(let i=0;i<=64;i++){const ph=-Math.PI/2+(i/64)*Math.PI;p.push(new THREE.Vector3(1.001*Math.cos(ph)*Math.cos(lm),1.001*Math.sin(ph),-1.001*Math.cos(ph)*Math.sin(lm)));}
+    earthGroup.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(p),mat));
+  }
+})();
+
+const MOON_D = 11;
+const MOON_SPD = (2*Math.PI/(27.3*86400)) * 60;
+let moonA = Math.random()*Math.PI*2;
+const moonMat = new THREE.MeshLambertMaterial({color:0x888899});
+const moonMesh = new THREE.Mesh(new THREE.SphereGeometry(.27,32,32), moonMat);
+scene.add(moonMesh);
+tl.load('./textures/8k_moon.jpg', t => { moonMat.map=t; moonMat.needsUpdate=true; });
+(function(){
+  const p=[];for(let i=0;i<=128;i++){const a=(i/128)*Math.PI*2;p.push(new THREE.Vector3(MOON_D*Math.cos(a),0,MOON_D*Math.sin(a)));}
+  scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(p),new THREE.LineBasicMaterial({color:0x223344,transparent:true,opacity:.09,depthWrite:false})));
+})();
+const moonLbl = document.createElement('div');
+moonLbl.className='sat-label'; moonLbl.style.color='#aaaacc';
+moonLbl.innerHTML='<div class="d" style="background:#aaaacc;box-shadow:0 0 5px #aaaacc"></div>Moon';
+document.getElementById('lbl').appendChild(moonLbl);
+
+const SIDEREAL = 2*Math.PI/86164.1;
+
+function eciToScene(pos, gmst) {
+  const gd = satellite.eciToGeodetic(pos, gmst);
+  const r = 1.0 + gd.height/6371;
+  return new THREE.Vector3(
+    r*Math.cos(gd.latitude)*Math.cos(gd.longitude),
+    r*Math.sin(gd.latitude),
+    -r*Math.cos(gd.latitude)*Math.sin(gd.longitude)
+  );
+}
+
+function isOccluded(satPos, camPos) {
+  const d = satPos.clone().sub(camPos);
+  const len = d.length(); d.normalize();
+  const t = -camPos.dot(d);
+  if (t <= 0 || t >= len) return false;
+  return camPos.clone().addScaledVector(d, t).length() < 0.99;
+}
+
+function timeInOrbit(ds) {
+  const ms = Date.now()-new Date(ds).getTime();
+  const days=Math.floor(ms/86400000),yrs=Math.floor(days/365),rem=days%365;
+  return yrs>0?`${yrs} yr${yrs>1?'s':''} · ${rem} day${rem!==1?'s':''}`:`${days} day${days!==1?'s':''}`;
+}
+
+const satData = SATELLITES.map(s => ({
+  ...s, satrec:satellite.twoline2satrec(s.l1,s.l2),
+  mesh:null, halo:null, label:null, trailLine:null, trailGeo:null,
+  screenX:0, screenY:0, onScreen:false,
+}));
+
+const TV='attribute float aA;varying float vA;void main(){vA=aA;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}';
+const TF='uniform vec3 uC;varying float vA;void main(){gl_FragColor=vec4(uC,vA);}';
+const TRAIL_STEPS=120;
+
+satData.forEach(s => {
+  s.mesh = new THREE.Mesh(
+    new THREE.SphereGeometry(0.018,8,8),
+    new THREE.MeshBasicMaterial({color:s.color})
+  );
+  s.mesh.visible=false; scene.add(s.mesh);
+
+  s.halo = new THREE.Mesh(
+    new THREE.SphereGeometry(0.036,8,8),
+    new THREE.MeshBasicMaterial({color:s.color,transparent:true,opacity:.2,depthWrite:false,blending:THREE.AdditiveBlending})
+  );
+  s.halo.visible=false; scene.add(s.halo);
+
+  const el=document.createElement('div');
+  el.className='sat-label'; el.style.color=s.color;
+  el.innerHTML=`<div class="d"></div>${s.name}`;
+  el.style.opacity='0'; document.getElementById('lbl').appendChild(el); s.label=el;
+
+  const pos=new Float32Array((TRAIL_STEPS+1)*3), alp=new Float32Array(TRAIL_STEPS+1);
+  const geo=new THREE.BufferGeometry();
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('aA',new THREE.BufferAttribute(alp,1));
+  geo.setDrawRange(0,0); s.trailGeo=geo;
+  s.trailLine=new THREE.Line(geo,new THREE.ShaderMaterial({
+    uniforms:{uC:{value:new THREE.Color(s.color)}},
+    vertexShader:TV,fragmentShader:TF,
+    transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,
+  }));
+  s.trailLine.visible=false; scene.add(s.trailLine);
+});
+
+function trailDuration(s) {
+  const periodMs = (2*Math.PI / s.satrec.no) * 60 * 1000;
+  // GEO/IGSO: show only a 90-min arc — the full orbit would be an enormous ellipse
+  if (periodMs > 10800000) return 5400000;
+  return Math.min(periodMs, 5400000);
+}
+
+function buildTrail(s, simMs) {
+  const TRAIL_DUR = trailDuration(s);
+  const posArr=s.trailGeo.attributes.position.array, alpArr=s.trailGeo.attributes.aA.array;
+  let count=0;
+  for(let i=0;i<=TRAIL_STEPS;i++){
+    const frac=i/TRAIL_STEPS;
+    const t=new Date(simMs-(1-frac)*TRAIL_DUR);
+    const gmst=satellite.gstime(t), pv=satellite.propagate(s.satrec,t);
+    if(!pv.position||isNaN(pv.position.x)) continue;
+    const v=eciToScene(pv.position,gmst);
+    posArr[count*3]=v.x; posArr[count*3+1]=v.y; posArr[count*3+2]=v.z;
+    alpArr[count]=frac*0.65; count++;
+  }
+  s.trailGeo.attributes.position.needsUpdate=true;
+  s.trailGeo.attributes.aA.needsUpdate=true;
+  s.trailGeo.setDrawRange(0,count);
+}
+
+function updateSatPositions(simMs) {
+  const t=new Date(simMs), gmst=satellite.gstime(t);
+  satData.forEach(s => {
+    const pv=satellite.propagate(s.satrec,t);
+    if(!pv.position||isNaN(pv.position.x)){ s.mesh.visible=false; return; }
+    const v=eciToScene(pv.position,gmst);
+    s.mesh.position.copy(v); s.halo.position.copy(v);
+    s.mesh.userData._hasPos=true;
+    // keep the selected satellite's dot hidden — the 3D model replaces it
+    if(s.mesh.userData._vis!==false && s!==selectedSat) s.mesh.visible=true;
+  });
+}
+
+// animated microwave ranging link between the two GRACE-FO satellites
+const GS=40;
+const gracePts=Array.from({length:GS+1},()=>new THREE.Vector3());
+const graceLinkGeo=new THREE.BufferGeometry().setFromPoints(gracePts);
+const graceLinkLine=new THREE.Line(graceLinkGeo,
+  new THREE.LineBasicMaterial({color:0x00ffcc,transparent:true,opacity:.5,depthWrite:false,blending:THREE.AdditiveBlending}));
+graceLinkLine.visible=false; scene.add(graceLinkLine);
+
+function updateGraceLink(elapsed){
+  const g1=satData.find(s=>s.name==='GRACE-FO 1'), g2=satData.find(s=>s.name==='GRACE-FO 2');
+  const show=g1&&g2&&g1.mesh.visible&&g2.mesh.visible&&g1.mesh.userData._vis!==false;
+  graceLinkLine.visible=show; if(!show) return;
+  const p1=g1.mesh.position, p2=g2.mesh.position;
+  const dir=p2.clone().sub(p1);
+  let perp=dir.clone().normalize().cross(new THREE.Vector3(0,1,0));
+  if(perp.length()<.01) perp=dir.clone().normalize().cross(new THREE.Vector3(1,0,0));
+  perp.normalize();
+  const amp=Math.min(.02,dir.length()*.06);
+  const pts=[];
+  for(let i=0;i<=GS;i++){const u=i/GS,w=Math.sin(u*Math.PI*7+elapsed*2.5)*amp*Math.sin(u*Math.PI);pts.push(p1.clone().addScaledVector(dir,u).addScaledVector(perp,w));}
+  graceLinkGeo.setFromPoints(pts);
+}
+
+let selectedSat=null, satModelObj=null;
+const satModelCache={};
+const dracoLoader = new THREE.DRACOLoader();
+dracoLoader.setDecoderPath('./draco/');
+const gltfLoader = new THREE.GLTFLoader();
+gltfLoader.setDRACOLoader(dracoLoader);
+const MODEL_SIZE=0.10; // scene units — visibly large like NASA Eyes
+
+function loadAndPlaceSatModel(s){
+  if(satModelObj){scene.remove(satModelObj);satModelObj=null;}
+  if(!s.model){toast('3D model is currently unavailable to view');return;}
+
+  const place=model=>{
+    const box=new THREE.Box3().setFromObject(model);
+    const center=box.getCenter(new THREE.Vector3());
+    const sz=box.getSize(new THREE.Vector3());
+    const maxDim=Math.max(sz.x,sz.y,sz.z)||1;
+    const scale=MODEL_SIZE/maxDim;
+
+    // wrap in a pivot group: center geometry, then scale and position the pivot
+    const pivot=new THREE.Group();
+    model.position.sub(center);
+    pivot.add(model);
+    pivot.scale.setScalar(scale);
+    pivot.position.copy(s.mesh.position);
+    satModelObj=pivot;
+    scene.add(satModelObj);
+    toast(s.name+' model loaded');
+  };
+
+  if(satModelCache[s.model]){
+    place(satModelCache[s.model].clone(true));
+    return;
+  }
+
+  toast('Loading '+s.name+' model…');
+  gltfLoader.load(
+    s.model,
+    gltf=>{
+      satModelCache[s.model]=gltf.scene;
+      place(gltf.scene.clone(true));
+    },
+    xhr=>{
+      if(xhr.total) toast('Loading model: '+Math.round(xhr.loaded/xhr.total*100)+'%');
+    },
+    err=>{
+      console.error('GLB load error',err);
+      toast('3D model unavailable');
+    }
+  );
+}
+
+// point light near the model simulates sunlight glinting off solar panels
+const satLight = new THREE.PointLight(0xfff4e0, 0, 1.5);
+scene.add(satLight);
+
+const camAnim={active:false,t:0,dur:1.6,
+  fromPos:new THREE.Vector3(),fromTgt:new THREE.Vector3(),
+  toPos:new THREE.Vector3(),toTgt:new THREE.Vector3()};
+const easeInOut=t=>t<.5?2*t*t:-1+(4-2*t)*t;
+
+function zoomToSat(sat){
+  camAnim.fromPos.copy(camera.position); camAnim.fromTgt.copy(controls.target);
+  const sp=sat.mesh.position.clone();
+  const dir=sp.clone().normalize();
+  const perp=dir.clone().cross(new THREE.Vector3(0,1,0)).normalize();
+  camAnim.toPos.copy(sp)
+    .addScaledVector(dir, 0.22)   // radially out from Earth
+    .addScaledVector(perp, 0.06); // slight side angle
+  camAnim.toTgt.copy(sp);
+  camAnim.t=0; camAnim.active=true;
+  controls.minDistance=0.05; controls.maxDistance=1.5;
+}
+function zoomBack(){
+  camAnim.fromPos.copy(camera.position); camAnim.fromTgt.copy(controls.target);
+  camAnim.toPos.set(0,0.5,3.2); camAnim.toTgt.set(0,0,0);
+  camAnim.t=0; camAnim.active=true;
+  controls.minDistance=1.25; controls.maxDistance=22;
+  satLight.intensity=0;
+}
+
+const SAT_MISSION_PAGES = {
+  'OCEANSAT-3':'./data/mission-oceansat.html',
+  'RESOURCESAT-2A':'./data/mission-resourcesat.html',
+  'AstroSat':'./data/mission-astrosat.html',
+  'XPoSat':'./data/mission-xposat.html',
+  'NISAR':'./data/mission-nisar.html',
+  'NavIC-1':'./data/mission-navic.html',
+  'NavIC-2':'./data/mission-navic.html',
+  'NavIC-3':'./data/mission-navic.html',
+  'NavIC-4':'./data/mission-navic.html',
+  'NavIC-5':'./data/mission-navic.html',
+  'NavIC-6':'./data/mission-navic.html',
+  'NavIC-7':'./data/mission-navic.html',
+};
+
+function openSatPanel(sat){
+  selectedSat=sat; loadAndPlaceSatModel(sat);
+  if(sat.model) zoomToSat(sat);
+  document.getElementById('sv-cat').textContent=sat.cat||'MISSIONS';
+  const agencyEl=document.getElementById('sv-agency');
+  agencyEl.style.display=sat.agency==='ISRO'?'inline':'none';
+  document.getElementById('sv-name').textContent=sat.name;
+  document.getElementById('sv-orbit').textContent='Time in orbit: '+timeInOrbit(sat.launchDate);
+  document.getElementById('sv-veh').textContent=sat.launchVehicle;
+  document.getElementById('sv-loc').textContent=sat.launchLocation;
+  document.getElementById('sv-about').textContent=sat.about;
+  const missionLink=document.getElementById('sv-mission-link');
+  if(SAT_MISSION_PAGES[sat.name]){ missionLink.href=SAT_MISSION_PAGES[sat.name]; missionLink.style.display='inline'; }
+  else { missionLink.style.display='none'; }
+  document.getElementById('sat-view').style.display='block';
+  document.getElementById('layer-card').classList.remove('show');
+  document.getElementById('hint').style.opacity='0';
+}
+function closeSatPanel(){
+  if(satModelObj){scene.remove(satModelObj);satModelObj=null;}
+  if(selectedSat && selectedSat.mesh.userData._hasPos && selectedSat.mesh.userData._vis!==false){
+    selectedSat.mesh.visible=true;
+  }
+  selectedSat=null;
+  document.getElementById('sat-view').style.display='none';
+  document.getElementById('hint').style.opacity='1';
+  if(currentTab!=='sat') document.getElementById('layer-card').classList.add('show');
+  zoomBack();
+}
+document.getElementById('sv-back').addEventListener('click',closeSatPanel);
+
+let mDownX=0, mDownY=0;
+
+renderer.domElement.addEventListener('mousemove',e=>{
+  const cx=e.clientX, cy=e.clientY;
+  const w2=W()/2, h2=H()/2;
+  let hovering=false;
+  for(const s of satData){
+    if(!s.mesh.visible||s.mesh.userData._vis===false) continue;
+    if(isOccluded(s.mesh.position,camera.position)) continue;
+    const p=s.mesh.position.clone().project(camera);
+    if(p.z>1) continue;
+    const sx=p.x*w2+w2, sy=-p.y*h2+h2;
+    if(Math.hypot(cx-sx,cy-sy)<40){hovering=true;break;}
+  }
+  renderer.domElement.style.cursor=hovering?'pointer':'default';
+});
+
+renderer.domElement.addEventListener('pointerdown',e=>{mDownX=e.clientX;mDownY=e.clientY;});
+renderer.domElement.addEventListener('touchstart',e=>{if(e.touches.length===1){mDownX=e.touches[0].clientX;mDownY=e.touches[0].clientY;}},{passive:true});
+function tryPickSat(cx,cy,dragThresh){
+  if(dragThresh>10) return; // was a drag, not a tap
+  const RADIUS=window.innerWidth<769?56:40; // bigger hit area on mobile
+  let nearest=null, nearestDist=RADIUS;
+  const w2=W()/2, h2=H()/2;
+  satData.forEach(s=>{
+    if(!s.mesh.visible||s.mesh.userData._vis===false) return;
+    if(isOccluded(s.mesh.position,camera.position)) return;
+    const p=s.mesh.position.clone().project(camera);
+    if(p.z>1) return;
+    const sx=p.x*w2+w2, sy=-p.y*h2+h2;
+    const dist=Math.hypot(cx-sx, cy-sy);
+    if(dist<nearestDist){nearestDist=dist;nearest=s;}
+  });
+  if(nearest) openSatPanel(nearest);
+}
+renderer.domElement.addEventListener('click',e=>{
+  tryPickSat(e.clientX,e.clientY,Math.abs(e.clientX-mDownX)+Math.abs(e.clientY-mDownY));
+});
+renderer.domElement.addEventListener('touchend',e=>{
+  if(e.changedTouches.length!==1) return;
+  const t=e.changedTouches[0];
+  const drag=Math.abs(t.clientX-mDownX)+Math.abs(t.clientY-mDownY);
+  if(drag<12) tryPickSat(t.clientX,t.clientY,drag);
+},{passive:true});
+
+const _p=new THREE.Vector3();
+function updateLabels(){
+  const w2=W()/2, h2=H()/2;
+  satData.forEach(s=>{
+    const layerOk = s.mesh.userData._vis !== false;
+    if (!layerOk || s === selectedSat) {
+      s.mesh.visible = false;
+      s.halo.visible = false;
+      s.trailLine.visible = false;
+      s.label.style.opacity = '0';
+      s.onScreen = false;
+      return;
+    }
+    const tracked = s.mesh.visible;
+    const occ = tracked ? isOccluded(s.mesh.position, camera.position) : true;
+    s.halo.visible = tracked && !occ;
+    s.trailLine.visible = tracked && !occ;
+    if (!tracked) { s.label.style.opacity='0'; s.onScreen=false; return; }
+    _p.copy(s.mesh.position).project(camera);
+    if (_p.z > 1 || occ) { s.label.style.opacity='0'; s.onScreen=false; return; }
+    const sx=_p.x*w2+w2, sy=-_p.y*h2+h2;
+    s.screenX=sx; s.screenY=sy; s.onScreen=true;
+    s.label.style.left=sx+'px'; s.label.style.top=sy+'px'; s.label.style.opacity='1';
+  });
+  const moonOcc=isOccluded(moonMesh.position,camera.position);
+  _p.copy(moonMesh.position).project(camera);
+  if(_p.z>1||moonOcc){moonLbl.style.opacity='0';}
+  else{moonLbl.style.left=(_p.x*w2+w2)+'px';moonLbl.style.top=(-_p.y*h2+h2)+'px';moonLbl.style.opacity='1';}
+}
+
+const pad=n=>String(n).padStart(2,'0');
+const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function fmtDate(d){return `${months[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()} · ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`;}
+
+setInterval(()=>{
+  const d=TM.simDate;
+  document.getElementById('live-t').textContent=`${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC`;
+  document.getElementById('sp-time-disp').textContent=fmtDate(d);
+},500);
+
+const speedPanel=document.getElementById('speed-panel');
+const speedBadge=document.getElementById('speed-badge');
+let speedPanelOpen=false;
+let currentMultiplier=1;
+const SPEED_STEPS=[1,10,60,120,600,1800,3600,7200,21600,86400];
+
+function openSpeedPanel(){speedPanelOpen=!speedPanelOpen;speedPanel.classList.toggle('show',speedPanelOpen);}
+document.getElementById('live-btn').addEventListener('click',openSpeedPanel);
+document.getElementById('sp-close').addEventListener('click',()=>{speedPanelOpen=false;speedPanel.classList.remove('show');});
+
+function formatMultiplier(m){
+  if(m===1) return{val:'1',unit:'SEC/SEC'};
+  if(m<60) return{val:m,unit:'SEC/SEC'};
+  if(m<3600) return{val:(m/60).toFixed(m%60===0?0:1),unit:'MIN/SEC'};
+  if(m<86400) return{val:(m/3600).toFixed(m%3600===0?0:1),unit:'HR/SEC'};
+  return{val:(m/86400).toFixed(m%86400===0?0:1),unit:'DAY/SEC'};
+}
+
+function applySpeed(m){
+  currentMultiplier=m; TM.setSpeed(m);
+  const f=formatMultiplier(m);
+  document.getElementById('sp-val').textContent=f.val;
+  document.getElementById('sp-unit').textContent=f.unit;
+  speedBadge.textContent=m===1?'1×':`${f.val}${f.unit.split('/')[0][0]}`;
+  speedBadge.style.display=m===1?'none':'block';
+  document.querySelectorAll('.sp-pre').forEach(el=>{
+    el.classList.toggle('on',+el.dataset.m===m);
+  });
+}
+
+document.getElementById('sp-rt').addEventListener('click',()=>{
+  document.getElementById('sp-rt').classList.add('active');
+  document.getElementById('sp-cu').classList.remove('active');
+  document.getElementById('sp-custom').classList.remove('show');
+  applySpeed(1);
+});
+document.getElementById('sp-cu').addEventListener('click',()=>{
+  document.getElementById('sp-cu').classList.add('active');
+  document.getElementById('sp-rt').classList.remove('active');
+  document.getElementById('sp-custom').classList.add('show');
+  if(currentMultiplier===1) applySpeed(60);
+});
+
+document.getElementById('sp-minus').addEventListener('click',()=>{
+  const idx=SPEED_STEPS.indexOf(currentMultiplier);
+  if(idx>0) applySpeed(SPEED_STEPS[idx-1]);
+  else if(idx===-1){const n=SPEED_STEPS.filter(s=>s<currentMultiplier);if(n.length) applySpeed(n[n.length-1]);}
+});
+document.getElementById('sp-plus').addEventListener('click',()=>{
+  const idx=SPEED_STEPS.indexOf(currentMultiplier);
+  if(idx!==-1&&idx<SPEED_STEPS.length-1) applySpeed(SPEED_STEPS[idx+1]);
+  else if(idx===-1){const n=SPEED_STEPS.filter(s=>s>currentMultiplier);if(n.length) applySpeed(n[0]);}
+});
+document.querySelectorAll('.sp-pre').forEach(el=>{
+  el.addEventListener('click',()=>applySpeed(+el.dataset.m));
+});
+
+const sidebar=document.getElementById('sidebar');
+const sbToggle=document.getElementById('sb-toggle');
+let sidebarOpen=true;
+sbToggle.addEventListener('click',()=>{
+  sidebarOpen=!sidebarOpen;
+  sidebar.classList.toggle('hidden',!sidebarOpen);
+  sbToggle.classList.toggle('shifted',sidebarOpen);
+  sbToggle.textContent=sidebarOpen?'☰':'›';
+});
+
+const clock3=new THREE.Clock();
+let lastTrailUpdate=0, lastSatPosUpdate=0;
+
+function animate(){
+  requestAnimationFrame(animate);
+  const dt=TM.update();
+  const elWall=clock3.getDelta();
+  const elapsed=clock3.getElapsedTime();
+
+  // run at 20× real sidereal rate so the rotation is visible in real-time mode
+  const SIDEREAL_MULT = TM._real ? SIDEREAL * 20 : SIDEREAL * TM._mult;
+  earthRotAngle += elWall * SIDEREAL_MULT;
+  const rot = earthRotAngle % (Math.PI*2);
+  earthMesh.rotation.y = rot;
+  overlayMesh.rotation.y = rot;
+
+  moonA += elWall * MOON_SPD;
+  moonMesh.position.set(MOON_D*Math.cos(moonA), MOON_D*Math.sin(moonA)*0.089, MOON_D*Math.sin(moonA));
+
+  if(elapsed-lastSatPosUpdate>=1.0){updateSatPositions(TM.sim);lastSatPosUpdate=elapsed;}
+
+  if(elapsed-lastTrailUpdate>=2.0){
+    satData.forEach(s=>{if(s.mesh.visible)buildTrail(s,TM.sim);});
+    lastTrailUpdate=elapsed;
+  }
+
+  if(Math.abs(overlayMat.opacity-overlayTarget)>0.001){
+    overlayMat.opacity+=(overlayTarget-overlayMat.opacity)*Math.min(elWall*3.5,1);
+    overlayMat.needsUpdate=true;
+  }
+
+  if(selectedSat&&satModelObj&&selectedSat.mesh.visible){
+    satModelObj.position.copy(selectedSat.mesh.position);
+    if(satModelObj.children[0]) satModelObj.children[0].rotation.y+=elWall*0.18;
+    if(!camAnim.active) controls.target.copy(selectedSat.mesh.position);
+    satLight.position.copy(selectedSat.mesh.position).addScaledVector(SUN_DIR, 0.25);
+    satLight.intensity=3.5;
+  } else {
+    satLight.intensity=0;
+  }
+
+  if(camAnim.active){
+    camAnim.t+=elWall/camAnim.dur;
+    const e=easeInOut(Math.min(camAnim.t,1));
+    camera.position.lerpVectors(camAnim.fromPos,camAnim.toPos,e);
+    controls.target.lerpVectors(camAnim.fromTgt,camAnim.toTgt,e);
+    if(camAnim.t>=1) camAnim.active=false;
+  }
+
+  updateGraceLink(elapsed);
+  controls.update();
+  renderer.render(scene,camera);
+  updateLabels();
+}
+animate();
+
+let currentTab='sat';
+const overlayCache={};
+
+function filterSatellites(activeSats){
+  satData.forEach(s=>{
+    const vis=!activeSats||activeSats.includes(s.name);
+    s.mesh.userData._vis=vis;
+    if(!vis){ s.mesh.visible=false; s.halo.visible=false; s.trailLine.visible=false; }
+    else if(s.mesh.userData._hasPos) s.mesh.visible=true;
+  });
+}
+
+function showLayerPanel(cfg){
+  const card=document.getElementById('layer-card');
+  if(!cfg||!cfg.layer){card.classList.remove('show');return;}
+  document.getElementById('lc-name').textContent=cfg.name;
+  document.getElementById('lc-src').textContent=cfg.src;
+  document.getElementById('lc-desc').textContent=cfg.desc;
+  const cbEl=document.getElementById('lc-cb');
+  cbEl.innerHTML=cfg.bar
+    ?`<div class="lc-bar" style="background:${cfg.bar.grad}"></div><div class="lc-lbl"><span>${cfg.bar.min}</span><span>${cfg.bar.max}</span></div>`:'';
+  if(!selectedSat) card.classList.add('show');
+}
+
+function loadLayer(key){
+  const cfg=LAYER_CFG[key];
+  filterSatellites(cfg.activeSats||null);
+  showLayerPanel(cfg);
+  if(!cfg.layer){overlayTarget=0;return;}
+
+  if(overlayCache[key]){
+    overlayMat.map=overlayCache[key]; overlayMat.needsUpdate=true; overlayTarget=0.88; return;
+  }
+
+  toast('Loading '+cfg.name+'…'); overlayTarget=0;
+
+  // decode via createImageBitmap off the main thread to avoid freezing Earth rotation
+  const applyBitmap=bmp=>{
+    const canvas=document.createElement('canvas');
+    canvas.width=bmp.width; canvas.height=bmp.height;
+    canvas.getContext('2d').drawImage(bmp,0,0);
+    const tex=new THREE.CanvasTexture(canvas); tex.needsUpdate=true;
+    overlayCache[key]=tex;
+    if(currentTab===key){overlayMat.map=tex; overlayMat.needsUpdate=true; overlayTarget=0.88;}
+    toast(cfg.name+' loaded ✓');
+  };
+
+  const tryUrl=(url,fallbackUrl)=>{
+    const fetchImage=u=>fetch(u,{mode:'cors'})
+      .then(r=>{
+        if(!r.ok) throw new Error('http '+r.status);
+        const ct=r.headers.get('content-type')||'';
+        if(!ct.includes('image')) throw new Error('not-image');
+        return r.blob();
+      })
+      .then(b=>createImageBitmap(b));
+    fetchImage(url)
+      .then(applyBitmap)
+      .catch(()=>{
+        if(fallbackUrl){
+          const fallbackDate=cfg.date||'';
+          const fallbackYear=fallbackDate.slice(0,4);
+          fetchImage(fallbackUrl)
+            .then(bmp=>{
+              applyBitmap(bmp);
+              toast(cfg.fallbackNasa ? cfg.name+' loaded via NASA archive' : 'Live data unavailable — showing '+fallbackYear+' archive');
+            })
+            .catch(()=>toast('Data unavailable right now'));
+        }else{toast('Data unavailable right now');}
+      });
+  };
+  const fallbackUrl = cfg.fallback ? wmsUrl(cfg.fallback, cfg.date, cfg.fallbackNasa ? false : cfg.isroWms) : null;
+  tryUrl(wmsUrl(cfg.layer,cfg.date,cfg.isroWms), fallbackUrl);
+}
+
+document.querySelectorAll('.sb-item').forEach(item=>{
+  item.addEventListener('click',()=>{
+    document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+    item.classList.add('active');
+    currentTab=item.dataset.tab;
+    if(currentTab==='sat'){
+      overlayTarget=0; document.getElementById('layer-card').classList.remove('show');
+      const isNasaActive=document.getElementById('nasa-panel').style.display!=='none';
+      filterSatellites(isNasaActive ? satData.filter(s=>s.agency!=='ISRO').map(s=>s.name) : null);
+    }else{loadLayer(currentTab);}
+  });
+});
+
+(function(){
+  const nasaBtn=document.getElementById('ag-nasa');
+  const isroBtn=document.getElementById('ag-isro');
+  const nasaPanel=document.getElementById('nasa-panel');
+  const isroPanel=document.getElementById('isro-panel');
+
+  // NISAR is a joint NASA-ISRO mission, so it shows up on both panels
+  const NASA_SATS = satData.filter(s=>s.agency!=='ISRO' || s.name==='NISAR').map(s=>s.name);
+  const ISRO_SATS = satData.filter(s=>s.agency==='ISRO' || s.name==='NISAR').map(s=>s.name);
+
+  function switchAgency(agency){
+    if(agency==='nasa'){
+      nasaPanel.style.display='block'; isroPanel.style.display='none';
+      nasaBtn.className='ag-btn active-nasa'; isroBtn.className='ag-btn';
+      document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+      nasaPanel.querySelector('[data-tab="sat"]').classList.add('active');
+      currentTab='sat'; overlayTarget=0;
+      document.getElementById('layer-card').classList.remove('show');
+      filterSatellites(NASA_SATS);
+    } else {
+      isroPanel.style.display='block'; nasaPanel.style.display='none';
+      isroBtn.className='ag-btn active-isro'; nasaBtn.className='ag-btn';
+      document.querySelectorAll('.sb-item').forEach(i=>i.classList.remove('active'));
+      isroPanel.querySelector('[data-tab="isro-all"]').classList.add('active');
+      currentTab='isro-all'; overlayTarget=0;
+      loadLayer('isro-all');
+    }
+  }
+
+  nasaBtn.addEventListener('click',()=>switchAgency('nasa'));
+  isroBtn.addEventListener('click',()=>switchAgency('isro'));
+  switchAgency('nasa');
+})();
+
+let _tt=null;
+function toast(msg){
+  const el=document.getElementById('toast');
+  el.textContent=msg; el.classList.add('show');
+  clearTimeout(_tt); _tt=setTimeout(()=>el.classList.remove('show'),2800);
+}
+
+window.addEventListener('resize',()=>{
+  camera.aspect=W()/H(); camera.updateProjectionMatrix(); renderer.setSize(W(),H());
+});
+
+updateSatPositions(TM.sim);
+satData.forEach(s=>{if(s.mesh.visible)buildTrail(s,TM.sim);});
+
+setTimeout(()=>{
+  const l=document.getElementById('load');
+  l.classList.add('out'); setTimeout(()=>l.remove(),750);
+},2200);
+</script>
+<script>
+(function(){
+  var btn = document.getElementById('nav-hamburger');
+  var ul = document.querySelector('.nav-links');
+  if (!btn || !ul) return;
+  btn.addEventListener('click', function(){
+    btn.classList.toggle('open');
+    ul.classList.toggle('mobile-open');
+    document.body.style.overflow = ul.classList.contains('mobile-open') ? 'hidden' : '';
+  });
+  ul.querySelectorAll('li').forEach(function(li){
+    if (!li.querySelector('.dropdown')) return;
+    li.classList.add('has-dropdown');
+    var topLink = li.querySelector(':scope > a');
+    var toggle = document.createElement('span');
+    toggle.className = 'nav-toggle';
+    toggle.textContent = '+';
+    if (topLink) topLink.appendChild(toggle);
+    topLink && topLink.addEventListener('click', function(e){
+      if (window.innerWidth > 768) return;
+      e.preventDefault();
+      var open = li.classList.toggle('mobile-expanded');
+      toggle.textContent = open ? '−' : '+';
+    });
+  });
+  // close menu when a dropdown link is tapped
+  ul.querySelectorAll('.dropdown a').forEach(function(a){
+    a.addEventListener('click', function(){
+      if (window.innerWidth > 768) return;
+      btn.classList.remove('open');
+      ul.classList.remove('mobile-open');
+      document.body.style.overflow = '';
+    });
+  });
+})();
+</script>
+</body>
+</html>

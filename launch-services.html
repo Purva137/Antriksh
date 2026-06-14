@@ -1,0 +1,553 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Launch Services — Antriksh</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
+
+  :root { --black:#000000; --white:#ffffff; --red:#FC3D21; --blue:#06038D; }
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  body { background:var(--black); color:var(--white); font-family:'Space Grotesk',sans-serif; overflow-x:hidden; }
+  #stars-canvas { position:fixed; top:0; left:0; width:100%; height:100%; z-index:0; pointer-events:none; }
+
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:20px 48px; background:linear-gradient(to bottom,rgba(0,0,0,0.9),transparent); }
+  .nav-logo { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:3px; color:var(--white); text-decoration:none; }
+  .nav-logo span { color:var(--red); }
+  .nav-links { display:flex; gap:36px; list-style:none; }
+  .nav-links a { font-family:'Space Mono',monospace; font-size:11px; letter-spacing:1.5px; color:rgba(255,255,255,0.8); text-decoration:none; text-transform:uppercase; transition:color 0.2s; }
+  .nav-links a:hover { color:var(--white); }
+  .nav-links li { position:relative; padding-bottom:20px; margin-bottom:-20px; }
+  .nav-links li:hover > .dropdown { opacity:1; pointer-events:all; transform:translateY(0); }
+  .dropdown { position:absolute; top:100%; left:0; background:rgba(5,5,10,0.97); border:1px solid rgba(255,255,255,0.08); padding:12px 0; min-width:200px; opacity:0; pointer-events:none; transform:translateY(8px); transition:all 0.2s ease; z-index:200; }
+  .dropdown a { display:block; padding:8px 20px; font-family:'Space Mono',monospace; font-size:10px; letter-spacing:1px; color:rgba(255,255,255,0.75); text-decoration:none; text-transform:uppercase; transition:all 0.15s; }
+  .dropdown a:hover { color:var(--white)!important; background:rgba(252,61,33,0.08); padding-left:28px; }
+  .nav-links li:last-child > .dropdown { left:auto; right:0; }
+  .dropdown-header { color:var(--white)!important; font-weight:700; border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:4px; padding-bottom:12px!important; }
+
+  section { position:relative; z-index:1; padding:120px 48px; }
+
+  #hero { min-height:100vh; display:flex; align-items:center; padding-top:160px; }
+  .hero-tag { font-family:'Space Mono',monospace; font-size:11px; letter-spacing:3px; color:var(--red); text-transform:uppercase; margin-bottom:24px; }
+  .hero-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(72px,10vw,140px); line-height:0.9; letter-spacing:2px; margin-bottom:32px; }
+  .hero-title span { color:var(--red); }
+  .hero-sub { font-family:'Space Mono',monospace; font-size:13px; letter-spacing:1px; color:rgba(255,255,255,0.75); max-width:600px; line-height:1.8; text-transform:uppercase; }
+  .scroll-indicator { margin-top:60px; display:flex; flex-direction:column; align-items:flex-start; gap:8px; }
+  .scroll-indicator span { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:2px; color:rgba(255,255,255,0.5); text-transform:uppercase; }
+  .scroll-line { width:1px; height:48px; background:linear-gradient(to bottom,var(--red),transparent); animation:scrollDrop 1.8s ease-in-out infinite; }
+  @keyframes scrollDrop { 0%{transform:translateY(0);opacity:1} 80%{transform:translateY(10px);opacity:0} 81%{transform:translateY(0);opacity:0} 100%{transform:translateY(0);opacity:1} }
+
+  .stat-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.06); margin-bottom:80px; }
+  .stat-item { padding:40px 32px; background:var(--black); }
+  .stat-num { font-family:'Bebas Neue',sans-serif; font-size:clamp(48px,6vw,72px); color:var(--red); line-height:1; }
+  .stat-label { font-family:'Space Mono',monospace; font-size:10px; letter-spacing:2px; color:rgba(255,255,255,0.6); text-transform:uppercase; margin-top:8px; }
+
+  .sec-tag { font-family:'Space Mono',monospace; font-size:10px; letter-spacing:3px; color:var(--red); text-transform:uppercase; margin-bottom:16px; }
+  .sec-title { font-family:'Bebas Neue',sans-serif; font-size:clamp(42px,5vw,64px); letter-spacing:2px; margin-bottom:48px; }
+  .sec-title span { color:var(--red); }
+
+  .manifest { width:100%; border-collapse:collapse; font-family:'Space Mono',monospace; margin-bottom:80px; }
+  .manifest thead tr { border-bottom:2px solid var(--red); }
+  .manifest th { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--red); padding:16px 20px; text-align:left; }
+  .manifest tbody tr { border-bottom:1px solid rgba(255,255,255,0.06); transition:background 0.15s; }
+  .manifest tbody tr:hover { background:rgba(252,61,33,0.04); }
+  .manifest td { padding:20px; font-size:11px; color:rgba(255,255,255,0.7); line-height:1.5; }
+  .manifest td:first-child { color:var(--white); font-weight:700; font-size:13px; }
+  .vehicle-tag { display:inline-block; font-size:8px; letter-spacing:1.5px; padding:3px 8px; border:1px solid rgba(255,255,255,0.2); margin-top:4px; color:rgba(255,255,255,0.6); }
+
+  .country-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(140px,1fr)); gap:1px; background:rgba(255,255,255,0.06); }
+  .country-item { background:var(--black); padding:20px 16px; text-align:center; border:1px solid rgba(255,255,255,0.04); transition:background 0.15s; }
+  .country-item:hover { background:rgba(252,61,33,0.05); }
+  .country-flag { margin-bottom:10px; display:flex; align-items:center; justify-content:center; }
+  .country-flag img { width:48px; height:32px; object-fit:cover; border-radius:3px; display:block; box-shadow:0 1px 4px rgba(0,0,0,0.5); }
+  .country-name { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:1px; color:rgba(255,255,255,0.7); text-transform:uppercase; }
+  .country-count { font-family:'Bebas Neue',sans-serif; font-size:18px; color:rgba(255,255,255,0.5); margin-top:2px; }
+
+  .milestones { display:flex; flex-direction:column; gap:0; }
+  .milestone { display:grid; grid-template-columns:120px 1fr; border-bottom:1px solid rgba(255,255,255,0.06); }
+  .milestone-year { font-family:'Bebas Neue',sans-serif; font-size:36px; color:var(--red); padding:28px 32px 28px 0; border-right:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:flex-end; }
+  .milestone-body { padding:28px 0 28px 32px; }
+  .milestone-title { font-family:'Bebas Neue',sans-serif; font-size:22px; letter-spacing:1px; margin-bottom:6px; }
+  .milestone-desc { font-size:13px; color:rgba(255,255,255,0.75); line-height:1.7; }
+
+  .nsil-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:rgba(255,255,255,0.06); }
+  .nsil-card { background:var(--black); padding:40px; border:1px solid rgba(255,255,255,0.06); }
+  .nsil-label { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:2px; color:var(--red); text-transform:uppercase; margin-bottom:12px; }
+  .nsil-title { font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:1px; margin-bottom:16px; }
+  .nsil-desc { font-size:14px; color:rgba(255,255,255,0.8); line-height:1.8; }
+
+  .notable { width:100%; border-collapse:collapse; }
+  .notable th { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--red); padding:14px 16px; text-align:left; border-bottom:1px solid rgba(252,61,33,0.3); }
+  .notable td { padding:16px; font-size:12px; color:rgba(255,255,255,0.85); border-bottom:1px solid rgba(255,255,255,0.05); font-family:'Space Mono',monospace; }
+  .notable td:first-child { color:var(--white); font-weight:700; }
+  .notable tr:hover td { background:rgba(252,61,33,0.03); }
+
+  .callout { background:rgba(252,61,33,0.06); border:1px solid rgba(252,61,33,0.2); border-left:4px solid var(--red); padding:40px 48px; margin:80px 0; }
+  .callout-label { font-family:'Space Mono',monospace; font-size:9px; letter-spacing:3px; color:var(--red); text-transform:uppercase; margin-bottom:12px; }
+  .callout-text { font-family:'Bebas Neue',sans-serif; font-size:clamp(24px,3vw,36px); letter-spacing:1px; line-height:1.3; }
+
+  .reveal { opacity:0; transform:translateY(32px); transition:opacity 0.7s ease,transform 0.7s ease; }
+  .reveal.visible { opacity:1; transform:translateY(0); }
+
+  footer { position:relative; z-index:1; border-top:1px solid rgba(255,255,255,0.08); padding:48px; display:flex; flex-direction:column; align-items:center; gap:24px; }
+  .footer-logo { font-family:'Bebas Neue',sans-serif; font-size:32px; letter-spacing:4px; }
+  .footer-logo span { color:var(--red); }
+  .footer-links { display:flex; gap:32px; list-style:none; flex-wrap:wrap; justify-content:center; }
+  .footer-links a { font-family:'Space Mono',monospace; font-size:10px; letter-spacing:1.5px; color:rgba(255,255,255,0.6); text-decoration:none; text-transform:uppercase; transition:color 0.2s; }
+  .footer-links a:hover { color:var(--white); }
+  .footer-credit { font-family:'Space Mono',monospace; font-size:9px; color:rgba(255,255,255,0.4); letter-spacing:1px; }
+</style>
+<link rel="stylesheet" href="responsive.css">
+</head>
+<body>
+<canvas id="stars-canvas"></canvas>
+
+<nav>
+  <a href="index.html" class="nav-logo">ANTRIK<span>SH</span></a>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  <ul class="nav-links">
+    <li>
+      <a href="missions.html">Missions</a>
+      <div class="dropdown">
+        <a href="missions.html" class="dropdown-header">Missions →</a>
+        <a href="missions.html#active">Active Missions</a>
+        <a href="missions.html#completed">Completed Missions</a>
+        <a href="missions.html#upcoming">Upcoming Missions</a>
+        <a href="missions.html#human">Human Spaceflight</a>
+        <a href="missions.html#lunar">Lunar Missions</a>
+        <a href="missions.html#interplanetary">Interplanetary</a>
+      </div>
+    </li>
+    <li>
+      <a href="timeline.html">Timeline</a>
+      <div class="dropdown">
+        <a href="timeline.html" class="dropdown-header">Timeline →</a>
+        <a href="timeline.html#1960s">1960s — The Beginning</a>
+        <a href="timeline.html#1980s">1980s — First Launches</a>
+        <a href="timeline.html#2000s">2000s — Moon & Beyond</a>
+        <a href="timeline.html#2020s">2020s — New Frontiers</a>
+        <a href="timeline.html#2030s">2030+ — Future Missions</a>
+      </div>
+    </li>
+    <li>
+      <a href="rockets.html">Rockets</a>
+      <div class="dropdown">
+        <a href="rockets.html" class="dropdown-header">Launch Vehicles →</a>
+        <a href="rockets.html#pslv">PSLV</a>
+        <a href="rockets.html#gslv">GSLV</a>
+        <a href="rockets.html#lvm3">LVM3 / HLVM3</a>
+        <a href="rockets.html#sslv">SSLV</a>
+        <a href="rockets.html#rlv">RLV (Reusable)</a>
+        <a href="launch-services.html">Launch Services</a>
+      </div>
+    </li>
+    <li>
+      <a href="heroes.html">Heroes</a>
+      <div class="dropdown">
+        <a href="heroes.html" class="dropdown-header">Science Heroes →</a>
+        <a href="heroes.html#sarabhai">Vikram Sarabhai</a>
+        <a href="heroes.html#kalam">A.P.J. Abdul Kalam</a>
+        <a href="heroes.html#karidhal">Ritu Karidhal</a>
+        <a href="heroes.html#somanath">S. Somanath</a>
+        <a href="heroes.html#all-scientists">All Scientists</a>
+      </div>
+    </li>
+    <li>
+      <a href="isropedia.html">ISRO-pedia</a>
+      <div class="dropdown">
+        <a href="isropedia.html" class="dropdown-header">ISRO-pedia →</a>
+        <a href="isropedia.html#concepts">Space Concepts</a>
+        <a href="isropedia.html#rockets">How Rockets Work</a>
+        <a href="isropedia.html#mechanics">Orbital Mechanics</a>
+        <a href="isropedia.html#career">How to Become a Scientist</a>
+        <a href="isropedia.html#glossary">ISRO Glossary</a>
+      </div>
+    </li>
+    <li>
+      <a href="eyes.html">Eyes on Space</a>
+      <div class="dropdown">
+        <a href="eyes.html" class="dropdown-header">Eyes on Space →</a>
+        <a href="earth.html">Eyes On Earth</a>
+        <a href="vikram.html">Vikram: The Final Descent</a>
+        <a href="pragyan.html">Pragyan's Walk</a>
+        <a href="isslive.html">ISS Live Position</a>
+        <a href="nextlaunch.html">Next Launch</a>
+      </div>
+    </li>
+    <li>
+      <a href="applications.html">ISRO Today</a>
+      <div class="dropdown">
+        <a href="applications.html" class="dropdown-header">ISRO Today →</a>
+        <a href="applications.html">Space Applications</a>
+        <a href="launch-services.html">Launch Services</a>
+        <a href="about.html">About Antriksh</a>
+      </div>
+    </li>
+  </ul>
+</nav>
+
+<section id="hero">
+  <div>
+    <div class="hero-tag">// INDIA LAUNCHES THE WORLD</div>
+    <h1 class="hero-title">LAUNCH<br><span>SERV</span>ICES</h1>
+    <p class="hero-sub">34 countries. 431 foreign satellites. One rocket. India didn't just build a space programme — it built the world's most affordable launch service.</p>
+    <div class="scroll-indicator">
+      <div class="scroll-line"></div>
+      <span>Scroll</span>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0; padding-bottom:80px;">
+  <div class="stat-strip reveal">
+    <div class="stat-item">
+      <div class="stat-num" data-target="431">0</div>
+      <div class="stat-label">Foreign satellites launched by PSLV</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" data-target="34">0</div>
+      <div class="stat-label">Countries that have used ISRO launch services</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" data-target="58">0</div>
+      <div class="stat-num" style="font-size:24px;color:rgba(255,255,255,0.5);margin-top:-8px;">consecutive successes</div>
+      <div class="stat-label">PSLV success streak (as of 2024)</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num" data-target="104">0</div>
+      <div class="stat-label">Satellites launched in a single PSLV mission (world record)</div>
+    </div>
+  </div>
+</section>
+
+<section id="vehicles" style="padding-top:0;">
+  <div class="sec-tag">// THE FLEET</div>
+  <div class="sec-title">LAUNCH <span>VEHICLES</span></div>
+  <div class="table-scroll"><table class="manifest reveal">
+    <thead>
+      <tr>
+        <th>Vehicle</th>
+        <th>Class</th>
+        <th>Payload to LEO</th>
+        <th>Payload to GTO</th>
+        <th>Commercial Use</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>PSLV<div class="vehicle-tag">Polar Satellite Launch Vehicle</div></td>
+        <td>Medium-lift</td>
+        <td>3,800 kg</td>
+        <td>1,678 kg</td>
+        <td>Primary commercial workhorse — most launches for foreign customers</td>
+        <td>✅ Operational</td>
+      </tr>
+      <tr>
+        <td>LVM3<div class="vehicle-tag">Launch Vehicle Mark 3</div></td>
+        <td>Heavy-lift</td>
+        <td>10,000 kg</td>
+        <td>4,000 kg</td>
+        <td>Commercial GEO commsats, OneWeb megaconstellation launches</td>
+        <td>✅ Operational</td>
+      </tr>
+      <tr>
+        <td>SSLV<div class="vehicle-tag">Small Satellite Launch Vehicle</div></td>
+        <td>Small-lift</td>
+        <td>500 kg</td>
+        <td>300 kg (SSO)</td>
+        <td>On-demand small sat launches — 72-hour assembly, low cost</td>
+        <td>✅ Operational</td>
+      </tr>
+      <tr>
+        <td>GSLV Mk II<div class="vehicle-tag">Geosynchronous SLV</div></td>
+        <td>Medium-lift</td>
+        <td>5,000 kg</td>
+        <td>2,500 kg</td>
+        <td>India's GSAT communication satellites</td>
+        <td>✅ Operational</td>
+      </tr>
+      <tr>
+        <td>NGLV<div class="vehicle-tag">Next Generation Launch Vehicle</div></td>
+        <td>Super heavy-lift</td>
+        <td>30,000 kg</td>
+        <td>10,000 kg</td>
+        <td>Future heavy-lift for Gaganyaan, BAS, commercial mega-missions</td>
+        <td>🔧 In development</td>
+      </tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="notable" style="padding-top:0;">
+  <div class="sec-tag">// LANDMARK MISSIONS</div>
+  <div class="sec-title">NOTABLE <span>COMMERCIAL</span> LAUNCHES</div>
+  <div class="table-scroll"><table class="notable reveal">
+    <thead>
+      <tr>
+        <th>Mission</th>
+        <th>Year</th>
+        <th>Vehicle</th>
+        <th>Customer / Payload</th>
+        <th>Significance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>PSLV-C37</td>
+        <td>2017</td>
+        <td>PSLV-XL</td>
+        <td>104 satellites — USA, Israel, UAE, Netherlands, Switzerland, Kazakhstan</td>
+        <td>World record: most satellites in a single launch, held for 4 years</td>
+      </tr>
+      <tr>
+        <td>LVM3-M1 OneWeb</td>
+        <td>2022</td>
+        <td>LVM3</td>
+        <td>36 OneWeb LEO internet sats (UK/India consortium)</td>
+        <td>First commercial mission for LVM3; India's entry into megaconstellation launches</td>
+      </tr>
+      <tr>
+        <td>LVM3-M2 OneWeb</td>
+        <td>2023</td>
+        <td>LVM3</td>
+        <td>36 OneWeb sats — completed India's OneWeb contract</td>
+        <td>Back-to-back heavy commercial launches established LVM3 reliability</td>
+      </tr>
+      <tr>
+        <td>PSLV-C11 Chandrayaan-1</td>
+        <td>2008</td>
+        <td>PSLV-XL</td>
+        <td>India + ESA + NASA instruments</td>
+        <td>International science payload collaboration; discovered water on Moon</td>
+      </tr>
+      <tr>
+        <td>PSLV-C25 MOM</td>
+        <td>2013</td>
+        <td>PSLV-XL</td>
+        <td>Mangalyaan — India's Mars Orbiter</td>
+        <td>First Asian Mars mission, cheapest ever; PSLV carried it beyond Earth–Moon system</td>
+      </tr>
+      <tr>
+        <td>PSLV-C54 OCEANSAT-3</td>
+        <td>2022</td>
+        <td>PSLV</td>
+        <td>OCEANSAT-3 + 8 foreign co-passengers</td>
+        <td>Rideshare model — India's primary satellite + paid foreign co-passengers on same rocket</td>
+      </tr>
+      <tr>
+        <td>GSLV-F12 NVS-01</td>
+        <td>2023</td>
+        <td>GSLV Mk II</td>
+        <td>NavIC NVS-01 navigation satellite</td>
+        <td>Navigation sovereignty mission — replaced ageing IRNSS-1G with upgraded NavIC</td>
+      </tr>
+    </tbody>
+  </table></div>
+</section>
+
+<section id="customers" style="padding-top:0;">
+  <div class="sec-tag">// GLOBAL CUSTOMERS</div>
+  <div class="sec-title">34 <span>COUNTRIES</span> TRUST ISRO</div>
+  <p style="font-size:14px;color:rgba(255,255,255,0.7);margin-bottom:40px;max-width:700px;line-height:1.8;">PSLV has carried commercial payloads for customers across six continents. The number next to each flag is the approximate count of satellites launched for that country.</p>
+  <div class="country-grid reveal">
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/us.png" alt="USA"></div><div class="country-name">USA</div><div class="country-count">100+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/gb.png" alt="UK"></div><div class="country-name">UK</div><div class="country-count">80+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/sg.png" alt="Singapore"></div><div class="country-name">Singapore</div><div class="country-count">20+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/de.png" alt="Germany"></div><div class="country-name">Germany</div><div class="country-count">15+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/ca.png" alt="Canada"></div><div class="country-name">Canada</div><div class="country-count">15+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/fr.png" alt="France"></div><div class="country-name">France</div><div class="country-count">12+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/jp.png" alt="Japan"></div><div class="country-name">Japan</div><div class="country-count">10+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/nl.png" alt="Netherlands"></div><div class="country-name">Netherlands</div><div class="country-count">10+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/il.png" alt="Israel"></div><div class="country-name">Israel</div><div class="country-count">8+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/ae.png" alt="UAE"></div><div class="country-name">UAE</div><div class="country-count">6+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/ch.png" alt="Switzerland"></div><div class="country-name">Switzerland</div><div class="country-count">5+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/at.png" alt="Austria"></div><div class="country-name">Austria</div><div class="country-count">4+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/au.png" alt="Australia"></div><div class="country-name">Australia</div><div class="country-count">4+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/sa.png" alt="Saudi Arabia"></div><div class="country-name">Saudi Arabia</div><div class="country-count">3+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/kz.png" alt="Kazakhstan"></div><div class="country-name">Kazakhstan</div><div class="country-count">3+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/no.png" alt="Norway"></div><div class="country-name">Norway</div><div class="country-count">2+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/be.png" alt="Belgium"></div><div class="country-name">Belgium</div><div class="country-count">2+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/id.png" alt="Indonesia"></div><div class="country-name">Indonesia</div><div class="country-count">2+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/my.png" alt="Malaysia"></div><div class="country-name">Malaysia</div><div class="country-count">2+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/dk.png" alt="Denmark"></div><div class="country-name">Denmark</div><div class="country-count">2+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/it.png" alt="Italy"></div><div class="country-name">Italy</div><div class="country-count">2+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/fi.png" alt="Finland"></div><div class="country-name">Finland</div><div class="country-count">2+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/cz.png" alt="Czech Rep."></div><div class="country-name">Czech Rep.</div><div class="country-count">1+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/lt.png" alt="Lithuania"></div><div class="country-name">Lithuania</div><div class="country-count">1+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/sk.png" alt="Slovakia"></div><div class="country-name">Slovakia</div><div class="country-count">1+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/ar.png" alt="Argentina"></div><div class="country-name">Argentina</div><div class="country-count">1+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/br.png" alt="Brazil"></div><div class="country-name">Brazil</div><div class="country-count">1+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/za.png" alt="South Africa"></div><div class="country-name">South Africa</div><div class="country-count">1+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/kr.png" alt="South Korea"></div><div class="country-name">South Korea</div><div class="country-count">1+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/cl.png" alt="Chile"></div><div class="country-name">Chile</div><div class="country-count">1+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/gh.png" alt="Ghana"></div><div class="country-name">Ghana</div><div class="country-count">1+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/la.png" alt="Laos"></div><div class="country-name">Laos</div><div class="country-count">1+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/co.png" alt="Colombia"></div><div class="country-name">Colombia</div><div class="country-count">1+</div></div>
+    <div class="country-item"><div class="country-flag"><img src="https://flagcdn.com/w80/mn.png" alt="Mongolia"></div><div class="country-name">Mongolia</div><div class="country-count">1+</div></div>
+  </div>
+</section>
+
+<section id="milestones" style="padding-top:40px;">
+  <div class="sec-tag">// COMMERCIAL MILESTONES</div>
+  <div class="sec-title">LAUNCH <span>HISTORY</span></div>
+  <div class="milestones reveal">
+    <div class="milestone">
+      <div class="milestone-year">1999</div>
+      <div class="milestone-body">
+        <div class="milestone-title">First commercial payload — Kitsat-3 (South Korea)</div>
+        <div class="milestone-desc">PSLV-C2 carried South Korea's Kitsat-3 and Germany's DLR-TUBSAT as co-passengers alongside India's OceanSat-1. ISRO's commercial launch era begins.</div>
+      </div>
+    </div>
+    <div class="milestone">
+      <div class="milestone-year">2008</div>
+      <div class="milestone-body">
+        <div class="milestone-title">PSLV-C9 — 10 satellites in one shot</div>
+        <div class="milestone-desc">PSLV launched India's CartoSat-2A alongside 8 international nano-satellites. The first major rideshare demonstration that put PSLV on the world commercial map.</div>
+      </div>
+    </div>
+    <div class="milestone">
+      <div class="milestone-year">2014</div>
+      <div class="milestone-body">
+        <div class="milestone-title">Antrix-Devas deal collapses — Antrix restructured</div>
+        <div class="milestone-desc">The Antrix Corporation controversy led to ISRO restructuring its commercial arm. NewSpace India Limited (NSIL) was established in 2019 as a more transparent commercial entity.</div>
+      </div>
+    </div>
+    <div class="milestone">
+      <div class="milestone-year">2017</div>
+      <div class="milestone-body">
+        <div class="milestone-title">PSLV-C37 — 104 satellites. One rocket. World record.</div>
+        <div class="milestone-desc">In a single launch, PSLV deployed 101 international co-passengers alongside 3 Indian satellites. Satellites from 6 countries. The record stood for 4 years. India charged less per kilogram than any competitor.</div>
+      </div>
+    </div>
+    <div class="milestone">
+      <div class="milestone-year">2019</div>
+      <div class="milestone-body">
+        <div class="milestone-title">NSIL established — commercial launch fully privatised</div>
+        <div class="milestone-desc">NewSpace India Limited created as a government company under Department of Space to handle all commercial launches, technology transfers, and satellite leasing. Separates ISRO's research mission from commercial operations.</div>
+      </div>
+    </div>
+    <div class="milestone">
+      <div class="milestone-year">2022</div>
+      <div class="milestone-body">
+        <div class="milestone-title">LVM3 goes commercial — OneWeb constellation</div>
+        <div class="milestone-desc">LVM3's first commercial flight carries 36 OneWeb satellites in a single launch — India's entry into the heavy-lift commercial megaconstellation market, competing directly with SpaceX Falcon 9 and Arianespace.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="nsil" style="padding-top:40px;">
+  <div class="sec-tag">// THE COMMERCIAL ARM</div>
+  <div class="sec-title">NEW<span>SPACE</span> INDIA</div>
+  <div class="nsil-grid reveal">
+    <div class="nsil-card">
+      <div class="nsil-label">About NSIL</div>
+      <div class="nsil-title">NEWSPACE INDIA LIMITED</div>
+      <div class="nsil-desc">Established in 2019 under the Department of Space, NSIL is India's commercial space company — handling launch services, satellite manufacturing contracts, and technology transfer to private industry. NSIL is the interface between ISRO's capabilities and global commercial demand.<br><br>Unlike ISRO (which is a research agency), NSIL operates as a profit-generating entity — its revenues fund future ISRO missions.</div>
+    </div>
+    <div class="nsil-card">
+      <div class="nsil-label">IN SPACE — Enabling Private Sector</div>
+      <div class="nsil-title">INDIA'S SPACE REVOLUTION</div>
+      <div class="nsil-desc">The Indian Space Policy 2023 opened ISRO's launch infrastructure to private companies. IN-SPACe (Indian National Space Promotion and Authorisation Centre) authorises private launches from ISRO facilities.<br><br>Agnikul Cosmos, Skyroot Aerospace, and Pixxel are among India's first private space companies. Skyroot's Vikram-S became India's first privately built rocket in 2022. The next decade of ISRO commercial growth will be private-led, with NSIL and IN-SPACe as enablers.</div>
+    </div>
+  </div>
+</section>
+
+<section style="padding-top:0; padding-bottom:0;">
+  <div class="callout reveal">
+    <div class="callout-label">// The price of access</div>
+    <div class="callout-text">PSLV launches at approximately $5,000 per kilogram to LEO — SpaceX Falcon 9 costs $2,700, but PSLV was the affordable option for a decade before Falcon 9 existed. India didn't just build a rocket. It built an affordable access corridor to space that small countries, universities, and startups couldn't otherwise afford. That's what 431 foreign satellites actually mean.</div>
+  </div>
+</section>
+
+<footer>
+  <div class="footer-logo">ANTRIK<span>SH</span></div>
+  <ul class="footer-links">
+    <li><a href="missions.html">Missions</a></li>
+    <li><a href="timeline.html">Timeline</a></li>
+    <li><a href="rockets.html">Rockets</a></li>
+    <li><a href="heroes.html">Heroes</a></li>
+    <li><a href="isropedia.html">ISRO-pedia</a></li>
+    <li><a href="eyes.html">Eyes on Space</a></li>
+    <li><a href="applications.html">Space Applications</a></li>
+    <li><a href="launch-services.html">Launch Services</a></li>
+    <li><a href="about.html">About</a></li>
+  </ul>
+  <div class="footer-credit">Data sourced from ISRO & NASA open data</div>
+</footer>
+
+<script>
+const starsCanvas = document.getElementById('stars-canvas');
+const sCtx = starsCanvas.getContext('2d');
+starsCanvas.width = window.innerWidth; starsCanvas.height = window.innerHeight;
+window.addEventListener('resize',()=>{ starsCanvas.width=window.innerWidth; starsCanvas.height=window.innerHeight; drawStars(); });
+const stars = Array.from({length:300},()=>({x:Math.random()*starsCanvas.width,y:Math.random()*starsCanvas.height,r:Math.random()*1.2+0.2,phase:Math.random()*Math.PI*2}));
+function drawStars(){
+  sCtx.clearRect(0,0,starsCanvas.width,starsCanvas.height);
+  const t=Date.now()/1000;
+  stars.forEach(s=>{const a=0.2+0.5*Math.abs(Math.sin(t*0.4+s.phase));sCtx.beginPath();sCtx.arc(s.x,s.y,s.r,0,Math.PI*2);sCtx.fillStyle=`rgba(255,255,255,${a})`;sCtx.fill();});
+  requestAnimationFrame(drawStars);
+}
+drawStars();
+
+const revealEls = document.querySelectorAll('.reveal');
+const revealObs = new IntersectionObserver(entries=>{entries.forEach((e,i)=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('visible'),i*80);}});},{threshold:0.06});
+revealEls.forEach(el=>revealObs.observe(el));
+
+const statNums = document.querySelectorAll('[data-target]');
+const statObs = new IntersectionObserver(entries=>{
+  entries.forEach(e=>{
+    if(e.isIntersecting&&!e.target.dataset.counted){
+      e.target.dataset.counted=true;
+      const target=+e.target.dataset.target;
+      gsap.fromTo(e.target,{innerText:0},{innerText:target,duration:1.8,ease:'power2.out',snap:{innerText:1},onUpdate:function(){e.target.innerText=Math.round(gsap.getProperty(e.target,'innerText'));}});
+    }
+  });
+},{threshold:0.5});
+statNums.forEach(el=>statObs.observe(el));
+</script>
+<script>
+(function(){
+  var btn = document.getElementById('nav-hamburger');
+  var ul = document.querySelector('.nav-links');
+  if (!btn || !ul) return;
+  btn.addEventListener('click', function(){
+    btn.classList.toggle('open');
+    ul.classList.toggle('mobile-open');
+    document.body.style.overflow = ul.classList.contains('mobile-open') ? 'hidden' : '';
+  });
+  ul.querySelectorAll('li').forEach(function(li){
+    if (!li.querySelector('.dropdown')) return;
+    li.classList.add('has-dropdown');
+    var topLink = li.querySelector(':scope > a');
+    var toggle = document.createElement('span');
+    toggle.className = 'nav-toggle';
+    toggle.textContent = '+';
+    if (topLink) topLink.appendChild(toggle);
+    topLink && topLink.addEventListener('click', function(e){
+      if (window.innerWidth > 768) return;
+      e.preventDefault();
+      var open = li.classList.toggle('mobile-expanded');
+      toggle.textContent = open ? '−' : '+';
+    });
+  });
+  // close menu when a dropdown link is tapped
+  ul.querySelectorAll('.dropdown a').forEach(function(a){
+    a.addEventListener('click', function(){
+      if (window.innerWidth > 768) return;
+      btn.classList.remove('open');
+      ul.classList.remove('mobile-open');
+      document.body.style.overflow = '';
+    });
+  });
+})();
+</script>
+</body>
+</html>

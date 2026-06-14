@@ -1,0 +1,298 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chandrayaan-4 — Antriksh</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
+  :root{--black:#000000;--white:#ffffff;--red:#FC3D21;--blue:#06038D;}
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{background:var(--black);color:var(--white);font-family:'Space Grotesk',sans-serif;overflow-x:hidden;}
+  #stars-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:20px 48px;background:rgba(0,0,0,0.92);border-bottom:1px solid rgba(255,255,255,0.06);}
+  .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.12em;color:var(--white);text-decoration:none;}
+  .nav-logo span{color:var(--red);}
+  .nav-links{display:flex;gap:36px;list-style:none;}
+  .nav-links li{position:relative;padding-bottom:20px;margin-bottom:-20px;}
+  .nav-links a{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.8);text-decoration:none;transition:color 0.3s;}
+  .nav-links a:hover{color:var(--white);}
+  .nav-links li:hover>.dropdown{opacity:1;pointer-events:all;transform:translateY(0);}
+  .dropdown{position:absolute;top:100%;left:0;background:rgba(5,5,10,0.97);border:1px solid rgba(255,255,255,0.08);border-top:2px solid var(--red);padding:16px 0;min-width:200px;opacity:0;pointer-events:none;transform:translateY(4px);transition:all 0.2s ease;z-index:200;}
+  .dropdown a{display:block;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.7)!important;padding:10px 20px;text-decoration:none;transition:all 0.2s;} .nav-links li:last-child>.dropdown{left:auto;right:0;}
+  .dropdown a:hover{color:var(--white)!important;background:rgba(252,61,33,0.08);padding-left:28px;}
+  .nav-live{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;color:var(--red);text-transform:uppercase;}
+  .live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.4);}}
+  .mission-hero{position:relative;z-index:1;min-height:100vh;display:flex;flex-direction:column;justify-content:flex-end;padding:0 48px 80px;overflow:hidden;}
+  .hero-bg{position:absolute;inset:0;background:radial-gradient(ellipse at 55% 35%, rgba(40,40,80,0.3) 0%, rgba(0,0,0,0) 60%);}
+  .hero-grid-lines{position:absolute;inset:0;background-image:linear-gradient(rgba(6,3,141,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(6,3,141,0.03) 1px,transparent 1px);background-size:60px 60px;}
+  .breadcrumb{position:relative;z-index:2;padding-top:120px;display:flex;align-items:center;gap:12px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.45);}
+  .breadcrumb a{color:rgba(255,255,255,0.45);text-decoration:none;}
+  .breadcrumb span{color:rgba(255,255,255,0.3);}
+  .mission-hero-content{position:relative;z-index:2;}
+  .mission-status-badge{display:inline-flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--red);margin-bottom:20px;}
+  .mission-hero-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(55px,10vw,140px);line-height:0.85;letter-spacing:0.02em;margin-bottom:24px;}
+  .mission-hero-sub{font-size:18px;font-weight:300;color:rgba(255,255,255,0.7);max-width:620px;line-height:1.7;margin-bottom:48px;}
+  .hero-stats{display:flex;gap:0;border:1px solid rgba(255,255,255,0.08);}
+  .hero-stat{padding:20px 32px;border-right:1px solid rgba(255,255,255,0.08);}
+  .hero-stat:last-child{border-right:none;}
+  .hero-stat-value{font-family:'Bebas Neue',sans-serif;font-size:32px;color:var(--white);line-height:1;}
+  .hero-stat-value span{color:var(--red);}
+  .hero-stat-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-top:4px;}
+  .mission-nav{position:sticky;top:69px;z-index:90;background:rgba(0,0,0,0.95);border-bottom:1px solid rgba(255,255,255,0.06);display:flex;overflow-x:auto;}
+  .mission-nav a{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.55);text-decoration:none;padding:18px 28px;border-bottom:2px solid transparent;white-space:nowrap;transition:all 0.3s;}
+  .mission-nav a:hover,.mission-nav a.active{color:var(--white);border-bottom-color:var(--red);}
+  .content-section{position:relative;z-index:1;padding:80px 48px;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .section-tag{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--red);margin-bottom:12px;}
+  .section-title{font-family:'Bebas Neue',sans-serif;font-size:52px;letter-spacing:0.03em;line-height:1;margin-bottom:32px;}
+  .section-body{font-size:16px;color:rgba(255,255,255,0.75);line-height:1.9;max-width:760px;}
+  .section-body p{margin-bottom:20px;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:80px;align-items:start;}
+  .two-col-wide{display:grid;grid-template-columns:1.4fr 1fr;gap:80px;align-items:start;}
+  .highlight-box{background:rgba(6,3,141,0.08);border:1px solid rgba(6,3,141,0.25);border-left:3px solid var(--blue);padding:28px 32px;margin:32px 0;}
+  .highlight-box-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.6);margin-bottom:12px;}
+  .highlight-box-text{font-size:15px;color:rgba(255,255,255,0.85);line-height:1.8;}
+  .specs-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;margin-top:32px;}
+  .spec-item{background:#080808;border:1px solid rgba(255,255,255,0.04);padding:24px;}
+  .spec-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:8px;}
+  .spec-value{font-family:'Bebas Neue',sans-serif;font-size:28px;color:var(--white);line-height:1;}
+  .spec-unit{font-family:'Space Mono',monospace;font-size:11px;color:rgba(255,255,255,0.55);margin-top:4px;}
+  .timeline-item{display:flex;gap:32px;padding:28px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .timeline-item:last-child{border-bottom:none;}
+  .timeline-date{font-family:'Space Mono',monospace;font-size:11px;color:var(--red);letter-spacing:0.1em;min-width:140px;padding-top:3px;}
+  .timeline-content-title{font-size:15px;font-weight:500;color:var(--white);margin-bottom:6px;}
+  .timeline-content-desc{font-size:13px;color:rgba(255,255,255,0.6);line-height:1.7;}
+  .discoveries-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;margin-top:32px;}
+  .discovery-card{background:#080808;border:1px solid rgba(255,255,255,0.04);padding:28px;transition:border-color 0.3s;}
+  .discovery-card:hover{border-color:rgba(252,61,33,0.15);}
+  .discovery-icon{font-size:32px;margin-bottom:12px;}
+  .discovery-title{font-size:15px;font-weight:500;color:var(--white);margin-bottom:8px;}
+  .discovery-desc{font-size:13px;color:rgba(255,255,255,0.6);line-height:1.7;}
+  .next-mission{position:relative;z-index:1;padding:60px 48px;display:flex;align-items:center;justify-content:space-between;border-top:1px solid rgba(255,255,255,0.06);}
+  .next-label{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(255,255,255,0.4);}
+  .next-title{font-family:'Bebas Neue',sans-serif;font-size:36px;margin-top:8px;}
+  .btn-red{display:inline-flex;align-items:center;gap:12px;background:var(--red);color:var(--white);font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;padding:16px 32px;text-decoration:none;transition:all 0.3s;}
+  .btn-red:hover{background:#ff5540;transform:translateX(4px);}
+  .btn-outline{display:inline-flex;align-items:center;gap:12px;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.7);font-family:'Space Mono',monospace;font-size:12px;letter-spacing:0.12em;text-transform:uppercase;padding:16px 32px;text-decoration:none;transition:all 0.3s;margin-left:16px;}
+  .btn-outline:hover{border-color:rgba(255,255,255,0.6);color:var(--white);}
+  footer{position:relative;z-index:10;padding:40px 48px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;}
+  .footer-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.12em;color:rgba(255,255,255,0.3);text-decoration:none;}
+  .footer-logo span{color:rgba(252,61,33,0.2);}
+  .footer-credit{font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.35);}
+</style>
+<link rel="stylesheet" href="../responsive.css">
+</head>
+<body>
+<canvas id="stars-canvas"></canvas>
+<nav>
+  <a href="../index.html" class="nav-logo">ANTRIK<span>SH</span></a>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  <ul class="nav-links">
+    <li><a href="../missions.html">Missions</a><div class="dropdown"><a href="../missions.html">All Missions →</a><a href="../missions.html">Lunar Missions</a></div></li>
+    <li><a href="../timeline.html">Timeline</a><div class="dropdown"><a href="../timeline.html">Full Timeline →</a></div></li>
+    <li><a href="../rockets.html">Rockets</a><div class="dropdown"><a href="../rockets.html">All Rockets →</a></div></li>
+    <li><a href="../heroes.html">Heroes</a><div class="dropdown"><a href="../heroes.html">All Scientists →</a></div></li>
+    <li><a href="../isropedia.html">ISRO-pedia</a><div class="dropdown"><a href="../isropedia.html">Explore →</a></div></li>
+    <li><a href="../eyes.html">Eyes on Space</a><div class="dropdown"><a href="../eyes.html">Live Tracking →</a></div></li>
+  </ul>
+  
+</nav>
+
+<div class="mission-hero">
+  <div class="hero-bg">
+    <img src="../photos/chandrayaan-3(6).jpg" alt="Chandrayaan Lunar Surface" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 30%;opacity:0.45;z-index:-1;">
+    <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(0,0,0,0.82) 35%,rgba(0,0,0,0.2) 100%),linear-gradient(to top,rgba(0,0,0,0.7) 0%,transparent 50%);z-index:0;"></div>
+  </div>
+  <div class="hero-grid-lines"></div>
+  <div class="breadcrumb"><a href="../index.html">Antriksh</a><span>/</span><a href="../missions.html">Missions</a><span>/</span>Chandrayaan-4</div>
+  <div class="mission-hero-content">
+    <div class="mission-status-badge">● Upcoming · Lunar Sample Return · 2027–2028</div>
+    <h1 class="mission-hero-title">CHANDRAYAAN<span style="color:var(--red);">-4</span></h1>
+    <p class="mission-hero-sub">India's most ambitious lunar mission yet — land on the Moon, collect samples, and bring them back to Earth. Only the USA, USSR, and China have done this. India will be the fourth. The samples from the south pole terrain that Chandrayaan-3 explored will finally come home.</p>
+    <a href="https://www.youtube.com/live/DLA_64yz8Ss?si=gXRrqpvyvYBVHEwx" target="_blank" style="display:inline-flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.55);text-decoration:none;margin-bottom:32px;transition:color 0.2s;" onmouseover="this.style.color='rgba(255,255,255,0.7)'" onmouseout="this.style.color='rgba(255,255,255,0.35)'">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5,3 19,12 5,21"/></svg>
+      Watch: Chandrayaan-3 Soft Landing
+    </a>
+    <div class="hero-stats">
+      <div class="hero-stat"><div class="hero-stat-value">4<span>th</span></div><div class="hero-stat-label">Nation to Return Lunar Samples</div></div>
+      <div class="hero-stat"><div class="hero-stat-value">2027</div><div class="hero-stat-label">Target Launch</div></div>
+      <div class="hero-stat"><div class="hero-stat-value">3<span>kg</span></div><div class="hero-stat-label">Target Sample Mass</div></div>
+      <div class="hero-stat"><div class="hero-stat-value">5</div><div class="hero-stat-label">Mission Modules</div></div>
+      <div class="hero-stat"><div class="hero-stat-value">2</div><div class="hero-stat-label">LVM3 Launches Required</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="mission-nav">
+  <a href="#overview" class="active">Overview</a>
+  <a href="#architecture">5-Module Architecture</a>
+  <a href="#why">Why Sample Return</a>
+  <a href="#ch3link">Built on Chandrayaan-3</a>
+  <a href="#timeline">Mission Plan</a>
+</div>
+
+<div class="content-section" id="overview">
+  <div class="two-col-wide">
+    <div>
+      <div class="section-tag">Overview</div>
+      <h2 class="section-title">Bring the Moon Home</h2>
+      <div class="section-body">
+        <p>Chandrayaan-4 is India's first lunar sample return mission — the most technically demanding class of planetary mission ever attempted. The goal: land on the Moon near the south pole region explored by Chandrayaan-3, collect approximately 3 kg of lunar regolith (soil and rock samples), and return them safely to Earth for laboratory analysis.</p>
+        <p>Only three entities have successfully returned samples from the Moon: the USSR's Luna programme (1970–1976), NASA's Apollo programme (1969–1972), and China's Chang'e-5 (2020). India will attempt to be the fourth — and the first to return samples from the scientifically priceless south pole terrain.</p>
+        <p>The mission requires two LVM3 launches — the spacecraft is too massive and complex for a single launch. <strong style="color:var(--white);">Stack 1</strong> carries the Transfer Module (TM) + Re-entry Module (RM). <strong style="color:var(--white);">Stack 2</strong> carries the Propulsion Module (PM) + Descender Module (DM) + Ascender Module (AM). The two stacks dock in Earth orbit before the combined spacecraft departs for the Moon. The docking technology was proven by SpaDeX in early 2025 — specifically to enable Chandrayaan-4.</p>
+      </div>
+    </div>
+    <div>
+      <div class="specs-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="spec-item"><div class="spec-label">Mission Type</div><div class="spec-value" style="font-size:16px;font-family:'Space Grotesk';">Lunar Sample Return</div></div>
+        <div class="spec-item"><div class="spec-label">Target Launch</div><div class="spec-value" style="font-size:18px;font-family:'Space Grotesk';">2027–2028</div></div>
+        <div class="spec-item"><div class="spec-label">Sample Target</div><div class="spec-value">~3<div class="spec-unit">kg regolith</div></div></div>
+        <div class="spec-item"><div class="spec-label">Launches Needed</div><div class="spec-value">2<div class="spec-unit">LVM3 flights</div></div></div>
+        <div class="spec-item"><div class="spec-label">Mission Modules</div><div class="spec-value">5</div></div>
+        <div class="spec-item"><div class="spec-label">Docking Tech</div><div class="spec-value" style="font-size:14px;font-family:'Space Grotesk';">SpaDeX Proven</div></div>
+        <div class="spec-item"><div class="spec-label">Partner</div><div class="spec-value" style="font-size:14px;font-family:'Space Grotesk';">JAXA (LUPEX)</div></div>
+        <div class="spec-item"><div class="spec-label">World Rank</div><div class="spec-value" style="font-size:16px;font-family:'Space Grotesk';">4th Nation</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="content-section" id="architecture">
+  <div class="section-tag">Mission Design</div>
+  <h2 class="section-title">5 Modules — The Most Complex ISRO Mission Ever</h2>
+  <div class="section-body" style="max-width:100%;margin-bottom:32px;">
+    <p>Chandrayaan-4's architecture is unlike any previous ISRO mission. The spacecraft consists of five distinct modules that work together to accomplish the round-trip to the Moon — two launched separately, docked in Earth orbit, then sent together.</p>
+  </div>
+  <div class="discoveries-grid" style="grid-template-columns:repeat(3,1fr);">
+    <div class="discovery-card">
+      <div class="discovery-icon">🚀</div>
+      <div class="discovery-title">Propulsion Module (PM)</div>
+      <div class="discovery-desc">Provides the propulsion for the Earth-Moon transfer, lunar orbit insertion, and Trans-Earth injection. The workhorse that carries everything to the Moon and powers the return journey.</div>
+    </div>
+    <div class="discovery-card">
+      <div class="discovery-icon">🛬</div>
+      <div class="discovery-title">Descender Module (DM)</div>
+      <div class="discovery-desc">The landing module — lands on the lunar surface with precision. Carries the sample collection mechanism and the Ascent Module on its back. Built on Chandrayaan-3's Vikram lander heritage.</div>
+    </div>
+    <div class="discovery-card">
+      <div class="discovery-icon">🪨</div>
+      <div class="discovery-title">Ascender Module (AM)</div>
+      <div class="discovery-desc">Lifts off from the lunar surface carrying the collected samples — the first time India will launch a rocket from the Moon. Must then perform a <strong style="color:rgba(255,255,255,0.8);">Lunar Orbit Rendezvous (LOR)</strong> — finding, chasing, and docking with the Transfer Module in lunar orbit. This is the most technically demanding phase of the entire mission: autonomous docking in lunar orbit, with no room for error and no second chance. Apollo used the same technique. India must now master it.</div>
+    </div>
+    <div class="discovery-card">
+      <div class="discovery-icon">🔄</div>
+      <div class="discovery-title">Transfer Module (TM)</div>
+      <div class="discovery-desc">Waits in lunar orbit while the Descender lands and the Ascender returns. Receives the Ascender, transfers samples to the Re-entry Module, and provides propulsion for the return to Earth.</div>
+    </div>
+    <div class="discovery-card">
+      <div class="discovery-icon">🌍</div>
+      <div class="discovery-title">Re-entry Module (RM)</div>
+      <div class="discovery-desc">The sample capsule — a small, hardened vehicle that separates from the Transfer Module and re-enters Earth's atmosphere at high velocity, landing safely in India with the precious lunar samples inside.</div>
+    </div>
+  </div>
+  <div class="highlight-box" style="margin-top:32px;">
+    <div class="highlight-box-title">SpaDeX Made This Possible</div>
+    <div class="highlight-box-text">Chandrayaan-4 requires two orbital docking operations — once in Earth orbit and once in lunar orbit. ISRO proved it could dock spacecraft with SpaDeX in early 2025, specifically to enable this mission. Without SpaDeX, Chandrayaan-4 could not exist. Every mission builds on the last.</div>
+  </div>
+</div>
+
+<div class="content-section" id="why">
+  <div class="section-tag">The Science</div>
+  <h2 class="section-title">Why Bring Samples Back?</h2>
+  <div class="two-col">
+    <div class="section-body">
+      <p>Chandrayaan-3's Pragyan rover detected sulfur, measured temperatures, and confirmed the south pole's ancient age — all with instruments weighing kilograms. Earth's laboratories contain instruments that weigh tonnes and have sensitivity many orders of magnitude higher. A single gram of lunar soil analysed on Earth yields more information than years of rover data.</p>
+      <p>The south pole samples are especially valuable because they may contain water ice billions of years old — preserved in permanently shadowed craters at −230°C. These samples could contain the most ancient material in the solar system — pre-dating the formation of Earth. Analysing them will reveal how water arrived in the inner solar system and whether it could support human lunar bases.</p>
+    </div>
+    <div>
+      <div class="highlight-box" style="margin-top:0;border-left-color:var(--red);">
+        <div class="highlight-box-title">First South Pole Samples in History</div>
+        <div class="highlight-box-text">Every previous sample return mission targeted equatorial or mid-latitude lunar terrain. Chandrayaan-4 will be the first mission ever to return samples from the lunar south pole — the most scientifically valuable terrain on the Moon. India will own that scientific first. Again.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="content-section" id="ch3link">
+  <div class="section-tag">The Lineage</div>
+  <h2 class="section-title">Built on Chandrayaan-3's Foundation</h2>
+  <div class="section-body">
+    <p>Chandrayaan-4 is not a separate programme — it is a direct continuation. The Descender Module is built on Chandrayaan-3's Vikram lander design, incorporating all lessons from the 2023 landing. Chandrayaan-2's orbiter mapped the terrain. Chandrayaan-3's Pragyan identified the mineralogy. Chandrayaan-4 will collect the physical evidence.</p>
+    <p>The Chandrayaan-2 Propulsion Module's return to Earth orbit in 2023 was not incidental — it was a direct demonstration of the orbital mechanics needed for Chandrayaan-4's return journey. Every mission in India's lunar programme has been building toward this one.</p>
+  </div>
+</div>
+
+<div class="content-section" id="timeline">
+  <div class="section-tag">Mission Plan</div>
+  <h2 class="section-title">The Road to Sample Return</h2>
+  <div class="timeline-item"><div class="timeline-date">2023–2025</div><div><div class="timeline-content-title">Foundation Missions Complete</div><div class="timeline-content-desc">Chandrayaan-3 proves landing capability. SpaDeX proves docking capability. Chandrayaan-2 orbiter maps target terrain. All prerequisites for Chandrayaan-4 are met.</div></div></div>
+  <div class="timeline-item"><div class="timeline-date">2026</div><div><div class="timeline-content-title">Chandrayaan-4 Assembly & Testing</div><div class="timeline-content-desc">All five modules designed, built, and tested at ISRO centres. Integration of the mission's complex multi-module architecture at SDSC SHAR.</div></div></div>
+  <div class="timeline-item"><div class="timeline-date">2027 · Launch 1</div><div><div class="timeline-content-title">Stack 1 — LVM3 carries TM + RM to Earth Orbit</div><div class="timeline-content-desc">First LVM3 launches Stack 1: Transfer Module + Re-entry Module. Placed in Earth parking orbit. Awaits Stack 2 for docking.</div></div></div>
+  <div class="timeline-item"><div class="timeline-date">2027 · Launch 2</div><div><div class="timeline-content-title">Stack 2 — LVM3 carries PM + DM + AM · Earth Orbit Docking</div><div class="timeline-content-desc">Second LVM3 launches Stack 2: Propulsion + Descender + Ascender modules. Rendezvousing with Stack 1 in Earth orbit. Full spacecraft assembled in orbit via autonomous docking. The complete Chandrayaan-4 mission stack departs for the Moon.</div></div></div>
+  <div class="timeline-item"><div class="timeline-date">2027–2028</div><div><div class="timeline-content-title">Lunar Journey + Landing + Sample Collection</div><div class="timeline-content-desc">Combined spacecraft travels to Moon. Orbital insertion. Descender+Ascender separate and land on south pole terrain. Samples collected over several days.</div></div></div>
+  <div class="timeline-item" style="border-bottom:none;"><div class="timeline-date" style="color:var(--white);">2028</div><div><div class="timeline-content-title" style="color:var(--red);font-size:17px;">Ascent · Docking · Return · India Receives Moon Samples</div><div class="timeline-content-desc">Ascender lifts off from Moon. Docks with Transfer Module. Samples transferred to Re-entry Module. Trans-Earth injection. Re-entry Module lands in India. Scientists open it. The Moon's south pole comes to Indian laboratories.</div></div></div>
+</div>
+
+<div class="next-mission">
+  <div>
+    <div class="next-label">Next Mission</div>
+    <div class="next-title">Bharatiya Antariksh Station</div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:0.1em;margin-top:6px;">India's Own Space Station · 2028–2035</div>
+  </div>
+  <div>
+    <a href="mission-bas.html" class="btn-red">Explore Mission →</a>
+    <a href="../missions.html" class="btn-outline">All Missions</a>
+  </div>
+</div>
+<footer><a href="../index.html" class="footer-logo">ANTRIK<span>SH</span></a><div class="footer-credit">Data sourced from ISRO open data</div></footer>
+<script>
+const sc=document.getElementById('stars-canvas');const sCtx=sc.getContext('2d');sc.width=window.innerWidth;sc.height=window.innerHeight;
+const stars=Array.from({length:200},()=>({x:Math.random()*sc.width,y:Math.random()*sc.height,r:Math.random()*1.1,phase:Math.random()*Math.PI*2,speed:Math.random()*0.003+0.001}));
+function drawStars(t){sCtx.clearRect(0,0,sc.width,sc.height);stars.forEach(s=>{const a=0.15+0.35*Math.sin(t*s.speed+s.phase);sCtx.beginPath();sCtx.arc(s.x,s.y,s.r,0,Math.PI*2);sCtx.fillStyle=`rgba(255,255,255,${a})`;sCtx.fill();});requestAnimationFrame(drawStars);}
+requestAnimationFrame(drawStars);
+window.addEventListener('resize',()=>{sc.width=window.innerWidth;sc.height=window.innerHeight;});
+const sections=document.querySelectorAll('.content-section');const navLinks=document.querySelectorAll('.mission-nav a');
+window.addEventListener('scroll',()=>{let current='';sections.forEach(s=>{if(window.scrollY>=s.offsetTop-200)current=s.id;});navLinks.forEach(a=>{a.classList.remove('active');if(a.getAttribute('href')==='#'+current)a.classList.add('active');});});
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';}});},{threshold:0.05});
+document.querySelectorAll('.spec-item,.discovery-card,.timeline-item').forEach((el,i)=>{el.style.opacity='0';el.style.transform='translateY(20px)';el.style.transition=`opacity 0.5s ease ${i*0.04}s,transform 0.5s ease ${i*0.04}s`;obs.observe(el);});
+</script>
+<script>
+(function(){
+  var btn = document.getElementById('nav-hamburger');
+  var ul = document.querySelector('.nav-links');
+  if (!btn || !ul) return;
+  btn.addEventListener('click', function(){
+    btn.classList.toggle('open');
+    ul.classList.toggle('mobile-open');
+    document.body.style.overflow = ul.classList.contains('mobile-open') ? 'hidden' : '';
+  });
+  ul.querySelectorAll('li').forEach(function(li){
+    if (!li.querySelector('.dropdown')) return;
+    li.classList.add('has-dropdown');
+    var topLink = li.querySelector(':scope > a');
+    var toggle = document.createElement('span');
+    toggle.className = 'nav-toggle';
+    toggle.textContent = '+';
+    if (topLink) topLink.appendChild(toggle);
+    topLink && topLink.addEventListener('click', function(e){
+      if (window.innerWidth > 768) return;
+      e.preventDefault();
+      var open = li.classList.toggle('mobile-expanded');
+      toggle.textContent = open ? '−' : '+';
+    });
+  });
+  // close menu when a dropdown link is tapped
+  ul.querySelectorAll('.dropdown a').forEach(function(a){
+    a.addEventListener('click', function(){
+      if (window.innerWidth > 768) return;
+      btn.classList.remove('open');
+      ul.classList.remove('mobile-open');
+      document.body.style.overflow = '';
+    });
+  });
+})();
+</script>
+</body>
+</html>

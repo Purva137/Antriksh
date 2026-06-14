@@ -1,0 +1,782 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>India's Rockets — Antriksh</title>
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.165.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.165.0/examples/jsm/"}}</script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap');
+  :root{--black:#000000;--white:#ffffff;--red:#FC3D21;--blue:#06038D;}
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  [id]{scroll-margin-top:100px;}
+  body{background:var(--black);color:var(--white);font-family:'Space Grotesk',sans-serif;overflow-x:hidden;}
+  #stars-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none;}
+  nav{position:fixed;top:0;left:0;right:0;z-index:100;display:flex;align-items:center;justify-content:space-between;padding:20px 48px;background:rgba(0,0,0,0.92);border-bottom:1px solid rgba(255,255,255,0.06);}
+  .nav-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.12em;color:var(--white);text-decoration:none;}
+  .nav-logo span{color:var(--red);}
+  .nav-links{display:flex;gap:36px;list-style:none;}
+  .nav-links li{position:relative;padding-bottom:20px;margin-bottom:-20px;}
+  .nav-links a{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.8);text-decoration:none;transition:color 0.3s;}
+  .nav-links a:hover{color:var(--white);}
+  .nav-links li:hover>.dropdown{opacity:1;pointer-events:all;transform:translateY(0);}
+  .dropdown{position:absolute;top:100%;left:0;background:rgba(5,5,10,0.97);border:1px solid rgba(255,255,255,0.08);border-top:2px solid var(--red);padding:16px 0;min-width:200px;opacity:0;pointer-events:none;transform:translateY(4px);transition:all 0.2s ease;z-index:200;}
+  .dropdown a{display:block;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.7)!important;padding:10px 20px;text-decoration:none;transition:all 0.2s;} .nav-links li:last-child>.dropdown{left:auto;right:0;}
+  .dropdown a:hover{color:var(--white)!important;background:rgba(252,61,33,0.08);padding-left:28px;}
+  .nav-live{display:flex;align-items:center;gap:8px;font-family:'Space Mono',monospace;font-size:11px;letter-spacing:0.15em;color:var(--red);text-transform:uppercase;}
+  .live-dot{width:6px;height:6px;border-radius:50%;background:var(--red);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(1.4);}}
+  .page-header{position:relative;z-index:1;padding:160px 48px 80px;border-bottom:1px solid rgba(255,255,255,0.06);}
+  .page-header-tag{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--red);margin-bottom:16px;}
+  .page-header-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(60px,10vw,130px);line-height:0.88;margin-bottom:24px;}
+  .page-header-sub{font-size:17px;color:rgba(255,255,255,0.6);max-width:560px;line-height:1.7;}
+
+  /* ROCKET DETAIL SECTIONS */
+  .rocket-section{position:relative;z-index:1;padding:80px 48px;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .rocket-header{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start;margin-bottom:40px;}
+  .rocket-title-block{display:flex;flex-direction:column;}
+  .rocket-section-tag{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:var(--red);margin-bottom:12px;}
+  .rocket-section-title{font-family:'Bebas Neue',sans-serif;font-size:72px;line-height:0.88;margin-bottom:16px;}
+  .rocket-tagline{font-size:15px;color:rgba(255,255,255,0.6);line-height:1.7;}
+
+  /* 3D VIEWER */
+  .rocket-viewer-wrap{position:relative;background:rgba(255,255,255,0.015);border:1px solid rgba(255,255,255,0.06);}
+  .rocket-canvas{display:block;width:100%;height:440px;cursor:grab;}
+  .rocket-canvas:active{cursor:grabbing;}
+  .viewer-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.38);pointer-events:none;white-space:nowrap;}
+  .viewer-loading{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.38);pointer-events:none;}
+
+  /* IMAGE VIEWER (for rockets with no 3D model) */
+  .rocket-viewer-image{display:flex;align-items:center;justify-content:center;flex-direction:column;height:440px;overflow:hidden;position:relative;}
+  .rocket-ref-img{height:100%;width:100%;object-fit:contain;object-position:center;filter:brightness(0.92);}
+  .viewer-no-model{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.18em;text-transform:uppercase;color:rgba(255,255,255,0.4);white-space:nowrap;pointer-events:none;}
+
+  /* SPECS STRIP */
+  .rocket-specs-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:2px;margin-top:28px;}
+  .spec-item{background:#080808;border:1px solid rgba(255,255,255,0.04);padding:16px 18px;}
+  .spec-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.45);margin-bottom:8px;}
+  .spec-value{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--white);line-height:1;}
+  .spec-unit{font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.55);margin-top:4px;}
+
+  .rocket-body-text{font-size:15px;color:rgba(255,255,255,0.7);line-height:1.9;max-width:760px;margin-top:32px;}
+  .rocket-body-text p{margin-bottom:16px;}
+  .stage-diagram{display:flex;flex-direction:column;gap:2px;margin-top:0;max-width:560px;}
+  .stage-row{display:grid;grid-template-columns:80px 1fr;gap:16px;align-items:center;}
+  .stage-label{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--red);}
+  .stage-bar{height:36px;display:flex;align-items:center;padding:0 16px;font-size:12px;color:rgba(255,255,255,0.8);}
+  .stage-s1{background:rgba(252,61,33,0.12);border:1px solid rgba(252,61,33,0.2);}
+  .stage-s2{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);}
+  .stage-s3{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);}
+  .stage-s4{background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);}
+  .stage-cryo{background:rgba(6,3,141,0.15);border:1px solid rgba(6,3,141,0.3);}
+
+  footer{position:relative;z-index:10;padding:40px 48px;border-top:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;}
+  .footer-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.12em;color:rgba(255,255,255,0.3);text-decoration:none;}
+  .footer-logo span{color:rgba(252,61,33,0.2);}
+  .footer-credit{font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.35);}
+  .footer-copyright{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;color:rgba(255,255,255,0.4);margin-top:8px;}
+</style>
+<link rel="stylesheet" href="responsive.css">
+</head>
+<body>
+<canvas id="stars-canvas"></canvas>
+<nav>
+  <a href="index.html" class="nav-logo">ANTRIK<span>SH</span></a>
+  <button class="nav-hamburger" id="nav-hamburger" aria-label="Menu"><span></span><span></span><span></span></button>
+  <ul class="nav-links">
+    <li><a href="missions.html">Missions</a><div class="dropdown"><a href="missions.html">All Missions →</a></div></li>
+    <li><a href="timeline.html">Timeline</a><div class="dropdown"><a href="timeline.html">Full Timeline →</a></div></li>
+    <li><a href="rockets.html">Rockets</a><div class="dropdown"><a href="rockets.html">PSLV</a><a href="rockets.html">GSLV</a><a href="rockets.html">LVM3</a><a href="rockets.html">SSLV</a><a href="rockets.html">RLV-01</a></div></li>
+    <li><a href="heroes.html">Heroes</a><div class="dropdown"><a href="heroes.html">All Scientists →</a></div></li>
+    <li><a href="isropedia.html">ISRO-pedia</a><div class="dropdown"><a href="isropedia.html">Explore →</a></div></li>
+    <li><a href="eyes.html">Eyes on Space</a><div class="dropdown"><a href="eyes.html">Live Tracking →</a></div></li>
+  </ul>
+</nav>
+
+<div class="page-header">
+  <div class="page-header-tag">India's Launch Vehicles</div>
+  <h1 class="page-header-title">The<br><span style="color:var(--red);">Rockets</span></h1>
+  <p class="page-header-sub">Every satellite India has ever launched, every planet it has reached, every astronaut it will send to space — carried by rockets built in India, by Indian engineers, for India and the world.</p>
+</div>
+
+<!-- SLV-3 -->
+<div class="rocket-section" id="slv3">
+  <div class="rocket-header">
+    <div class="rocket-title-block">
+      <div class="rocket-section-tag">India's First · 1979 – 1983</div>
+      <div class="rocket-section-title">SLV-3</div>
+      <div class="rocket-tagline">Satellite Launch Vehicle 3. India's first indigenous orbital rocket — four solid stages, built without foreign technology transfers. Placed Rohini RS-1 into orbit on July 18, 1980 and made India a spacefaring nation.</div>
+      <div class="rocket-specs-grid">
+        <div class="spec-item"><div class="spec-label">Height</div><div class="spec-value">22<div class="spec-unit">metres</div></div></div>
+        <div class="spec-item"><div class="spec-label">Liftoff Mass</div><div class="spec-value">17<div class="spec-unit">tonnes</div></div></div>
+        <div class="spec-item"><div class="spec-label">Stages</div><div class="spec-value">4<div class="spec-unit">All Solid</div></div></div>
+        <div class="spec-item"><div class="spec-label">Payload to LEO</div><div class="spec-value">40<div class="spec-unit">kg</div></div></div>
+        <div class="spec-item"><div class="spec-label">Total Flights</div><div class="spec-value">4<div class="spec-unit">1979 – 1983</div></div></div>
+        <div class="spec-item"><div class="spec-label">Status</div><div class="spec-value" style="font-size:18px;font-family:'Space Grotesk';color:rgba(255,255,255,0.55);">Retired</div></div>
+      </div>
+    </div>
+    <div class="rocket-viewer-wrap rocket-viewer-image">
+      <img src="./models/rockets/SLV.png" alt="SLV-3" class="rocket-ref-img">
+      <div class="viewer-no-model">No 3D model available</div>
+    </div>
+  </div>
+  <div class="stage-diagram">
+    <div class="stage-row"><div class="stage-label">Stage 4</div><div class="stage-bar stage-s4">Solid propellant · 83 kN</div></div>
+    <div class="stage-row"><div class="stage-label">Stage 3</div><div class="stage-bar stage-s3">Solid propellant · 267 kN</div></div>
+    <div class="stage-row"><div class="stage-label">Stage 2</div><div class="stage-bar stage-s2">Solid propellant · 267 kN</div></div>
+    <div class="stage-row"><div class="stage-label">Stage 1</div><div class="stage-bar stage-s1">Solid propellant (PVC) · 443 kN</div></div>
+  </div>
+  <div class="rocket-body-text">
+    <p>SLV-3 was a decade-long indigenous effort led by A.P.J. Abdul Kalam as Project Director. With no foreign technology transfers permitted, ISRO built every component from scratch. The 1979 launch failed due to fourth-stage destabilisation, but the July 1980 launch was a complete success — Rohini RS-1 into a 305×919 km orbit. India became the sixth nation to develop its own satellite launch capability.</p>
+    <p>SLV-3's real legacy was the engineers it forged. Every team that built PSLV, GSLV, and LVM3 cut their teeth on SLV-3.</p>
+  </div>
+</div>
+
+<!-- PSLV -->
+<div class="rocket-section" id="pslv">
+  <div class="rocket-header">
+    <div class="rocket-title-block">
+      <div class="rocket-section-tag">India's Workhorse</div>
+      <div class="rocket-section-title" style="color:var(--red);">PSLV</div>
+      <div class="rocket-tagline">Polar Satellite Launch Vehicle. 55+ consecutive successes. 50+ nations' satellites launched. The most reliable rocket in Asia. India's commercial launch flagship.</div>
+      <div class="rocket-specs-grid">
+        <div class="spec-item"><div class="spec-label">Height</div><div class="spec-value">44<div class="spec-unit">metres</div></div></div>
+        <div class="spec-item"><div class="spec-label">Liftoff Mass</div><div class="spec-value">320<div class="spec-unit">tonnes</div></div></div>
+        <div class="spec-item"><div class="spec-label">Stages</div><div class="spec-value">4<div class="spec-unit">Solid-Liquid-Solid-Liquid</div></div></div>
+        <div class="spec-item"><div class="spec-label">Payload to LEO</div><div class="spec-value" style="font-size:20px;">~3,800<div class="spec-unit">kg (XL) · 3,200 kg (CA)</div></div></div>
+        <div class="spec-item"><div class="spec-label">Payload to SSO</div><div class="spec-value">1,750<div class="spec-unit">kg</div></div></div>
+        <div class="spec-item"><div class="spec-label">Status</div><div class="spec-value" style="font-size:18px;font-family:'Space Grotesk';color:#00c864;">Active</div></div>
+      </div>
+    </div>
+    <div class="rocket-viewer-wrap">
+      <canvas class="rocket-canvas" id="viewer-pslv"></canvas>
+      <div class="viewer-loading" id="loading-pslv">Loading model…</div>
+      <div class="viewer-hint">drag to rotate</div>
+    </div>
+  </div>
+  <div class="stage-diagram">
+    <div class="stage-row"><div class="stage-label">Stage 4</div><div class="stage-bar stage-s4">PS4 — Liquid (MMH/MON) · 7.6 kN</div></div>
+    <div class="stage-row"><div class="stage-label">Stage 3</div><div class="stage-bar stage-s3">PS3 — Solid (HTPB) · 84 kN</div></div>
+    <div class="stage-row"><div class="stage-label">Stage 2</div><div class="stage-bar stage-s2">PS2 — Vikas Engine · Liquid (UH25 / N2O4) · 800 kN</div></div>
+    <div class="stage-row"><div class="stage-label">Stage 1</div><div class="stage-bar stage-s1">PS1 — Solid (HTPB) · 4,846 kN + 6 strap-on boosters</div></div>
+  </div>
+  <div class="rocket-body-text">
+    <p style="font-size:12px;color:rgba(255,255,255,0.45);font-family:'Space Mono',monospace;letter-spacing:0.04em;margin-bottom:16px;">* UH25 = a blend of UDMH and Hydrazine Hydrate used in the Vikas engine — derived from the French Viking engine, indigenised by ISRO, with a perfect flight record across PSLV, GSLV, and LVM3.</p>
+    <p>PSLV's four-stage alternating solid-liquid design is its signature strength — solids for high thrust in the lower atmosphere, liquids for precise throttling at orbital insertion. The XL configuration adds six strap-on boosters for extra payload.</p>
+    <p>PSLV has launched Chandrayaan-1, Mangalyaan, Astrosat, Aditya-L1, and 104 satellites in a single flight. Its PS4 fourth stage, retained in orbit as POEM platforms, has hosted dozens of experiments — zero-waste space engineering.</p>
+  </div>
+</div>
+
+<!-- GSLV Mk II -->
+<div class="rocket-section" id="gslvmkii">
+  <div class="rocket-header">
+    <div class="rocket-title-block">
+      <div class="rocket-section-tag">Cryo Pioneer · Active</div>
+      <div class="rocket-section-title">GSLV Mk II</div>
+      <div class="rocket-tagline">Geosynchronous Satellite Launch Vehicle Mark II. India's first indigenously cryogenic-equipped orbital rocket. The CE-7.5 engine — developed after technology denial — is a milestone of Indian aerospace engineering.</div>
+      <div class="rocket-specs-grid">
+        <div class="spec-item"><div class="spec-label">Height</div><div class="spec-value">49<div class="spec-unit">metres</div></div></div>
+        <div class="spec-item"><div class="spec-label">Liftoff Mass</div><div class="spec-value">415<div class="spec-unit">tonnes</div></div></div>
+        <div class="spec-item"><div class="spec-label">Stages</div><div class="spec-value">3<div class="spec-unit">Solid + Liquid + Cryo</div></div></div>
+        <div class="spec-item"><div class="spec-label">Payload to GTO</div><div class="spec-value">2,500<div class="spec-unit">kg</div></div></div>
+        <div class="spec-item"><div class="spec-label">Payload to LEO</div><div class="spec-value">5,000<div class="spec-unit">kg</div></div></div>
+        <div class="spec-item"><div class="spec-label">Status</div><div class="spec-value" style="font-size:18px;font-family:'Space Grotesk';color:#00c864;">Active</div></div>
+      </div>
+    </div>
+    <div class="rocket-viewer-wrap">
+      <canvas class="rocket-canvas" id="viewer-gslv"></canvas>
+      <div class="viewer-loading" id="loading-gslv">Loading model…</div>
+      <div class="viewer-hint">drag to rotate</div>
+    </div>
+  </div>
+  <div class="stage-diagram">
+    <div class="stage-row"><div class="stage-label">Stage 3</div><div class="stage-bar stage-cryo">GS3 — CE-7.5 Cryogenic (LH2/LOX) · 73.5 kN</div></div>
+    <div class="stage-row"><div class="stage-label">Stage 2</div><div class="stage-bar stage-s2">GS2 — Vikas Engine · Liquid (UH25 / N2O4) · 800 kN</div></div>
+    <div class="stage-row"><div class="stage-label">Stage 1</div><div class="stage-bar stage-s1">GS1 — Solid (HTPB) · 4,700 kN + 4 liquid strap-on boosters</div></div>
+  </div>
+  <div class="rocket-body-text">
+    <p>GSLV Mk II introduced India's indigenous cryogenic stage — the CE-7.5 engine burning liquid hydrogen (−253°C) and liquid oxygen (−183°C). The United States pressured Russia in 1992 to block cryogenic technology transfer to India. ISRO's response was to develop the engine independently — a process spanning nearly two decades. GSLV Mk II now routinely launches GSAT communication satellites, NVS navigation satellites, and GISAT Earth observation missions.</p>
+  </div>
+</div>
+
+<!-- LVM3 -->
+<div class="rocket-section" id="lvm3">
+  <div class="rocket-header">
+    <div class="rocket-title-block">
+      <div class="rocket-section-tag">India's Heavy Lifter</div>
+      <div class="rocket-section-title" style="color:rgba(6,3,141,0.9);">LVM3</div>
+      <div class="rocket-tagline">Launch Vehicle Mark 3. India's most powerful operational rocket. Chandrayaan-2, Chandrayaan-3, OneWeb constellation launches. The rocket that will carry India's astronauts to space.</div>
+      <div class="rocket-specs-grid">
+        <div class="spec-item"><div class="spec-label">Height</div><div class="spec-value">43.5<div class="spec-unit">metres</div></div></div>
+        <div class="spec-item"><div class="spec-label">Liftoff Mass</div><div class="spec-value">640<div class="spec-unit">tonnes</div></div></div>
+        <div class="spec-item"><div class="spec-label">Stages</div><div class="spec-value">3<div class="spec-unit">Solid + Liquid + Cryo</div></div></div>
+        <div class="spec-item"><div class="spec-label">Payload to LEO</div><div class="spec-value">10,000<div class="spec-unit">kg</div></div></div>
+        <div class="spec-item"><div class="spec-label">Payload to GTO</div><div class="spec-value">4,000<div class="spec-unit">kg</div></div></div>
+        <div class="spec-item"><div class="spec-label">Status</div><div class="spec-value" style="font-size:18px;font-family:'Space Grotesk';color:#00c864;">Active</div></div>
+      </div>
+    </div>
+    <div class="rocket-viewer-wrap">
+      <canvas class="rocket-canvas" id="viewer-lvm3"></canvas>
+      <div class="viewer-loading" id="loading-lvm3">Loading model…</div>
+      <div class="viewer-hint">drag to rotate</div>
+    </div>
+  </div>
+  <div class="stage-diagram">
+    <div class="stage-row"><div class="stage-label">Stage 3</div><div class="stage-bar stage-cryo">C25 — Cryogenic (LH2/LOX) · 200 kN · India-developed CE-20</div></div>
+    <div class="stage-row"><div class="stage-label">Stage 2</div><div class="stage-bar stage-s2">L110 — 2 × Vikas Engines · Liquid (UH25 / N2O4) · 1,598 kN</div></div>
+    <div class="stage-row"><div class="stage-label">Stage 1</div><div class="stage-bar stage-s1">S200 × 2 — Solid strap-ons · World's 3rd largest solid boosters · 2 × 5,150 kN</div></div>
+  </div>
+  <div class="rocket-body-text">
+    <p>LVM3's most significant achievement is its cryogenic upper stage — the C25, using liquid hydrogen (−253°C) and liquid oxygen (−183°C). Mastering this placed India in an elite group: only USA, Russia, France, Japan, China, and India operate indigenous cryogenic stages. The CE-20 engine was developed entirely by ISRO after technology transfer was denied in the 1990s.</p>
+    <p>LVM3 will be upgraded to HLVM3 for Gaganyaan — with additional abort systems, crew escape tower, and human-certification modifications. The same rocket that launched Chandrayaan-3 will carry India's first astronauts.</p>
+  </div>
+</div>
+
+<!-- SSLV -->
+<div class="rocket-section" id="sslv">
+  <div class="rocket-header">
+    <div class="rocket-title-block">
+      <div class="rocket-section-tag">Small Satellite Revolution</div>
+      <div class="rocket-section-title">SSLV</div>
+      <div class="rocket-tagline">Small Satellite Launch Vehicle. Designed for the new space economy — rapid assembly, minimal launch infrastructure, low cost. India's answer to Rocket Lab and Virgin Orbit.</div>
+      <div class="rocket-specs-grid">
+        <div class="spec-item"><div class="spec-label">Height</div><div class="spec-value">34<div class="spec-unit">metres</div></div></div>
+        <div class="spec-item"><div class="spec-label">Liftoff Mass</div><div class="spec-value">120<div class="spec-unit">tonnes</div></div></div>
+        <div class="spec-item"><div class="spec-label">Stages</div><div class="spec-value">3<div class="spec-unit">All Solid + VTM kick</div></div></div>
+        <div class="spec-item"><div class="spec-label">Payload to LEO</div><div class="spec-value">500<div class="spec-unit">kg @ 500 km</div></div></div>
+        <div class="spec-item"><div class="spec-label">Payload to SSO</div><div class="spec-value">300<div class="spec-unit">kg @ 500 km SSO</div></div></div>
+        <div class="spec-item"><div class="spec-label">Assembly Time</div><div class="spec-value">72<div class="spec-unit">hours</div></div></div>
+      </div>
+    </div>
+    <div class="rocket-viewer-wrap rocket-viewer-image">
+      <img src="./models/rockets/sslv.jpg" alt="SSLV" class="rocket-ref-img">
+      <div class="viewer-no-model">No 3D model available</div>
+    </div>
+  </div>
+  <div class="stage-diagram">
+    <div class="stage-row"><div class="stage-label">VTM</div><div class="stage-bar stage-s4">Velocity Trimming Module — Liquid (MMH/MON-3) · precision kick</div></div>
+    <div class="stage-row"><div class="stage-label">Stage 3</div><div class="stage-bar stage-s3">SS3 — Solid (HTPB)</div></div>
+    <div class="stage-row"><div class="stage-label">Stage 2</div><div class="stage-bar stage-s2">SS2 — Solid (HTPB)</div></div>
+    <div class="stage-row"><div class="stage-label">Stage 1</div><div class="stage-bar stage-s1">SS1 — Solid (HTPB) · 1,640 kN</div></div>
+  </div>
+  <div class="rocket-body-text">
+    <p>SSLV's solid stages cannot be throttled once ignited — so the <strong style="color:var(--white);">Velocity Trimming Module (VTM)</strong>, a small liquid stage using MMH/MON-3, provides precise orbital fine-tuning after the solids finish. It's the difference between "approximately right" and "exactly right."</p>
+    <p>SSLV can be assembled in 72 hours with minimal ground infrastructure — designed specifically for the commercial small satellite market. After a sensor failure on SSLV-D1 (2022), SSLV-D2 (2023) succeeded perfectly and the vehicle is now available commercially via NewSpace India Limited (NSIL).</p>
+  </div>
+</div>
+
+<!-- NEXT GENERATION -->
+<div class="rocket-section" id="rlv">
+  <div class="rocket-section-tag">In Development</div>
+  <h2 style="font-family:'Bebas Neue',sans-serif;font-size:52px;margin-bottom:64px;">Next Generation</h2>
+
+  <!-- HLVM3 -->
+  <div style="margin-bottom:80px;">
+    <div class="rocket-header" style="margin-bottom:32px;">
+      <div class="rocket-title-block">
+        <div class="rocket-section-tag" style="color:var(--red);">Gaganyaan Vehicle</div>
+        <div class="rocket-section-title" style="font-size:54px;">HLVM3</div>
+        <div class="rocket-tagline">Human-Rated LVM3. LVM3 upgraded for human spaceflight — Crew Escape System, full redundancy, human-rating certification. The rocket that will carry Gaganyaan astronauts, and later, modules for India's own space station (BAS).</div>
+        <div class="rocket-specs-grid">
+          <div class="spec-item"><div class="spec-label">Height (est.)</div><div class="spec-value">~45<div class="spec-unit">metres</div></div></div>
+          <div class="spec-item"><div class="spec-label">Crew Capacity</div><div class="spec-value">3<div class="spec-unit">astronauts</div></div></div>
+          <div class="spec-item"><div class="spec-label">Escape System</div><div class="spec-value" style="font-size:14px;font-family:'Space Grotesk';">CES<div class="spec-unit">Crew Escape System</div></div></div>
+          <div class="spec-item"><div class="spec-label">Status</div><div class="spec-value" style="font-size:14px;font-family:'Space Grotesk';color:var(--red);">In Development</div></div>
+        </div>
+      </div>
+      <div class="rocket-viewer-wrap rocket-viewer-image">
+        <img src="./models/rockets/GaganyaanG1_HLVm3.png" alt="HLVM3" class="rocket-ref-img">
+        <div class="viewer-no-model">No 3D model available</div>
+      </div>
+    </div>
+    <div class="rocket-body-text">
+      <p>The Crew Escape System (CES) can pull the crew module away from the rocket in under two seconds during any abort — from launchpad to ascent. The crew module is designed for re-entry at up to 8 g's and water landing, with recovery by the Indian Navy. Every system must meet human-rating requirements that go far beyond normal satellite launch standards.</p>
+    </div>
+  </div>
+
+  <!-- RLV-01 -->
+  <div>
+    <div class="rocket-header" style="margin-bottom:32px;">
+      <div class="rocket-title-block">
+        <div class="rocket-section-tag" style="color:rgba(255,200,0,0.6);">Reusable Vehicle</div>
+        <div class="rocket-section-title" style="font-size:54px;color:rgba(255,200,0,0.55);">RLV-01</div>
+        <div class="rocket-tagline">Reusable Launch Vehicle. After HEX, LEX, and REX demonstrator successes — hypersonic re-entry, autonomous runway landing proven — RLV-01 is the full orbital version targeting 10× cost reduction through vehicle reuse.</div>
+        <div class="rocket-specs-grid">
+          <div class="spec-item"><div class="spec-label">Type</div><div class="spec-value" style="font-size:18px;">Winged<div class="spec-unit">Orbital Reusable</div></div></div>
+          <div class="spec-item"><div class="spec-label">Landing</div><div class="spec-value" style="font-size:16px;">Runway<div class="spec-unit">Autonomous</div></div></div>
+          <div class="spec-item"><div class="spec-label">Cost Target</div><div class="spec-value">10×<div class="spec-unit">reduction vs expendable</div></div></div>
+          <div class="spec-item"><div class="spec-label">Status</div><div class="spec-value" style="font-size:14px;font-family:'Space Grotesk';color:var(--red);">In Development</div></div>
+        </div>
+      </div>
+      <div class="rocket-viewer-wrap rocket-viewer-image">
+        <img src="./models/rockets/rlv.jpg" alt="RLV-01" class="rocket-ref-img">
+        <div class="viewer-no-model">No 3D model available</div>
+      </div>
+    </div>
+    <div class="rocket-body-text">
+      <p>RLV-01 is the culmination of HEX (Hypersonic Entry), LEX (Landing Experiment), and REX (Return Flight Experiment) — all proving autonomous re-entry and precision runway landing. The full orbital vehicle launches on an expendable booster, delivers payload to orbit, re-enters autonomously, and lands on a runway for reuse. TPS (Thermal Protection System) uses Carbon-Carbon composites and silica tiles. FADS and onboard AI handle autonomous approach and touchdown.</p>
+    </div>
+  </div>
+</div>
+
+<div style="position:relative;z-index:1;width:55%;line-height:0;margin:0 auto;">
+  <img src="./models/rockets/launch_vehicles_large.jpg" alt="ISRO Launch Vehicles" style="width:100%;display:block;object-fit:cover;">
+</div>
+
+<footer>
+  <a href="index.html" class="footer-logo">ANTRIK<span>SH</span></a>
+  <div class="footer-credit">Data sourced from ISRO open data</div>
+  <div class="footer-copyright">© 2026 Antriksh. All rights reserved.</div>
+</footer>
+
+<!-- 3D ROCKET VIEWERS -->
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js';
+
+const dracoLoader = new DRACOLoader();
+dracoLoader.setDecoderPath('./draco/');
+const gltfLoader = new GLTFLoader();
+gltfLoader.setDRACOLoader(dracoLoader);
+
+function mat(hex, m = 0.2, r = 0.6) {
+  return new THREE.MeshStandardMaterial({ color: hex, metalness: m, roughness: r });
+}
+
+function cyl(g, rt, rb, h, segs, material, x, y, z) {
+  const m = new THREE.Mesh(new THREE.CylinderGeometry(rt, rb, h, segs), material);
+  m.position.set(x ?? 0, y ?? 0, z ?? 0);
+  g.add(m); return m;
+}
+function cone(g, r, h, segs, material, x, y, z) {
+  const m = new THREE.Mesh(new THREE.ConeGeometry(r, h, segs), material);
+  m.position.set(x ?? 0, y ?? 0, z ?? 0);
+  g.add(m); return m;
+}
+function box(g, w, h, d, material, x, y, z, rx, ry, rz) {
+  const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), material);
+  m.position.set(x ?? 0, y ?? 0, z ?? 0);
+  if (rx) m.rotation.x = rx; if (ry) m.rotation.y = ry; if (rz) m.rotation.z = rz;
+  g.add(m); return m;
+}
+
+/* legacy shims so old GLB viewers still compile */
+function cylinder(rt, rb, h, segs = 32) { return new THREE.CylinderGeometry(rt, rb, h, segs); }
+function add(group, geo, material, x = 0, y = 0, z = 0, rx = 0, ry = 0, rz = 0) {
+  const mesh = new THREE.Mesh(geo, material); mesh.position.set(x, y, z); mesh.rotation.set(rx, ry, rz);
+  group.add(mesh); return mesh;
+}
+
+function fitModel(root, group) {
+  const b = new THREE.Box3().setFromObject(root);
+  const c = b.getCenter(new THREE.Vector3());
+  const s = b.getSize(new THREE.Vector3());
+  const sc = 4.0 / Math.max(s.x, s.y, s.z);
+  root.scale.setScalar(sc);
+  root.position.copy(c.negate().multiplyScalar(sc));
+  // Ensure GLB materials render correctly with tone mapping
+  root.traverse(o => {
+    if (o.isMesh && o.material) {
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      mats.forEach(m => { m.needsUpdate = true; });
+    }
+  });
+  group.add(root);
+}
+
+/* SLV-3: 4 all-solid stages stacked exactly (no gaps) */
+function buildSLV3(group) {
+  const w = mat(0xdedede), rd = mat(0xcc2200), dk = mat(0x888888);
+  // S1  h=1.10  bottom=-2.20  center=-1.650  top=-1.10
+  cyl(group, 0.28, 0.32, 1.10, 32, w,  0, -1.650);
+  // S2  h=0.80  bottom=-1.10  center=-0.700  top=-0.30
+  cyl(group, 0.24, 0.28, 0.80, 32, w,  0, -0.700);
+  // S3  h=0.65  bottom=-0.30  center=+0.025  top=+0.35
+  cyl(group, 0.20, 0.24, 0.65, 32, w,  0,  0.025);
+  // S4  h=0.52  bottom=+0.35  center=+0.610  top=+0.87
+  cyl(group, 0.17, 0.20, 0.52, 32, w,  0,  0.610);
+  // Nose  h=0.48  bottom=+0.87  center=+1.110
+  cone(group, 0.17, 0.48, 32, w, 0, 1.110);
+  // Separation rings at stage joints
+  [-1.10, -0.30, 0.35].forEach(y => cyl(group, 0.33, 0.33, 0.04, 32, rd, 0, y));
+  // 4 fins — W=radial extent, H=height, D=thickness; rotated to face outward
+  for (let i = 0; i < 4; i++) {
+    const a = i * Math.PI / 2;
+    // fin center is at body_radius(0.32) + half_fin_radial(0.13) = 0.45
+    box(group, 0.26, 0.50, 0.05, dk, Math.cos(a) * 0.45, -2.00, Math.sin(a) * 0.45, 0, a, 0);
+  }
+}
+
+/* SSLV: 3 solid stages + VTM kick stage */
+function buildSSLV(group) {
+  const w = mat(0xe2e2e2), g = mat(0xaaaaaa), rd = mat(0xcc2200);
+  // SS1 h=1.10  bottom=-2.20  center=-1.650  top=-1.10
+  cyl(group, 0.33, 0.36, 1.10, 32, w,  0, -1.650);
+  // SS2 h=0.85  bottom=-1.10  center=-0.675  top=-0.25
+  cyl(group, 0.28, 0.33, 0.85, 32, w,  0, -0.675);
+  // SS3 h=0.68  bottom=-0.25  center=+0.090  top=+0.43
+  cyl(group, 0.24, 0.28, 0.68, 32, w,  0,  0.090);
+  // VTM h=0.28  bottom=+0.43  center=+0.570  top=+0.71
+  cyl(group, 0.18, 0.24, 0.28, 32, g,  0,  0.570);
+  // Adapter h=0.18 bottom=+0.71 center=+0.800 top=+0.89
+  cyl(group, 0.12, 0.18, 0.18, 32, g,  0,  0.800);
+  // Nose  bottom=+0.89  center=+1.110
+  cone(group, 0.12, 0.44, 32, w, 0, 1.110);
+  // Rings at stage joints
+  [-1.10, -0.25, 0.43].forEach(y => cyl(group, 0.37, 0.37, 0.04, 32, rd, 0, y));
+  // 4 fins — radially oriented
+  for (let i = 0; i < 4; i++) {
+    const a = i * Math.PI / 2;
+    // fin center at body_radius(0.36) + half_fin(0.12) = 0.48
+    box(group, 0.24, 0.46, 0.05, g, Math.cos(a) * 0.48, -1.95, Math.sin(a) * 0.48, 0, a, 0);
+  }
+}
+
+/* HLVM3: crew capsule + escape tower + twin S200 boosters (ref image) */
+function buildHLVM3(group) {
+  const w  = mat(0xf0f0f0), dk = mat(0x222222);
+  const rd = mat(0xcc1100), or = mat(0xdd6600);
+  const cr = mat(0xe6f0ff), si = mat(0xbbbbbb);
+
+  // Twin S200 solid boosters flanking core at x=±0.64
+  const bx = 0.64;
+  [-bx, bx].forEach(x => {
+    // body h=1.65  bottom=-2.28  center=-1.455  top=-0.63
+    cyl(group, 0.205, 0.205, 1.65, 20, w,  x, -1.455);
+    // nose   bottom=-0.63  center=-0.445
+    cone(group, 0.205, 0.37, 20, w, x, -0.445);
+    // orange bands
+    cyl(group, 0.21, 0.21, 0.07, 20, or, x, -1.05);
+    cyl(group, 0.21, 0.21, 0.07, 20, or, x, -1.60);
+    // engine nozzle bell at very bottom
+    cyl(group, 0.10, 0.18, 0.26, 16, dk, x, -2.41);
+  });
+
+  // Core L110 liquid stage  h=1.40  center=-1.500  top=-0.80
+  cyl(group, 0.44, 0.44, 1.40, 32, mat(0xdddddd), 0, -1.500);
+  // Core engine nozzle
+  cyl(group, 0.11, 0.19, 0.28, 20, dk, 0, -2.34);
+  // Core C32 cryo stage  h=1.20  bottom=-0.80  center=-0.200  top=+0.40
+  cyl(group, 0.44, 0.44, 1.20, 32, cr, 0, -0.200);
+  // Interstage dark ring
+  cyl(group, 0.40, 0.44, 0.16, 32, dk, 0, 0.480);
+  // Fairing transition  h=0.22  bottom=+0.56  center=+0.670
+  cyl(group, 0.34, 0.40, 0.22, 32, w,  0, 0.670);
+  // Service module  h=0.50  bottom=+0.78  center=+1.030
+  cyl(group, 0.32, 0.34, 0.50, 32, si, 0, 1.030);
+  // Crew module capsule (frustum)  h=0.55  bottom=+1.28  center=+1.555
+  cyl(group, 0.26, 0.32, 0.55, 32, w,  0, 1.555);
+  // CM top cone  bottom=+1.83  center=+1.955
+  cone(group, 0.26, 0.25, 32, w, 0, 1.955);
+  // Escape tower base  h=0.30  bottom=+2.08  center=+2.230
+  cyl(group, 0.05, 0.05, 0.30, 12, dk, 0, 2.230);
+  // Escape tower shaft  h=0.90  bottom=+2.38  center=+2.830
+  cyl(group, 0.030, 0.030, 0.90, 12, dk, 0, 2.830);
+  // Abort motor at tip  h=0.20  bottom=+3.28  center=+3.380
+  cyl(group, 0.095, 0.060, 0.20, 16, rd, 0, 3.380);
+
+  group.scale.setScalar(0.70);
+}
+
+/* RLV-01: winged shuttle orbiter on top of launch booster (ref image) */
+function buildRLV01(group) {
+  const w  = mat(0xf0f0f0), dk = mat(0x111111);
+  const or = mat(0xdd7700), g  = mat(0xcccccc);
+
+  // BOOSTER — bottom section
+  // Nozzle bell  h=0.30  bottom=-3.22  center=-3.07
+  cyl(group, 0.11, 0.21, 0.30, 20, dk, 0, -3.07);
+  // Body  h=2.10  bottom=-2.92  center=-1.870  top=-0.82
+  cyl(group, 0.26, 0.28, 2.10, 32, w,  0, -1.870);
+  // Accent bands
+  cyl(group, 0.285, 0.285, 0.07, 32, or, 0, -1.50);
+  cyl(group, 0.285, 0.285, 0.07, 32, or, 0, -2.20);
+  // 4 booster fins near base — radially oriented
+  for (let i = 0; i < 4; i++) {
+    const a = i * Math.PI / 2;
+    // fin center at body_radius(0.28) + half_fin(0.12) = 0.40
+    box(group, 0.24, 0.55, 0.05, g,
+      Math.cos(a) * 0.40, -2.68, Math.sin(a) * 0.40, 0, a, 0);
+  }
+
+  // ADAPTER  h=0.35  bottom=-0.82  center=-0.645  top=-0.47
+  cyl(group, 0.21, 0.26, 0.35, 32, g,  0, -0.645);
+
+  // RLV-TD ORBITER
+  // Rear fuselage  h=0.75  bottom=-0.47  center=-0.095  top=+0.28
+  cyl(group, 0.215, 0.215, 0.75, 32, w,  0, -0.095);
+  // Fwd fuselage  h=0.55  bottom=+0.28  center=+0.555  top=+0.83
+  cyl(group, 0.195, 0.215, 0.55, 32, w,  0,  0.555);
+  // Nose  h=0.72  bottom=+0.83  center=+1.190
+  cone(group, 0.195, 0.72, 32, w, 0, 1.190);
+
+  // Delta wings using ExtrudeGeometry (shape in XY → rotated flat)
+  [-1, 1].forEach(side => {
+    const shape = new THREE.Shape();
+    shape.moveTo(0,           -0.38); // root trailing
+    shape.lineTo(side * 0.95, -0.25); // tip trailing
+    shape.lineTo(side * 0.50,  0.28); // tip leading
+    shape.lineTo(0,            0.22); // root leading
+    shape.closePath();
+    const geo = new THREE.ExtrudeGeometry(shape, { depth: 0.04, bevelEnabled: false });
+    const wing = new THREE.Mesh(geo, mat(0xe8e8e8));
+    wing.rotation.x = -Math.PI / 2;
+    wing.position.set(side * 0.215, 0.05, 0);
+    group.add(wing);
+  });
+
+  // Vertical tail fin (box)
+  box(group, 0.04, 0.40, 0.34, dk, 0, 0.26, -0.28);
+
+  // Heat-shield TPS dark underside (half-cylinder)
+  const tpsGeo = new THREE.CylinderGeometry(0.22, 0.22, 0.75, 32, 1, false, 0, Math.PI);
+  const tps = new THREE.Mesh(tpsGeo, dk);
+  tps.position.set(0, -0.095, 0);
+  tps.rotation.y = Math.PI / 2;
+  group.add(tps);
+
+  group.scale.setScalar(0.80);
+}
+
+/* VIEWER SETUP */
+function setupViewer(canvasId, initFn) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.1;
+
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(40, 1, 0.01, 200);
+  camera.position.set(0, 0.3, 6.5);
+
+  scene.add(new THREE.AmbientLight(0xffffff, 0.75));
+  const sun = new THREE.DirectionalLight(0xffffff, 1.6);
+  sun.position.set(3, 5, 4); scene.add(sun);
+  const fill = new THREE.DirectionalLight(0x6688cc, 0.30);
+  fill.position.set(-4, -2, -3); scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xffffff, 0.20);
+  rim.position.set(0, -4, -5); scene.add(rim);
+
+  const group = new THREE.Group();
+  scene.add(group);
+  initFn(group, gltfLoader);
+
+  function resize() {
+    const W = canvas.clientWidth, H = canvas.clientHeight;
+    renderer.setSize(W, H, false);
+    camera.aspect = W / H; camera.updateProjectionMatrix();
+  }
+  resize();
+  new ResizeObserver(resize).observe(canvas);
+
+  // Drag rotate
+  let dragging = false, lastX = 0, lastY = 0, autoRot = true, autoTimer = 0;
+  canvas.addEventListener('mousedown', e => {
+    dragging = true; lastX = e.clientX; lastY = e.clientY;
+    autoRot = false; clearTimeout(autoTimer);
+  });
+  window.addEventListener('mouseup', () => {
+    if (!dragging) return; dragging = false;
+    autoTimer = setTimeout(() => autoRot = true, 2500);
+  });
+  canvas.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    group.rotation.y += (e.clientX - lastX) * 0.009;
+    group.rotation.x += (e.clientY - lastY) * 0.004;
+    group.rotation.x = Math.max(-0.65, Math.min(0.65, group.rotation.x));
+    lastX = e.clientX; lastY = e.clientY;
+  });
+
+  // Scroll zoom
+  canvas.addEventListener('wheel', e => {
+    camera.position.z += e.deltaY * 0.014;
+    camera.position.z = Math.max(1.0, Math.min(14, camera.position.z));
+    e.preventDefault();
+  }, { passive: false });
+
+  // Touch drag + pinch zoom
+  let lastTX = 0, lastTY = 0, lastPinch = 0;
+  canvas.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) { lastTX = e.touches[0].clientX; lastTY = e.touches[0].clientY; }
+    if (e.touches.length === 2) lastPinch = Math.hypot(
+      e.touches[0].clientX - e.touches[1].clientX,
+      e.touches[0].clientY - e.touches[1].clientY);
+    autoRot = false; clearTimeout(autoTimer);
+  }, { passive: true });
+  canvas.addEventListener('touchmove', e => {
+    if (e.touches.length === 1) {
+      group.rotation.y += (e.touches[0].clientX - lastTX) * 0.009;
+      group.rotation.x += (e.touches[0].clientY - lastTY) * 0.004;
+      group.rotation.x = Math.max(-0.65, Math.min(0.65, group.rotation.x));
+      lastTX = e.touches[0].clientX; lastTY = e.touches[0].clientY;
+    }
+    if (e.touches.length === 2) {
+      const d = Math.hypot(e.touches[0].clientX - e.touches[1].clientX,
+                           e.touches[0].clientY - e.touches[1].clientY);
+      camera.position.z -= (d - lastPinch) * 0.04;
+      camera.position.z = Math.max(1.0, Math.min(14, camera.position.z));
+      lastPinch = d;
+    }
+    e.preventDefault();
+  }, { passive: false });
+  canvas.addEventListener('touchend', () => { autoTimer = setTimeout(() => autoRot = true, 2500); });
+
+  (function loop() {
+    requestAnimationFrame(loop);
+    if (autoRot) group.rotation.y += 0.004;
+    renderer.render(scene, camera);
+  })();
+}
+
+/* ── WIRE UP ALL VIEWERS ── */
+
+
+setupViewer('viewer-pslv', (group, loader) => {
+  // Try newest colored model first, chain fallbacks
+  function tryLoad(paths, idx) {
+    if (idx >= paths.length) { buildPSLVFallback(group); document.getElementById('loading-pslv').style.display = 'none'; return; }
+    loader.load(paths[idx], gltf => {
+      fitModel(gltf.scene, group);
+      document.getElementById('loading-pslv').style.display = 'none';
+    }, undefined, () => tryLoad(paths, idx + 1));
+  }
+  tryLoad(['./models/rockets/pslv_c40.glb', './models/rockets/rocket__isro.glb', './models/rockets/pslv_c2_model.glb'], 0);
+});
+
+setupViewer('viewer-gslv', (group, loader) => {
+  loader.load('./models/rockets/rocket-g25.glb', gltf => {
+    fitModel(gltf.scene, group);
+    document.getElementById('loading-gslv').style.display = 'none';
+  }, undefined, () => {
+    document.getElementById('loading-gslv').textContent = 'Model unavailable';
+  });
+});
+
+setupViewer('viewer-lvm3', (group, loader) => {
+  loader.load('./models/rockets/gslv_mk3.glb', gltf => {
+    fitModel(gltf.scene, group);
+    document.getElementById('loading-lvm3').style.display = 'none';
+  }, undefined, () => {
+    const el = document.getElementById('loading-lvm3');
+    el.textContent = 'No 3D model available';
+    el.style.color = 'rgba(255,255,255,0.2)';
+  });
+});
+
+
+/* LVM3 (GSLV Mk3): twin S200 solid boosters + L110 core + C25 cryo + payload fairing */
+function buildLVM3Fallback(group) {
+  const w  = mat(0xf0f0f0), dk = mat(0x222222);
+  const or = mat(0xdd6600), cr = mat(0xe6f4ff);
+
+  // Twin S200 solid boosters at x=±0.68 (large, chunky)
+  const bx = 0.68;
+  [-bx, bx].forEach(x => {
+    // body h=2.20  bottom=-2.30  center=-1.200  top=-0.10
+    cyl(group, 0.235, 0.235, 2.20, 24, w,  x, -1.200);
+    // nose  bottom=-0.10  center=+0.145
+    cone(group, 0.235, 0.49, 24, w, x, 0.145);
+    // orange accent bands
+    cyl(group, 0.242, 0.242, 0.09, 24, or, x, -0.80);
+    cyl(group, 0.242, 0.242, 0.09, 24, or, x, -1.50);
+    // engine nozzle at bottom
+    cyl(group, 0.12, 0.20, 0.28, 16, dk, x, -2.44);
+    // small fins at booster base
+    for (let i = 0; i < 2; i++) {
+      const fa = (i * Math.PI) + (x > 0 ? 0 : Math.PI);
+      box(group, 0.18, 0.35, 0.04, dk,
+        x + Math.cos(fa) * 0.295, -2.18, Math.sin(fa) * 0.295, 0, fa, 0);
+    }
+  });
+
+  // L110 liquid core  h=1.50  bottom=-2.10  center=-1.350  top=-0.60
+  cyl(group, 0.46, 0.46, 1.50, 32, mat(0xe0e0e0), 0, -1.350);
+  // Core engine nozzle
+  cyl(group, 0.13, 0.22, 0.32, 20, dk, 0, -2.46);
+  // C25 cryo stage  h=1.10  bottom=-0.60  center=-0.050  top=+0.50
+  cyl(group, 0.46, 0.46, 1.10, 32, cr, 0, -0.050);
+  // Interstage dark band
+  cyl(group, 0.42, 0.46, 0.15, 32, dk, 0, 0.575);
+  // Payload fairing (2 parts: cylinder + cone)
+  cyl(group, 0.36, 0.42, 0.25, 32, w,  0, 0.775); // transition
+  cyl(group, 0.36, 0.36, 0.70, 32, w,  0, 1.125); // fairing cylinder
+  cone(group, 0.36, 0.62, 32, w, 0, 1.640);        // fairing cone tip
+
+  group.scale.setScalar(0.78);
+}
+
+function buildPSLVFallback(group) {
+  const w = mat(0xe8e8e8), r = mat(0xcc2200), g = mat(0x999999);
+  // PS1 solid  h=1.30  bottom=-2.15  center=-1.500  top=-0.85
+  cyl(group, 0.28, 0.32, 1.30, 32, r,  0, -1.500);
+  // PS2 liquid h=0.95  bottom=-0.85  center=-0.375  top=+0.10
+  cyl(group, 0.24, 0.28, 0.95, 32, w,  0, -0.375);
+  // PS3 solid  h=0.70  bottom=+0.10  center=+0.450  top=+0.80
+  cyl(group, 0.20, 0.24, 0.70, 32, r,  0,  0.450);
+  // PS4 liquid h=0.50  bottom=+0.80  center=+1.050  top=+1.30
+  cyl(group, 0.17, 0.20, 0.50, 32, w,  0,  1.050);
+  cone(group, 0.17, 0.46, 32, w, 0, 1.530);
+  // Stage rings at joints
+  [-0.85, +0.10, +0.80].forEach(y => cyl(group, 0.33, 0.33, 0.04, 32, g, 0, y));
+  // 6 strap-on solid boosters
+  for (let i = 0; i < 6; i++) {
+    const a = i * Math.PI * 2 / 6;
+    const bx = Math.cos(a) * 0.46, bz = Math.sin(a) * 0.46;
+    cyl(group, 0.082, 0.082, 1.05, 12, r, bx, -1.500, bz);
+    cone(group, 0.082, 0.20, 12, r, bx, -0.875, bz);
+  }
+}
+</script>
+
+<script>
+const sc=document.getElementById('stars-canvas');const sCtx=sc.getContext('2d');sc.width=window.innerWidth;sc.height=window.innerHeight;
+const stars=Array.from({length:180},()=>({x:Math.random()*sc.width,y:Math.random()*sc.height,r:Math.random()*1.1,phase:Math.random()*Math.PI*2,speed:Math.random()*0.003+0.001}));
+function drawStars(t){sCtx.clearRect(0,0,sc.width,sc.height);stars.forEach(s=>{const a=0.15+0.35*Math.sin(t*s.speed+s.phase);sCtx.beginPath();sCtx.arc(s.x,s.y,s.r,0,Math.PI*2);sCtx.fillStyle=`rgba(255,255,255,${a})`;sCtx.fill();});requestAnimationFrame(drawStars);}
+requestAnimationFrame(drawStars);
+window.addEventListener('resize',()=>{sc.width=window.innerWidth;sc.height=window.innerHeight;});
+const obs=new IntersectionObserver(entries=>{entries.forEach(e=>{if(e.isIntersecting){e.target.style.opacity='1';e.target.style.transform='translateY(0)';}});},{threshold:0.05});
+document.querySelectorAll('.spec-item,.stage-row').forEach((el,i)=>{el.style.opacity='0';el.style.transform='translateY(16px)';el.style.transition=`opacity 0.4s ease ${i*0.05}s,transform 0.4s ease ${i*0.05}s`;obs.observe(el);});
+</script>
+<script>
+(function(){
+  var btn = document.getElementById('nav-hamburger');
+  var ul = document.querySelector('.nav-links');
+  if (!btn || !ul) return;
+  btn.addEventListener('click', function(){
+    btn.classList.toggle('open');
+    ul.classList.toggle('mobile-open');
+    document.body.style.overflow = ul.classList.contains('mobile-open') ? 'hidden' : '';
+  });
+  ul.querySelectorAll('li').forEach(function(li){
+    if (!li.querySelector('.dropdown')) return;
+    li.classList.add('has-dropdown');
+    var topLink = li.querySelector(':scope > a');
+    var toggle = document.createElement('span');
+    toggle.className = 'nav-toggle';
+    toggle.textContent = '+';
+    if (topLink) topLink.appendChild(toggle);
+    topLink && topLink.addEventListener('click', function(e){
+      if (window.innerWidth > 768) return;
+      e.preventDefault();
+      var open = li.classList.toggle('mobile-expanded');
+      toggle.textContent = open ? '−' : '+';
+    });
+  });
+  ul.querySelectorAll('.dropdown a').forEach(function(a){
+    a.addEventListener('click', function(){
+      if (window.innerWidth > 768) return;
+      btn.classList.remove('open');
+      ul.classList.remove('mobile-open');
+      document.body.style.overflow = '';
+    });
+  });
+})();
+</script>
+</body>
+</html>

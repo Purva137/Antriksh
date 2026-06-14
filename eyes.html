@@ -1,0 +1,2750 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Antriksh — Eyes on Space</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
+    #globe { position: absolute; inset: 0; width: 100vw; height: 100vh; }
+
+</style>
+<link rel="stylesheet" href="responsive.css">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Grotesk:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/renderers/CSS2DRenderer.js"></script>
+  <style>
+    #mission-nav {
+      position: fixed; top: 0; left: 0; bottom: 0;
+      width: 240px; z-index: 100;
+      background: rgba(4,4,12,0.96);
+      border-right: 1px solid rgba(255,255,255,0.07);
+      display: flex; flex-direction: column;
+      transition: transform 0.35s cubic-bezier(.16,1,.3,1);
+      backdrop-filter: blur(14px);
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    #mission-nav.collapsed { transform: translateX(-240px); }
+
+    #nav-toggle {
+      position: fixed; top: 50%; left: 240px;
+      transform: translateY(-50%);
+      z-index: 101; width: 18px; height: 44px;
+      background: rgba(252,61,33,.65); border: none;
+      color: #fff; cursor: pointer; font-size: 9px;
+      border-radius: 0 3px 3px 0;
+      transition: left 0.35s cubic-bezier(.16,1,.3,1), background 0.2s;
+    }
+    #nav-toggle:hover { background: #FC3D21; }
+    #nav-toggle.collapsed { left: 0; }
+
+    .nav-header {
+      padding: 14px 14px 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+      display: flex; align-items: center;
+      justify-content: space-between; flex-shrink: 0;
+    }
+    .nav-logo-line {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 19px; letter-spacing: .12em; color: #fff;
+    }
+    .nav-logo-line span { color: #FC3D21; }
+    #nav-count {
+      font-family: 'Space Mono', monospace;
+      font-size: 8px; letter-spacing: .1em;
+      color: rgba(255,255,255,.25);
+      background: rgba(255,255,255,.05);
+      padding: 2px 7px; border-radius: 2px;
+    }
+
+    .nav-search { padding: 8px 12px; border-bottom: 1px solid rgba(255,255,255,.05); flex-shrink: 0; }
+    .nav-search input {
+      width: 100%; padding: 6px 10px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid rgba(255,255,255,.08); border-radius: 2px;
+      color: #fff; font-family: 'Space Mono', monospace;
+      font-size: 9px; letter-spacing: .04em; outline: none;
+    }
+    .nav-search input:focus { border-color: rgba(252,61,33,.4); }
+    .nav-search input::placeholder { color: rgba(255,255,255,.2); }
+
+    .nav-body { flex: 1; overflow-y: auto; padding: 4px 0 20px; }
+    .nav-body::-webkit-scrollbar { width: 3px; }
+    .nav-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,.1); }
+
+    .nav-category { margin-top: 4px; }
+    .nav-cat-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 7px; letter-spacing: .18em; text-transform: uppercase;
+      padding: 8px 14px 3px;
+      display: flex; align-items: center; gap: 7px;
+    }
+    .nav-cat-label::after {
+      content: ''; flex: 1; height: 1px;
+      background: currentColor; opacity: .18;
+    }
+
+    .nav-mission {
+      display: flex; align-items: center; gap: 9px;
+      padding: 7px 14px; cursor: pointer;
+      border-left: 2px solid transparent;
+      transition: background .15s, border-left-color .15s;
+    }
+    .nav-mission:hover { background: rgba(255,255,255,.04); }
+    .nav-mission.active {
+      background: rgba(252,61,33,.07);
+      border-left-color: #FC3D21;
+    }
+    .nav-mission-dot {
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+    }
+    .nav-mission-info { flex: 1; min-width: 0; }
+    .nav-mission-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 14px; line-height: 1; color: #fff;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .nav-mission-meta {
+      font-family: 'Space Mono', monospace;
+      font-size: 7px; letter-spacing: .07em; text-transform: uppercase;
+      color: rgba(255,255,255,.22); margin-top: 2px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .nav-mission-year {
+      font-family: 'Space Mono', monospace;
+      font-size: 8px; color: rgba(255,255,255,.15); flex-shrink: 0;
+    }
+
+    #mission-panel {
+      position: fixed; top: 0; right: 0; bottom: 0;
+      width: 520px; z-index: 200; background: #000;
+      border-left: 1px solid rgba(255,255,255,.08);
+      display: flex; flex-direction: column;
+      transform: translateX(520px);
+      transition: transform 0.4s cubic-bezier(.16,1,.3,1);
+    }
+    #mission-panel.open { transform: translateX(0); }
+    @media (max-width: 600px) {
+      #mission-panel { width: 100vw; transform: translateX(100vw); }
+    }
+
+    .panel-topbar {
+      height: 44px; flex-shrink: 0;
+      display: flex; align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      background: rgba(4,4,12,.98);
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
+    #panel-title {
+      font-family: 'Space Mono', monospace;
+      font-size: 9px; letter-spacing: .16em;
+      text-transform: uppercase; color: rgba(255,255,255,.35);
+    }
+    .panel-actions { display: flex; align-items: center; gap: 6px; }
+    #panel-popout {
+      background: none; border: 1px solid rgba(255,255,255,.1);
+      color: rgba(255,255,255,.35); font-size: 10px;
+      padding: 3px 8px; cursor: pointer; border-radius: 2px;
+      font-family: 'Space Mono', monospace; letter-spacing: .06em;
+      transition: all .2s;
+    }
+    #panel-popout:hover { color: #fff; border-color: rgba(255,255,255,.3); }
+    #panel-close {
+      background: none; border: none;
+      color: rgba(255,255,255,.3); font-size: 15px;
+      cursor: pointer; padding: 4px 6px; transition: color .2s;
+    }
+    #panel-close:hover { color: #fff; }
+    #mission-frame { flex: 1; border: none; background: #000; }
+    .rhud-controls span { color: rgba(255,200,60,.7); }
+    .rhud-badge {
+      font-size: 7px; letter-spacing: .18em; text-transform: uppercase;
+      color: #ffaa00; display: flex; align-items: center; gap: 6px;
+      margin-bottom: 4px;
+    }
+    .rhud-badge::before {
+      content: ''; width: 6px; height: 6px; border-radius: 50%;
+      background: #ffaa00; box-shadow: 0 0 6px #ffaa0088;
+      animation: pulse 2s infinite;
+    }
+
+    #hud {
+      position: fixed; bottom: 22px; left: 258px;
+      z-index: 50; pointer-events: none;
+      display: flex; flex-direction: column; gap: 6px;
+      font-family: 'Space Mono', monospace;
+    }
+
+    #hud-clock {
+      background: rgba(4,4,14,.88);
+      border: 1px solid rgba(255,255,255,.07);
+      border-left: 2px solid #00c864;
+      padding: 8px 14px;
+      backdrop-filter: blur(10px);
+    }
+    .hud-row {
+      display: flex; align-items: baseline; gap: 10px; line-height: 1.75;
+    }
+    .hud-tz {
+      font-size: 7px; letter-spacing: .18em; text-transform: uppercase;
+      color: rgba(255,255,255,.28); min-width: 34px;
+    }
+    .hud-time {
+      font-size: 13px; letter-spacing: .04em; color: #00c864;
+      font-variant-numeric: tabular-nums;
+    }
+    .hud-date {
+      font-size: 7px; letter-spacing: .1em; text-transform: uppercase;
+      color: rgba(255,255,255,.2); margin-left: auto;
+    }
+
+    #hud-gauge {
+      background: rgba(4,4,14,.88);
+      border: 1px solid rgba(255,255,255,.07);
+      border-left: 2px solid #FC3D21;
+      padding: 8px 14px 10px;
+      backdrop-filter: blur(10px);
+      min-width: 270px;
+    }
+    .gauge-head {
+      font-size: 7px; letter-spacing: .18em; text-transform: uppercase;
+      color: rgba(255,255,255,.22); margin-bottom: 4px;
+    }
+    #gauge-reading {
+      display: flex; align-items: baseline; gap: 5px; margin-bottom: 7px;
+    }
+    #gauge-val {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 26px; color: #FC3D21; line-height: 1;
+      font-variant-numeric: tabular-nums; letter-spacing: .02em;
+    }
+    #gauge-unit {
+      font-size: 10px; letter-spacing: .14em; text-transform: uppercase;
+      color: rgba(255,255,255,.4);
+    }
+    .gauge-track {
+      position: relative; width: 100%; height: 3px;
+      background: rgba(255,255,255,.07); border-radius: 1px; overflow: visible;
+    }
+    .gauge-fill {
+      height: 100%; border-radius: 1px;
+      background: linear-gradient(90deg,#00c864 0%,#ffaa00 50%,#FC3D21 100%);
+      min-width: 2px; transition: width .25s ease;
+    }
+    .gauge-needle {
+      position: absolute; top: -4px;
+      width: 2px; height: 11px;
+      background: #fff; border-radius: 1px;
+      transform: translateX(-50%); transition: left .25s ease;
+    }
+    .gauge-ticks { position: relative; height: 18px; }
+    .gauge-tick {
+      position: absolute; bottom: 0; transform: translateX(-50%);
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+    }
+    .gauge-tick-pip {
+      width: 1px; height: 4px; background: rgba(255,255,255,.18);
+    }
+    .gauge-tick-lbl {
+      font-size: 6px; letter-spacing: .04em;
+      color: rgba(255,255,255,.22); white-space: nowrap;
+    }
+    #gauge-ref {
+      font-size: 7px; letter-spacing: .12em; text-transform: uppercase;
+      color: rgba(255,255,255,.18); margin-top: 3px;
+    }
+  </style>
+<link rel="stylesheet" href="responsive.css">
+</head>
+<body>
+
+  <div id="globe"></div>
+
+  <!-- Mission Nav -->
+  <aside id="mission-nav">
+    <div class="nav-header">
+      <div class="nav-logo-line"><a href="index.html" style="text-decoration: none; color: white;">ANTRIK<span>SH</span></a></div>
+      <span id="nav-count">22</span>
+    </div>
+    <div class="nav-search">
+      <input type="text" id="nav-search-input" placeholder="Search missions…" autocomplete="off">
+    </div>
+    <div class="nav-body" id="nav-body"></div>
+  </aside>
+  <button id="nav-toggle" aria-label="Toggle nav">◀</button>
+
+  <!-- Mission Detail Panel -->
+  <div id="mission-panel">
+    <div class="panel-topbar">
+      <span id="panel-title">Mission Profile</span>
+      <div class="panel-actions">
+        <button id="panel-popout" title="Open in new tab">↗ Open</button>
+        <button id="panel-close" aria-label="Close">✕</button>
+      </div>
+    </div>
+    <iframe id="mission-frame" src="" title="Mission Profile" sandbox="allow-scripts allow-same-origin allow-popups"></iframe>
+  </div>
+    <div class="rhud-panel">
+      <div class="rhud-label">Heading</div>
+      <div class="rhud-val" id="rover-hdg">—</div>
+    </div>
+    <div class="rhud-panel">
+      <div class="rhud-label">Position</div>
+      <div class="rhud-val" id="rover-pos">—</div>
+    </div>
+    <div class="rhud-controls">
+      <span>W / S</span> Drive &nbsp; <span>A / D</span> Turn &nbsp; <span>Scroll</span> Pitch &nbsp; <span>ESC</span> Exit
+    </div>
+  </div>
+
+  <!-- zoom hint -->
+  <div id="milky-hint" style="
+    position:fixed; bottom:32px; left:50%; transform:translateX(-50%);
+    font-family:'Space Mono',monospace; font-size:10px; letter-spacing:0.2em;
+    color:rgba(255,255,255,0.75); pointer-events:none; z-index:50;
+    text-transform:uppercase; transition:opacity 0.6s;
+    text-shadow: 0 0 12px rgba(255,255,255,0.3);
+  ">↓ scroll out to see 3D milky way</div>
+
+  <!-- HUD -->
+  <div id="hud">
+    <div id="hud-clock">
+      <div class="hud-row">
+        <span class="hud-tz">Local</span>
+        <span id="hud-local-t" class="hud-time">--:--:--</span>
+        <span id="hud-local-d" class="hud-date"></span>
+      </div>
+      <div class="hud-row">
+        <span class="hud-tz" id="hud-tz-label" style="font-size:7px;max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">—</span>
+      </div>
+    </div>
+    <div id="hud-gauge">
+      <div class="gauge-head">Distance from Earth</div>
+      <div id="gauge-reading">
+        <span id="gauge-val">—</span>
+        <span id="gauge-unit"></span>
+      </div>
+      <div class="gauge-track">
+        <div class="gauge-fill" id="gauge-fill" style="width:0%"></div>
+        <div class="gauge-needle" id="gauge-needle" style="left:0%"></div>
+      </div>
+      <div class="gauge-ticks" id="gauge-ticks"></div>
+      <div id="gauge-ref">FROM EARTH SURFACE</div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/DRACOLoader.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/satellite.js@5.0.0/dist/satellite.min.js"></script>
+
+  <script>
+    const container = document.getElementById('globe');
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true, logarithmicDepthBuffer: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    container.appendChild(renderer.domElement);
+
+    // log missing textures without crashing the render loop
+    THREE.DefaultLoadingManager.onError = url =>
+      console.warn('[TextureLoader] missing:', url);
+
+    const scene  = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.00001, 1e25);
+    camera.position.set(35, 18, 50);
+
+    const controls = new THREE.OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 0, 0);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.enableZoom = false;
+
+    
+
+const skyTex = new THREE.TextureLoader().load('./textures/8k_stars.jpg');
+    const skyMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(1e15, 64, 64),
+      new THREE.MeshBasicMaterial({ map: skyTex, side: THREE.BackSide, transparent:true, opacity:1 })
+    );
+    scene.add(skyMesh);
+
+    // load Milky Way GLB and scale it to match the star dome radius
+    (function loadMilkyWay() {
+      const dracoLoader = new THREE.DRACOLoader();
+dracoLoader.setDecoderPath('./draco/');
+var loader = new THREE.GLTFLoader();
+loader.setDRACOLoader(dracoLoader);
+      loader.load('./models/milky_way_galaxy.glb', function(gltf) {
+        var mw = gltf.scene;
+
+        var box = new THREE.Box3().setFromObject(mw);
+        var center = new THREE.Vector3();
+        var size   = new THREE.Vector3();
+        box.getCenter(center);
+        box.getSize(size);
+
+        // scale longest axis to 2× the star dome radius so it wraps around it
+        var maxDim = Math.max(size.x, size.y, size.z);
+        var targetSize = 1e14;
+        var S = targetSize / maxDim;
+        mw.scale.setScalar(S);
+
+        // shift so the model's geometric center lands at the scene origin
+        mw.position.set(-center.x * S, -center.y * S, -center.z * S);
+
+        mw.traverse(function(obj) {
+          if (obj.isMesh) {
+            obj.material.depthWrite = false;
+            obj.material.transparent = true;
+            obj.material.opacity = 0.0;
+            obj.renderOrder = 0;
+          }
+        });
+        scene.add(mw);
+        window._milkyWayObj = mw;
+      }, undefined, function(e) { console.warn('Milky Way GLB failed:', e); });
+    })();
+
+    var sunMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(1.5, 64, 64),
+      new THREE.MeshBasicMaterial({ map: new THREE.TextureLoader().load('./textures/8k_sun.jpg') })
+    );
+    sunMesh.name = 'Sun';
+    scene.add(sunMesh);
+
+    const sunLight = new THREE.PointLight(0xffffff, 2, 0, 1);
+    sunLight.position.set(0, 0, 0);
+    scene.add(sunLight);
+
+    // 100k procedural background stars with B-V colour mapping and magnitude-scaled size
+    (function buildStarField() {
+      const COUNT = 100_000;
+      const positions = new Float32Array(COUNT * 3);
+      const colors    = new Float32Array(COUNT * 3);
+      const sizes     = new Float32Array(COUNT);
+
+      // B-V colour index → RGB via piecewise interpolation
+      const BV_TABLE = [
+        [-0.40, 0.635, 0.748, 1.000],
+        [ 0.00, 0.800, 0.880, 1.000],
+        [ 0.30, 1.000, 1.000, 1.000],
+        [ 0.58, 1.000, 0.952, 0.880],
+        [ 0.81, 1.000, 0.850, 0.720],
+        [ 1.40, 1.000, 0.700, 0.420],
+        [ 2.00, 1.000, 0.560, 0.140],
+      ];
+
+      function getStarPos(ra, dec, dist) {
+        const phi = (90 - dec) * (Math.PI / 180);
+        const theta = (ra * 15) * (Math.PI / 180); // RA is in hours (0-24), so * 15 for degrees
+        return new THREE.Vector3(
+          dist * Math.sin(phi) * Math.cos(theta),
+          dist * Math.cos(phi),
+          dist * Math.sin(phi) * Math.sin(theta)
+        );
+      }
+
+      function bvToRgb(bv) {
+        bv = Math.max(-0.40, Math.min(2.00, bv));
+        for (let i = 0; i < BV_TABLE.length - 1; i++) {
+          const lo = BV_TABLE[i], hi = BV_TABLE[i + 1];
+          if (bv <= hi[0]) {
+            const t = (bv - lo[0]) / (hi[0] - lo[0]);
+            return [lo[1] + t*(hi[1]-lo[1]), lo[2] + t*(hi[2]-lo[2]), lo[3] + t*(hi[3]-lo[3])];
+          }
+        }
+        return [1, 1, 1];
+      }
+
+      // weighted random B-V by realistic spectral-type frequency
+      function randomBV() {
+        const r = Math.random();
+        if (r < 0.0003) return -0.35 + Math.random() * 0.10; // O
+        if (r < 0.0013) return -0.25 + Math.random() * 0.25; // B
+        if (r < 0.0063) return  0.00 + Math.random() * 0.30; // A
+        if (r < 0.0363) return  0.30 + Math.random() * 0.28; // F
+        if (r < 0.1363) return  0.58 + Math.random() * 0.23; // G
+        if (r < 0.2763) return  0.81 + Math.random() * 0.59; // K
+        return  1.40 + Math.random() * 0.60;                 // M
+      }
+
+      function bvToAbsMag(bv) {
+        if (bv < -0.20) return -4 + Math.random() * 8;  // O/B
+        if (bv <  0.00) return  0 + Math.random() * 4;  // late B
+        if (bv <  0.30) return  2 + Math.random() * 4;  // A
+        if (bv <  0.58) return  3 + Math.random() * 5;  // F
+        if (bv <  0.81) return  4 + Math.random() * 4;  // G
+        if (bv <  1.40) return  5 + Math.random() * 5;  // K
+        return  8 + Math.random() * 8;                  // M
+      }
+
+      for (let i = 0; i < COUNT; i++) {
+        const u     = Math.random() * 2 - 1;
+        const theta = Math.random() * Math.PI * 2;
+        const sqr   = Math.sqrt(1 - u * u);
+        const r     = (2.5 + 2.5 * Math.random()) * 1e14;
+        positions[i*3]   = r * sqr * Math.cos(theta);
+        positions[i*3+1] = r * sqr * Math.sin(theta);
+        positions[i*3+2] = r * u;
+
+        const bv  = randomBV();
+        const rgb = bvToRgb(bv);
+        colors[i*3]   = rgb[0];
+        colors[i*3+1] = rgb[1];
+        colors[i*3+2] = rgb[2];
+
+        // brighter stars (lower absMag) get larger point sizes
+        const absMag = bvToAbsMag(bv);
+        sizes[i] = Math.max(0.5e12, (5.0 - absMag * 0.22) * 1e12);
+      }
+
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position',  new THREE.BufferAttribute(positions, 3));
+      geo.setAttribute('starColor', new THREE.BufferAttribute(colors,    3));
+      geo.setAttribute('starSize',  new THREE.BufferAttribute(sizes,     1));
+
+      const mat = new THREE.ShaderMaterial({
+        vertexShader: `
+          attribute vec3  starColor;
+          attribute float starSize;
+          varying vec3 vColor;
+          void main() {
+            vColor = starColor;
+            vec4 mvPos    = modelViewMatrix * vec4(position, 1.0);
+            gl_PointSize  = starSize * (1000.0 / -mvPos.z);
+            gl_Position   = projectionMatrix * mvPos;
+          }
+        `,
+        fragmentShader: `
+          varying vec3 vColor;
+          void main() {
+            float d = length(gl_PointCoord - vec2(0.5));
+            if (d > 0.5) discard;
+            float alpha = 1.0 - smoothstep(0.25, 0.5, d);
+            gl_FragColor = vec4(vColor, alpha);
+          }
+        `,
+        transparent: true,
+        depthWrite:  false,
+        blending:    THREE.AdditiveBlending,
+      });
+
+      scene.add(new THREE.Points(geo, mat));
+    })();
+
+    // M31 and M42 as sprites at exact RA/Dec
+    (function buildDSO() {
+      // equatorial RA/Dec to Three.js cartesian: x=cos(dec)cos(ra), y=sin(dec), z=-cos(dec)sin(ra)
+      function raDecToVec3(raDeg, decDeg, dist) {
+        const ra  = raDeg  * (Math.PI / 180);
+        const dec = decDeg * (Math.PI / 180);
+        return new THREE.Vector3(
+           Math.cos(dec) * Math.cos(ra) * dist,
+           Math.sin(dec)                * dist,
+          -Math.cos(dec) * Math.sin(ra) * dist
+        );
+      }
+
+      function makeGlowTex(r, g, b, size = 256) {
+        const c   = document.createElement('canvas');
+        c.width   = c.height = size;
+        const ctx = c.getContext('2d');
+        const cx  = size / 2;
+        const grd = ctx.createRadialGradient(cx, cx, 0, cx, cx, cx);
+        grd.addColorStop(0.00, `rgba(${r},${g},${b},1.00)`);
+        grd.addColorStop(0.20, `rgba(${r},${g},${b},0.80)`);
+        grd.addColorStop(0.50, `rgba(${r},${g},${b},0.30)`);
+        grd.addColorStop(1.00, `rgba(${r},${g},${b},0.00)`);
+        ctx.fillStyle = grd;
+        ctx.fillRect(0, 0, size, size);
+        return new THREE.CanvasTexture(c);
+      }
+
+      const DSO = [
+        {
+          name: 'M31',
+          // Andromeda Galaxy — RA 00h 42m 44.3s, Dec +41° 16′ 09″
+          ra:   (0*15) + (42/60*15) + (44.3/3600*15), // 10.685°
+          dec:  41 + 16/60 + 9/3600,                  // +41.269°
+          // Soft blue-white elliptical glow
+          tex:  makeGlowTex(180, 200, 255),
+          // Apparent ~3°: scale = tan(1.5°) * 2 * 1e20 ≈ 5.24e18
+          scale: new THREE.Vector3(5.24e18, 2.8e18, 1), // flattened ellipse
+        },
+        {
+          name: 'M42',
+          // Orion Nebula — RA 05h 35m 17.3s, Dec −05° 23′ 28″
+          ra:   (5*15) + (35/60*15) + (17.3/3600*15), // 83.822°
+          dec:  -(5 + 23/60 + 28/3600),               // −5.391°
+          // Warm pink-rose emission nebula glow
+          tex:  makeGlowTex(255, 160, 180),
+          // Apparent ~1°: scale = tan(0.5°) * 2 * 1e20 ≈ 1.75e18
+          scale: new THREE.Vector3(1.75e18, 1.75e18, 1),
+        },
+      ];
+
+      DSO.forEach(({ name, ra, dec, tex, scale }) => {
+        const mat = new THREE.SpriteMaterial({
+          map:         tex,
+          transparent: true,
+          depthWrite:  false,
+          blending:    THREE.AdditiveBlending,
+        });
+        const sprite = new THREE.Sprite(mat);
+        sprite.position.copy(raDecToVec3(ra, dec, 1e20));
+        sprite.scale.copy(scale);
+        sprite.name = name;
+        scene.add(sprite);
+      });
+    })();
+
+    const { atmUniforms, earthGroup } = (function buildEarth() {
+      const loader = new THREE.TextureLoader();
+
+      // Earth surface
+      const earthMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(1, 128, 128),
+        new THREE.MeshStandardMaterial({
+          map:      loader.load('./textures/8k_earth_daymap.jpg'),
+          roughness: 1.0,
+          metalness: 0.0,
+        })
+      );
+
+      // uCamPos is updated every frame in animate()
+      const uniforms = {
+        uSunDir: { value: new THREE.Vector3(1.0, 0.3, 0.0).normalize() },
+        uCamPos: { value: camera.position.clone() },
+      };
+
+      const atmMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(1.025, 128, 128),
+        new THREE.ShaderMaterial({
+          uniforms,
+          vertexShader: `
+            varying vec3 vWorldPos;
+            varying vec3 vWorldNormal;
+            void main() {
+              vec4 wp      = modelMatrix * vec4(position, 1.0);
+              vWorldPos    = wp.xyz;
+              vWorldNormal = normalize(mat3(modelMatrix) * normal);
+              gl_Position  = projectionMatrix * viewMatrix * wp;
+            }
+          `,
+          fragmentShader: `
+            #define PI 3.14159265359
+
+            uniform vec3 uSunDir;
+            uniform vec3 uCamPos;
+
+            varying vec3 vWorldPos;
+            varying vec3 vWorldNormal;
+
+            // Rayleigh phase function P(θ) = (3/16π)(1 + cos²θ)
+            float phaseRayleigh(float cosA) {
+              return (3.0 / (16.0 * PI)) * (1.0 + cosA * cosA);
+            }
+
+            void main() {
+              vec3 N = normalize(vWorldNormal);
+              vec3 V = normalize(uCamPos - vWorldPos); // toward camera
+              vec3 L = normalize(uSunDir);             // toward sun
+
+              // Rayleigh β ∝ λ^{-4}: R(680nm):G(550nm):B(440nm)
+              // Relative ratios normalised to blue = 1.0
+              vec3 betaR = vec3(0.175, 0.408, 1.0);
+
+              // Phase: angle between reversed view ray and sun
+              float phase = phaseRayleigh(dot(-V, L));
+
+              // Optical depth: atmosphere is much thicker at the limb
+              float cosVN = max(dot(N, V), 0.0);
+              float depth = pow(1.0 - cosVN, 5.0);
+
+              // Day / night terminator
+              float sunDot  = dot(N, L);
+              float dayMask = smoothstep(-0.15, 0.25, sunDot);
+
+              // Rayleigh blue scatter
+              vec3 scatter = betaR * phase * depth * dayMask;
+
+              // Sunset / sunrise orange-red band at the terminator
+              float twi     = smoothstep(-0.20, 0.0, sunDot) * (1.0 - smoothstep(0.0, 0.25, sunDot));
+              vec3 twilight = vec3(1.0, 0.35, 0.05) * twi * depth * 2.0;
+
+              // Faint night-side limb (bent starlight)
+              vec3 nightLimb = vec3(0.02, 0.04, 0.10) * depth * (1.0 - dayMask);
+
+              vec3  col   = scatter * 2.5 + twilight + nightLimb;
+              float alpha = clamp(depth * (dayMask * 1.2 + twi * 0.8) + depth * 0.04, 0.0, 0.9);
+
+              gl_FragColor = vec4(col, alpha);
+            }
+          `,
+          side:        THREE.FrontSide,
+          transparent: true,
+          depthWrite:  false,
+          blending:    THREE.AdditiveBlending,
+        })
+      );
+      const group = new THREE.Group();
+      group.add(earthMesh, atmMesh);
+      scene.add(group);
+
+      return { atmUniforms: uniforms, earthGroup: group };
+    })();
+
+    var planetOrbitGroups = {}; // name → orbitGroup
+    (function buildPlanets() {
+      const loader = new THREE.TextureLoader();
+      const KM = 1 / (6_371 * 1_000);
+
+      var J2000 = new Date('2000-01-01T12:00:00Z').getTime();
+      var daysSinceJ2000 = (Date.now() - J2000) / 86400000;
+
+      // Keplerian elements: L0 = mean longitude at J2000 (deg), n = motion (deg/day)
+      const PLANETS = [
+        { name:'Mercury', semiMajorKm:57_909_227,  radius:2_439.7,  tex:'./textures/8k_mercury.jpg',       tilt:0.034,  L0:252.251,  n:4.09234 },
+        { name:'Venus',   semiMajorKm:108_209_475, radius:6_051.8,  tex:'./textures/8k_venus_surface.jpg', tilt:177.4,  L0:181.979,  n:1.60213,  cloudTex:'./textures/4k_venus_atmosphere.jpg' },
+        { name:'Mars',    semiMajorKm:227_943_824, radius:3_389.5,  tex:'./textures/8k_mars.jpg',          tilt:25.19,  L0:355.433,  n:0.52403 },
+        { name:'Jupiter', semiMajorKm:778_570_000, radius:69_911.0, tex:'./textures/8k_jupiter.jpg',       tilt:3.13,   L0:34.396,   n:0.08309 },
+        { name:'Saturn',  semiMajorKm:1_432_041_000,radius:58_232.0,tex:'./textures/8k_saturn.jpg',        tilt:26.73,  L0:50.077,   n:0.03346, rings:true },
+        { name:'Uranus',  semiMajorKm:2_872_500_000,radius:25_362.0,tex:'./textures/2k_uranus.jpg',        tilt:97.77,  L0:314.055,  n:0.01170 },
+        { name:'Neptune', semiMajorKm:4_495_100_000,radius:24_622.0,tex:'./textures/2k_neptune.jpg',       tilt:28.32,  L0:304.349,  n:0.00598 },
+      ];
+
+      var earthL0 = 100.464, earthN = 0.98561;
+      var earthAngle = (earthL0 + earthN * daysSinceJ2000) * Math.PI / 180;
+      var earthDist  = 149_598_262 * KM;
+      earthGroup.position.set(Math.cos(earthAngle) * earthDist, 0, Math.sin(earthAngle) * earthDist);
+
+      (function() {
+        var pts = [];
+        for (var i = 0; i <= 128; i++) { var a = i/128*Math.PI*2; pts.push(new THREE.Vector3(Math.cos(a)*earthDist,0,Math.sin(a)*earthDist)); }
+        scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color:0x334455, transparent:true, opacity:0.35, depthWrite:false })));
+      })();
+
+      PLANETS.forEach(function(p) {
+        var dist   = p.semiMajorKm * KM;
+        var radius = p.radius / 6371;
+        var angle  = (p.L0 + p.n * daysSinceJ2000) * Math.PI / 180;
+
+        const orbitGroup = new THREE.Group();
+        orbitGroup.position.set(Math.cos(angle) * dist, 0, Math.sin(angle) * dist);
+        orbitGroup.name = p.name;
+        planetOrbitGroups[p.name] = orbitGroup;
+
+        const bodyGroup = new THREE.Group();
+        bodyGroup.rotation.z = p.tilt * Math.PI / 180;
+
+        bodyGroup.add(new THREE.Mesh(
+          new THREE.SphereGeometry(radius, 64, 64),
+          new THREE.MeshLambertMaterial({ map: loader.load(p.tex) })
+        ));
+
+        if (p.cloudTex) {
+          bodyGroup.add(new THREE.Mesh(
+            new THREE.SphereGeometry(radius * 1.005, 64, 64),
+            new THREE.MeshLambertMaterial({ map: loader.load(p.cloudTex), transparent:true, opacity:0.75, depthWrite:false })
+          ));
+        }
+
+        if (p.rings) {
+          const rInner = 92_000 / 6371, rOuter = 136_780 / 6371;
+          const ringGeo = new THREE.RingGeometry(rInner, rOuter, 128, 1);
+          const pos = ringGeo.attributes.position, uv = ringGeo.attributes.uv;
+          for (let i = 0; i < pos.count; i++) {
+            const x = pos.getX(i), y = pos.getY(i), r = Math.sqrt(x*x+y*y);
+            uv.setX(i, (r-rInner)/(rOuter-rInner)); uv.setY(i, 0.5);
+          }
+          uv.needsUpdate = true;
+          const ringTex = loader.load('./textures/8k_saturn_ring_alpha.png');
+          const ringMesh = new THREE.Mesh(ringGeo, new THREE.MeshBasicMaterial({ map:ringTex, alphaMap:ringTex, side:THREE.DoubleSide, transparent:true, depthWrite:false, opacity:0.9 }));
+          ringMesh.rotation.x = Math.PI / 2;
+          bodyGroup.add(ringMesh);
+        }
+
+        orbitGroup.add(bodyGroup);
+        scene.add(orbitGroup);
+
+        var pts = [];
+        for (var i = 0; i <= 128; i++) { var a = i/128*Math.PI*2; pts.push(new THREE.Vector3(Math.cos(a)*dist, 0, Math.sin(a)*dist)); }
+        scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(pts), new THREE.LineBasicMaterial({ color:0x334455, transparent:true, opacity:0.35, depthWrite:false })));
+
+        orbitGroup.userData.bodyGroup = bodyGroup;
+      });
+
+      window._planetUpdate = function() {
+        var t = (Date.now() - J2000) / 86400000; // days since J2000
+        var ea = (earthL0 + earthN * t) * Math.PI / 180;
+        earthGroup.position.set(Math.cos(ea) * earthDist, 0, Math.sin(ea) * earthDist);
+
+        PLANETS.forEach(function(p) {
+          var d = p.semiMajorKm * KM;
+          var a = (p.L0 + p.n * t) * Math.PI / 180;
+          var g = planetOrbitGroups[p.name];
+          if (g) g.position.set(Math.cos(a) * d, 0, Math.sin(a) * d);
+          // Self-rotation
+          var bg = g && g.userData.bodyGroup;
+          if (bg) bg.rotation.y += 0.001;
+        });
+      };
+    })();
+
+(function buildPlanetClicks() {
+      var PLANET_INFO = {
+        Mercury: { name:'Mercury', agency:'NASA · Solar System', type:'Rocky Planet · 0.39 AU · 88-day year',
+          body:`<b>Diameter:</b> 4,879 km<br><b>Mass:</b> 3.30 × 10²³ kg (0.055 Earths)<br><b>Distance from Sun:</b> 57.9 million km (0.39 AU)<br><b>Day length:</b> 59 Earth days<br><b>Year:</b> 88 Earth days<br><b>Temperature:</b> −180°C to +430°C<br><b>Moons:</b> 0<br><br>The smallest and fastest planet. No atmosphere means wild temperature swings. Covered in craters — geologically dead. MESSENGER (NASA) orbited it 2011–2015; BepiColombo (ESA/JAXA) en route.` },
+        Venus: { name:'Venus', agency:'NASA · Solar System', type:'Rocky Planet · 0.72 AU · 225-day year',
+          body:`<b>Diameter:</b> 12,104 km<br><b>Mass:</b> 4.87 × 10²⁴ kg (0.815 Earths)<br><b>Distance from Sun:</b> 108.2 million km (0.72 AU)<br><b>Day length:</b> 243 Earth days (retrograde!)<br><b>Year:</b> 225 Earth days<br><b>Temperature:</b> 465°C (hottest planet)<br><b>Atmosphere:</b> 96% CO₂, 90× Earth pressure<br><b>Moons:</b> 0<br><br>Earth's twisted twin. Runaway greenhouse effect made it hotter than Mercury. Rotates backwards and slower than its year. Sulphuric acid clouds. Magellan radar-mapped its surface; Shukrayaan-1 (ISRO) and EnVision (ESA) planned.` },
+        Mars: { name:'Mars', agency:'NASA · Solar System', type:'Rocky Planet · 1.52 AU · 687-day year',
+          body:`<b>Diameter:</b> 6,779 km<br><b>Mass:</b> 6.39 × 10²³ kg (0.107 Earths)<br><b>Distance from Sun:</b> 227.9 million km (1.52 AU)<br><b>Day length:</b> 24h 37m<br><b>Year:</b> 687 Earth days<br><b>Temperature:</b> −87°C to +20°C<br><b>Moons:</b> Phobos, Deimos<br><br>The Red Planet. Olympus Mons (21 km high) is the largest volcano in the solar system. Ancient riverbeds suggest liquid water billions of years ago. Currently hosting Perseverance rover, Ingenuity helicopter, Curiosity rover, MAVEN, MRO, and InSight seismometer (retired). Mangalyaan (ISRO) orbited 2014–2022.` },
+        Jupiter: { name:'Jupiter', agency:'NASA · Solar System', type:'Gas Giant · 5.2 AU · 12-year orbit',
+          body:`<b>Diameter:</b> 139,820 km (11× Earth)<br><b>Mass:</b> 1.90 × 10²⁷ kg (318 Earths)<br><b>Distance from Sun:</b> 778.5 million km (5.2 AU)<br><b>Day length:</b> 9h 56m (fastest rotation)<br><b>Year:</b> 11.86 Earth years<br><b>Moons:</b> 95 known (Io, Europa, Ganymede, Callisto)<br><b>Great Red Spot:</b> Storm older than 350 years<br><br>The king of planets. Its magnetic field is 20,000× stronger than Earth's. Europa likely has a subsurface ocean — prime candidate for life. Juno spacecraft (NASA) currently in orbit. JUICE (ESA) en route to study icy moons.` },
+        Saturn: { name:'Saturn', agency:'NASA · Solar System', type:'Gas Giant · 9.58 AU · 29-year orbit',
+          body:`<b>Diameter:</b> 116,460 km (9.5× Earth)<br><b>Mass:</b> 5.68 × 10²⁶ kg (95 Earths)<br><b>Distance from Sun:</b> 1.43 billion km (9.58 AU)<br><b>Day length:</b> 10h 42m<br><b>Year:</b> 29.5 Earth years<br><b>Moons:</b> 146 known (Titan, Enceladus, Mimas...)<br><b>Ring system:</b> 270,000 km wide, 1 km thick<br><br>The jewel of the solar system. Its rings are mostly water ice and rock. Titan has a thick atmosphere and methane lakes — the only moon with stable surface liquid. Enceladus shoots water geysers into space. Cassini–Huygens (NASA/ESA) revealed all of this 2004–2017.` },
+        Uranus: { name:'Uranus', agency:'NASA · Solar System', type:'Ice Giant · 19.2 AU · 84-year orbit',
+          body:`<b>Diameter:</b> 50,724 km (4× Earth)<br><b>Mass:</b> 8.68 × 10²⁵ kg (14.5 Earths)<br><b>Distance from Sun:</b> 2.87 billion km (19.2 AU)<br><b>Day length:</b> 17h 14m<br><b>Year:</b> 84 Earth years<br><b>Moons:</b> 28 known (Miranda, Ariel, Titania...)<br><b>Tilt:</b> 97.77° — orbits on its side<br><br>The tilted giant. Its extreme axial tilt means each pole gets 42 years of continuous sunlight then 42 years of darkness. Made mostly of water, methane, and ammonia ices under intense pressure. Only Voyager 2 has visited (1986).` },
+        Neptune: { name:'Neptune', agency:'NASA · Solar System', type:'Ice Giant · 30.1 AU · 165-year orbit',
+          body:`<b>Diameter:</b> 49,244 km (3.9× Earth)<br><b>Mass:</b> 1.02 × 10²⁶ kg (17.1 Earths)<br><b>Distance from Sun:</b> 4.50 billion km (30.1 AU)<br><b>Day length:</b> 16h 6m<br><b>Year:</b> 164.8 Earth years<br><b>Moons:</b> 16 known (Triton, Proteus...)<br><b>Winds:</b> Up to 2,100 km/h — fastest in solar system<br><br>The windiest planet. Triton orbits backwards — it's a captured Kuiper Belt object, doomed to spiral inward and shatter in ~3.6 billion years. Only Voyager 2 has visited (1989). Neptune's 165-year orbit was completed for the first time since discovery in 2011.` },
+        Earth: { name:'Earth', agency:'NASA · Solar System', type:'Rocky Planet · 1 AU · 365-day year',
+          body:`<b>Diameter:</b> 12,742 km<br><b>Mass:</b> 5.97 × 10²⁴ kg<br><b>Distance from Sun:</b> 149.6 million km (1 AU)<br><b>Day length:</b> 24 hours<br><b>Year:</b> 365.25 days<br><b>Temperature:</b> −88°C to +58°C<br><b>Moons:</b> 1 (Moon)<br><b>Atmosphere:</b> 78% N₂, 21% O₂<br><br>Our home. The only known planet with confirmed life, liquid surface water, and plate tectonics. Protected by a magnetic field and ozone layer. Hosts over 8,700 known satellites in orbit. ISRO's NISAR and Aditya-L1 launched recently. Earth's Moon is unusually large relative to its planet.` },
+        Sun: { name:'Sun', agency:'NASA · Our Star', type:'G-type Main Sequence Star · Centre of Solar System',
+          body:`<b>Diameter:</b> 1,392,700 km (109× Earth)<br><b>Mass:</b> 1.99 × 10³⁰ kg (333,000 Earths)<br><b>Surface temp:</b> 5,778 K<br><b>Core temp:</b> 15,000,000 K<br><b>Age:</b> 4.6 billion years (halfway through life)<br><b>Composition:</b> 71% hydrogen, 27% helium<br><br>Our star fuses 600 million tonnes of hydrogen per second into helium. Energy takes 100,000 years to travel from core to surface, then 8 minutes to reach Earth. The Sun's gravity holds everything from Mercury to the Oort Cloud. Aditya-L1 (ISRO) and Parker Solar Probe (NASA) are studying it right now.` },
+      };
+
+      Object.keys(PLANET_INFO).forEach(function(name) {
+        var g = planetOrbitGroups[name];
+        if (g) g.traverse(function(obj) { if (obj.isMesh) obj.userData.planetInfo = PLANET_INFO[name]; });
+      });
+      if (sunMesh) sunMesh.userData.planetInfo = PLANET_INFO['Sun'];
+      // earthGroup is separate from the PLANETS array
+      if (typeof earthGroup !== 'undefined') earthGroup.traverse(function(obj) { if (obj.isMesh) obj.userData.planetInfo = PLANET_INFO['Earth']; });
+
+      // planet click — skip if a satellite sprite was already picked
+      var _pRay = new THREE.Raycaster();
+      renderer.domElement.addEventListener('click', function(e) {
+        if (window._satClickHandled) { window._satClickHandled = false; return; }
+        if (window._pickSat) { var s = window._pickSat(e.clientX, e.clientY); if (s && window._showSatInfo) { window._showSatInfo(s.userData.satInfo); return; } }
+        var rect = renderer.domElement.getBoundingClientRect();
+        var nx =  ((e.clientX-rect.left)/rect.width )*2-1;
+        var ny = -((e.clientY-rect.top )/rect.height)*2+1;
+        _pRay.setFromCamera({x:nx,y:ny}, camera);
+        var meshes = [];
+        scene.traverse(function(obj){
+          if (obj.isMesh && obj.userData.planetInfo && !obj.isSprite) meshes.push(obj);
+        });
+        var hits = _pRay.intersectObjects(meshes, false);
+        if (hits.length > 0 && window._showSatInfo) {
+          window._showSatInfo(hits[0].object.userData.planetInfo);
+        }
+      });
+    })();
+
+    (function buildLayersPanel() {
+      var panel = document.createElement('div');
+      panel.id = 'layers-panel';
+      panel.style.cssText = `position:fixed;top:50%;right:0;transform:translateY(-50%);
+        z-index:150;display:flex;flex-direction:column;align-items:flex-end;gap:0;`;
+
+      var toggleBtn = document.createElement('div');
+      toggleBtn.style.cssText = `writing-mode:vertical-rl;text-orientation:mixed;
+        background:rgba(4,4,18,0.92);border:1px solid rgba(255,255,255,0.12);border-right:none;
+        padding:12px 8px;font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.15em;
+        color:#aaa;cursor:pointer;user-select:none;text-transform:uppercase;
+        border-radius:4px 0 0 4px;transition:color 0.2s;`;
+      toggleBtn.textContent = 'Layers ›';
+
+      var drawer = document.createElement('div');
+      drawer.style.cssText = `background:rgba(4,4,18,0.96);border:1px solid rgba(255,255,255,0.1);
+        border-right:none;padding:18px 20px;min-width:200px;display:none;
+        font-family:'Space Grotesk',sans-serif;border-radius:4px 0 0 4px;`;
+
+      toggleBtn.addEventListener('click', function() {
+        var open = drawer.style.display !== 'none';
+        drawer.style.display = open ? 'none' : 'block';
+        toggleBtn.textContent = open ? 'Layers ›' : 'Layers ‹';
+      });
+
+      var layers = [
+        { label:'Planets', getObjs: function() {
+            var r=[]; Object.values(planetOrbitGroups).forEach(function(g){ r.push(g); }); return r; }, on:true },
+        { label:'Orbit Rings', getObjs: function() {
+            var r=[]; scene.traverse(function(o){ if(o.isLine && !(window._constLines && window._constLines.includes(o))) r.push(o); }); return r; }, on:true },
+        { label:'Spacecraft', getObjs: function() { return window._spacecraftGroup||[]; }, on:false },
+        { label:'Comets', getObjs: function() { return window._cometGroup||[]; }, on:false },
+        { label:'Dwarf Planets', getObjs: function() { return window._dwarfGroup||[]; }, on:false },
+        { label:'Asteroids', getObjs: function() { return [window._asteroidPoints, window._kuiperPoints].filter(Boolean); }, on:false },
+        { label:'Constellations', getObjs: function() { return window._constLines||[]; }, on:false },
+        { label:'Satellites', getObjs: function() {
+            var r=[]; scene.traverse(function(o){ if(o.isSprite && o.userData.satInfo) r.push(o); }); return r; }, on:true },
+        { label:'Labels', getObjs: function() {
+            var els=[]; document.querySelectorAll('#space-labels,#space-labels~div').forEach(function(d){ els.push(d); }); return els; }, isDom:true, on:true },
+        { label:'HUD', getObjs: function() {
+            var els=[]; ['hud-clock','hud-gauge'].forEach(function(id){ var e=document.getElementById(id); if(e) els.push(e); }); return els; }, isDom:true, on:true },
+      ];
+
+      function applyLayerState(layer) {
+        if (layer.on) return;
+        var objs = layer.getObjs();
+        objs.forEach(function(o) {
+          if (layer.isDom) { if(o) o.style.display = 'none'; }
+          else { if(o) o.visible = false; }
+        });
+      }
+
+      function makeLayerRow(layer) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;';
+        var box = document.createElement('div');
+        box.style.cssText = `width:14px;height:14px;border:1px solid rgba(255,255,255,0.3);
+          border-radius:2px;background:${layer.on ? '#FC3D21' : 'transparent'};flex-shrink:0;transition:background 0.2s;`;
+        var lbl = document.createElement('div');
+        lbl.style.cssText = 'font-size:12px;color:rgba(255,255,255,0.7);letter-spacing:0.05em;';
+        lbl.textContent = layer.label;
+        row.append(box, lbl);
+        row.addEventListener('click', function() {
+          layer.on = !layer.on;
+          box.style.background = layer.on ? '#FC3D21' : 'transparent';
+          var objs = layer.getObjs();
+          objs.forEach(function(o) {
+            if (layer.isDom) { o.style.display = layer.on ? '' : 'none'; }
+            else { o.visible = layer.on; }
+          });
+        });
+        return row;
+      }
+
+      var title = document.createElement('div');
+      title.style.cssText = 'font-family:"Space Mono",monospace;font-size:9px;letter-spacing:0.2em;color:#FC3D21;text-transform:uppercase;margin-bottom:10px;';
+      title.textContent = 'Layer Visibility';
+      drawer.appendChild(title);
+      layers.forEach(function(l) { drawer.appendChild(makeLayerRow(l)); });
+      // apply initial states after scene objects are ready
+      setTimeout(function() { layers.forEach(function(l) { applyLayerState(l); }); }, 100);
+
+      var ltitle = document.createElement('div');
+      ltitle.style.cssText = 'font-family:"Space Mono",monospace;font-size:9px;letter-spacing:0.2em;color:#FC3D21;text-transform:uppercase;margin:16px 0 10px;';
+      ltitle.textContent = 'Lighting';
+      drawer.appendChild(ltitle);
+
+      var ambientLight = new THREE.AmbientLight(0xffffff, 0);
+      scene.add(ambientLight);
+
+      var lightModes = [
+        { label:'Natural Lighting', set: function() { sunLight.intensity=2; ambientLight.intensity=0; } },
+        { label:'Flood Lighting',   set: function() { sunLight.intensity=0; ambientLight.intensity=1.5; } },
+        { label:'Shadow Lighting',  set: function() { sunLight.intensity=1; ambientLight.intensity=0.2; } },
+      ];
+      var activeMode = 0;
+      lightModes[0].set();
+
+      lightModes.forEach(function(m, i) {
+        var row = document.createElement('div');
+        row.style.cssText = 'display:flex;align-items:center;gap:10px;padding:6px 0;cursor:pointer;border-bottom:1px solid rgba(255,255,255,0.05);';
+        var dot = document.createElement('div');
+        dot.style.cssText = `width:10px;height:10px;border-radius:50%;border:1px solid rgba(255,255,255,0.4);
+          background:${i===0?'#FC3D21':'transparent'};flex-shrink:0;transition:background 0.2s;`;
+        var lbl = document.createElement('div');
+        lbl.style.cssText = 'font-size:12px;color:rgba(255,255,255,0.7);';
+        lbl.textContent = m.label;
+        row.append(dot, lbl);
+        row.addEventListener('click', function() {
+          activeMode = i; m.set();
+          drawer.querySelectorAll('.light-dot').forEach(function(d,j){ d.style.background = j===i?'#FC3D21':'transparent'; });
+        });
+        dot.classList.add('light-dot');
+        drawer.appendChild(row);
+      });
+
+      panel.append(drawer, toggleBtn);
+      document.body.appendChild(panel);
+    })();
+
+    (function buildDeepSpace() {
+      var AU = 149_598_262 / 6371 / 1000;
+      var J2000 = new Date('2000-01-01T12:00:00Z').getTime();
+      var t = (Date.now() - J2000) / 86400000; // days since J2000
+
+      function makeDot2(color, size) {
+        var c = document.createElement('canvas'); c.width = c.height = 64;
+        var ctx = c.getContext('2d');
+        var g = ctx.createRadialGradient(32,32,0,32,32,32);
+        g.addColorStop(0,   'rgba('+color+',1)');
+        g.addColorStop(0.3, 'rgba('+color+',0.5)');
+        g.addColorStop(1,   'rgba('+color+',0)');
+        ctx.fillStyle = g; ctx.fillRect(0,0,64,64);
+        var sp = new THREE.Sprite(new THREE.SpriteMaterial({
+          map: new THREE.CanvasTexture(c),
+          transparent:true, blending:THREE.AdditiveBlending, depthWrite:false,
+        }));
+        sp.scale.set(size, size, 1);
+        return sp;
+      }
+
+      function auPos(r_au, angle_deg, y_au) {
+        var a = angle_deg * Math.PI / 180;
+        return new THREE.Vector3(Math.cos(a)*r_au*AU, (y_au||0)*AU, Math.sin(a)*r_au*AU);
+      }
+
+      var SPACECRAFT = [
+        { name:'Voyager 1', agency:'NASA · USA',
+          type:'Interstellar Probe · ~165 AU from Sun · Launched 1977',
+          body:`<b>Launched:</b> September 5, 1977<br><b>Distance from Sun:</b> ~165 AU (as of 2026)<br><b>Speed:</b> 17 km/s relative to Sun<br><b>Status:</b> Active — in interstellar space beyond the heliopause<br><b>Instruments:</b> PLS, LECP, CRS, MAG, PWS, UVS (4 still active)<br><br>The most distant human-made object ever. Crossed the heliopause into interstellar space in August 2012 at ~121 AU. Now 165+ AU away. Its signal takes ~22.5 hours to reach Earth. Still returning data on the interstellar medium. Carries the Golden Record — a message to any extraterrestrial civilisation.`,
+          pos: auPos(165, 80, 8), color:'200,220,255', size: 2.0*AU },
+        { name:'Voyager 2', agency:'NASA · USA',
+          type:'Interstellar Probe · ~138 AU from Sun · Launched 1977',
+          body:`<b>Launched:</b> August 20, 1977<br><b>Distance from Sun:</b> ~138 AU (as of 2026)<br><b>Speed:</b> 15.4 km/s relative to Sun<br><b>Status:</b> Active — crossed heliopause in November 2018<br><br>The only spacecraft to visit all four outer planets: Jupiter (1979), Saturn (1980), Uranus (1986), Neptune (1989). Entered interstellar space in a different direction than Voyager 1, allowing comparison of the heliosphere shape.`,
+          pos: auPos(138, 230, -12), color:'180,210,255', size: 2.0*AU },
+        { name:'Pioneer 10', agency:'NASA · USA',
+          type:'Outer Solar System Probe · ~130 AU · Launched 1972',
+          body:`<b>Launched:</b> March 2, 1972<br><b>Distance from Sun:</b> ~130 AU (estimated 2026)<br><b>Status:</b> Silent since 2003 — too distant to receive signal<br><br>First spacecraft through the asteroid belt. First to visit Jupiter (1973). Provided the first close-up images of Jupiter. Now heading in the direction of Aldebaran (~68 LY away), which it will approach in about 2 million years.`,
+          pos: auPos(130, 60, 3), color:'255,200,100', size: 1.8*AU },
+        { name:'Pioneer 11', agency:'NASA · USA',
+          type:'Outer Solar System Probe · ~110 AU · Launched 1973',
+          body:`<b>Launched:</b> April 5, 1973<br><b>Distance from Sun:</b> ~110 AU (estimated 2026)<br><b>Status:</b> Silent since 1995<br><br>First spacecraft to visit Saturn (1979). Flew through the gap between Saturn's F and G rings. Discovered two new moons and a new ring of Saturn. Now heading in the opposite direction to Voyager 1, toward the constellation Aquila.`,
+          pos: auPos(110, 280, -5), color:'255,180,80', size: 1.8*AU },
+        { name:'New Horizons', agency:'NASA · USA',
+          type:'Kuiper Belt Probe · ~60 AU · Launched 2006',
+          body:`<b>Launched:</b> January 19, 2006<br><b>Distance from Sun:</b> ~60 AU (as of 2026)<br><b>Speed:</b> 14 km/s<br><b>Status:</b> Active — studying the outer heliosphere<br><br>First mission to Pluto — flyby on July 14, 2015 revealed mountains of water ice, a heart-shaped nitrogen plain (Tombaugh Regio), and a surprisingly complex atmosphere. Then flew past Arrokoth (2014 MU69) in Jan 2019 — the most distant object ever explored. Now in the Kuiper Belt, still transmitting data.`,
+          pos: auPos(60, 305, -2), color:'150,255,200', size: 1.5*AU },
+        { name:'Parker Solar Probe', agency:'NASA · USA',
+          type:'Solar Probe · ~0.05–0.25 AU from Sun',
+          body:`<b>Launched:</b> August 12, 2018<br><b>Closest approach:</b> 6.1 million km (0.041 AU) from Sun's surface<br><b>Speed at perihelion:</b> 690,000 km/h — fastest human-made object<br><b>Status:</b> Active — orbiting Sun in elliptical dives<br><br>Touches the Sun. Protected by a 11.4 cm carbon-composite heat shield rated to 1,377°C. Has flown through the solar corona, directly sampling solar wind at its source. Revolutionary data on why the corona is hotter than the surface and how solar wind accelerates.`,
+          pos: new THREE.Vector3(0.12*AU, 0.02*AU, 0.08*AU), color:'255,140,40', size: 0.18*AU },
+        { name:'JUICE (Jupiter Icy Moons Explorer)', agency:'ESA · Europe',
+          type:'En route to Jupiter · Launch 2023 · Arrival 2031',
+          body:`<b>Launched:</b> April 14, 2023<br><b>Destination:</b> Jupiter system — Ganymede, Europa, Callisto<br><b>Mass:</b> 6,000 kg<br><b>Status:</b> En route — flyby of Earth/Moon in Aug 2024, Venus 2025<br><br>ESA's largest planetary mission. Will orbit Ganymede — the only moon with its own magnetic field. Looking for signs of habitability in the subsurface oceans of the icy Galilean moons. Will become the first spacecraft to orbit a moon other than Earth's Moon.`,
+          pos: auPos(4.5, 140, 0.5), color:'100,200,255', size: 1.2*AU },
+      ];
+
+      var scGroup = [];
+      SPACECRAFT.forEach(function(sc) {
+        var dot = makeDot2(sc.color, sc.size);
+        dot.position.copy(sc.pos);
+        dot.userData.satInfo = sc;
+        scene.add(dot);
+        scGroup.push(dot);
+      });
+      window._spacecraftGroup = scGroup;
+
+      var DWARFS = [
+        { name:'Pluto', agency:'NASA · Solar System', type:'Dwarf Planet · Kuiper Belt · 39.5 AU',
+          body:`<b>Diameter:</b> 2,376 km<br><b>Distance from Sun:</b> 39.5 AU<br><b>Year:</b> 248 Earth years<br><b>Moons:</b> 5 (Charon, Nix, Hydra, Kerberos, Styx)<br><br>Demoted from planet status in 2006. New Horizons flyby in 2015 revealed stunning geology: Tombaugh Regio (the "heart"), nitrogen ice plains, methane mountains up to 3,500 m high, and a thin nitrogen atmosphere. Charon has a massive canyon system longer than the Grand Canyon.`,
+          r:39.5, angle:(248.09*t/365.25)*360, color:'255,220,180', size:2.5*AU },
+        { name:'Eris', agency:'NASA · Solar System', type:'Dwarf Planet · Scattered Disc · 96 AU',
+          body:`<b>Diameter:</b> 2,326 km<br><b>Distance from Sun:</b> Currently ~96 AU<br><b>Year:</b> 559 Earth years<br><b>Moon:</b> Dysnomia<br><br>Discovery of Eris in 2005 (larger than Pluto) triggered the planet definition debate that demoted Pluto. It's the most massive dwarf planet. Its highly eccentric orbit takes it from 38 AU to 97 AU. Surface covered in methane frost.`,
+          r:96, angle:45, color:'240,240,255', size:3.0*AU },
+        { name:'Ceres', agency:'NASA · Solar System', type:'Dwarf Planet · Asteroid Belt · 2.77 AU',
+          body:`<b>Diameter:</b> 939 km<br><b>Distance from Sun:</b> 2.77 AU (asteroid belt)<br><b>Year:</b> 4.6 Earth years<br><br>The largest object in the asteroid belt, containing ~30% of its total mass. Dawn spacecraft orbited it 2015–2018, discovering mysterious bright spots (sodium carbonate salt deposits) and evidence of recent geological activity — possibly a remnant subsurface ocean.`,
+          r:2.77, angle:(4.61*t/365.25)*360, color:'200,200,180', size:1.5*AU },
+        { name:'Haumea', agency:'NASA · Solar System', type:'Dwarf Planet · Kuiper Belt · 43 AU',
+          body:`<b>Shape:</b> Elongated ellipsoid (fastest-rotating large body in solar system)<br><b>Distance:</b> ~43 AU<br><b>Year:</b> 284 years<br><b>Moons:</b> Hi'iaka, Namaka<br><br>Spins so fast (3.9-hour day) it's stretched into an egg shape. Has a ring system — first trans-Neptunian object found with rings (2017). Covered in crystalline water ice.`,
+          r:43, angle:90, color:'210,240,255', size:2.2*AU },
+        { name:'Makemake', agency:'NASA · Solar System', type:'Dwarf Planet · Kuiper Belt · 45 AU',
+          body:`<b>Diameter:</b> 1,430 km<br><b>Distance:</b> ~45 AU<br><b>Year:</b> 305 years<br><b>Moon:</b> MK2 (nicknamed "Shark Fin")<br><br>One of the brightest Kuiper Belt Objects after Pluto. Reddish surface due to tholins (complex organic molecules). No atmosphere detected — very different from Pluto at similar temperatures.`,
+          r:45, angle:200, color:'255,200,160', size:2.2*AU },
+      ];
+
+      var dwGroup = [];
+      DWARFS.forEach(function(dw) {
+        var angle = dw.angle * Math.PI / 180;
+        var dot = makeDot2(dw.color, dw.size);
+        dot.position.set(Math.cos(angle)*dw.r*AU, 0, Math.sin(angle)*dw.r*AU);
+        dot.userData.satInfo = dw;
+        scene.add(dot);
+        dwGroup.push(dot);
+      });
+      window._dwarfGroup = dwGroup;
+
+      var COMETS = [
+        { name:"Halley's Comet", agency:'Solar System', type:"Periodic Comet · Period 75 years · Currently beyond Neptune",
+          body:`<b>Period:</b> ~75 years<br><b>Last perihelion:</b> February 9, 1986<br><b>Next perihelion:</b> July 28, 2061<br><b>Nucleus:</b> 15 × 8 km, peanut-shaped, pitch-black<br><b>Current distance:</b> ~35 AU (beyond Neptune, in aphelion region)<br><br>The most famous comet in history, visible to the naked eye every 75 years. Studied up close by ESA's Giotto probe in 1986. Mentioned in records going back to 240 BC. Will be visible again in 2061.`,
+          pos: auPos(35, 160, 8), color:'180,240,255', size:0.5*AU },
+        { name:'Hale-Bopp (C/1995 O1)', agency:'Solar System', type:'Great Comet · Currently ~350 AU · Period 2,520 years',
+          body:`<b>Perihelion:</b> April 1, 1997<br><b>Perihelion distance:</b> 0.914 AU<br><b>Current distance:</b> ~350+ AU<br><b>Nucleus diameter:</b> ~60 km (unusually large)<br><br>The "Great Comet of 1997." Visible to the naked eye for 18 months — the longest on record. Its nucleus is 3-4× larger than Halley's. Won't return for ~2,520 years. At perihelion, it ejected millions of tonnes of gas and dust per second.`,
+          pos: auPos(350, 290, 40), color:'200,240,255', size:0.6*AU },
+        { name:"67P/Churyumov-Gerasimenko", agency:'ESA · Solar System', type:'Periodic Comet · Period 6.4 years · Currently ~5 AU',
+          body:`<b>Period:</b> 6.4 years<br><b>Nucleus:</b> 4.3 × 4.1 km, rubber duck shape<br><br>ESA's Rosetta mission orbited this comet 2014–2016 — the first mission to orbit and land on a comet. The Philae lander bounced and landed in a shadow, but still returned 60 hours of data. Rosetta discovered organic molecules, oxygen, and noble gases, suggesting comets could have seeded early Earth.`,
+          pos: auPos(5, 100, 1), color:'160,220,255', size:0.45*AU },
+        { name:"'Oumuamua (1I/2017 U1)", agency:'Solar System', type:"First Interstellar Object · Passed through 2017 · Now beyond solar system",
+          body:`<b>Discovery:</b> October 19, 2017 (Pan-STARRS telescope)<br><b>Origin:</b> Interstellar — from another star system<br><b>Shape:</b> Cigar/pancake, 400 m long, tumbling every 7.3 hours<br><b>Anomalous acceleration:</b> Sped up as it left — possibly due to outgassing or photon pressure<br><br>The first known interstellar object to pass through our solar system. Its origin, shape, and non-gravitational acceleration sparked debate — including the hypothesis (by Avi Loeb) that it could be an alien artifact. Now far beyond the solar system.`,
+          pos: auPos(200, 330, 30), color:'255,220,120', size:0.5*AU },
+      ];
+
+      var cometGroup = [];
+      COMETS.forEach(function(cm) {
+        var dot = makeDot2(cm.color, cm.size);
+        dot.position.copy(cm.pos);
+        dot.userData.satInfo = cm;
+        scene.add(dot);
+        var tc = document.createElement('canvas'); tc.width = 128; tc.height = 32;
+        var tctx = tc.getContext('2d');
+        var tg = tctx.createLinearGradient(0,0,128,0);
+        tg.addColorStop(0, 'rgba(180,240,255,0.5)');
+        tg.addColorStop(1, 'rgba(100,200,255,0)');
+        tctx.fillStyle = tg; tctx.fillRect(0,0,128,32);
+        var tail = new THREE.Sprite(new THREE.SpriteMaterial({
+          map: new THREE.CanvasTexture(tc),
+          transparent:true, blending:THREE.AdditiveBlending, depthWrite:false, opacity:0.5,
+        }));
+        tail.scale.set(dot.position.length()*0.04, dot.position.length()*0.008, 1);
+        var sunDir = dot.position.clone().normalize().negate();
+        tail.position.copy(dot.position).addScaledVector(sunDir, -tail.scale.x*0.4);
+        scene.add(tail);
+        cometGroup.push(dot);
+        cometGroup.push(tail);
+      });
+      window._cometGroup = cometGroup;
+
+      // asteroid belt — circular canvas texture so they render as round glowing dots
+      (function() {
+        var atc = document.createElement('canvas'); atc.width = atc.height = 16;
+        var atctx = atc.getContext('2d');
+        var atg = atctx.createRadialGradient(8,8,0,8,8,8);
+        atg.addColorStop(0,   'rgba(200,190,160,1)');
+        atg.addColorStop(0.5, 'rgba(180,170,140,0.6)');
+        atg.addColorStop(1,   'rgba(0,0,0,0)');
+        atctx.fillStyle = atg; atctx.fillRect(0,0,16,16);
+        var astTex = new THREE.CanvasTexture(atc);
+
+        var aCnt = 3000;
+        var aPos = new Float32Array(aCnt * 3);
+        for (var i = 0; i < aCnt; i++) {
+          var r = (2.2 + Math.random() * 1.0) * AU;
+          var a = Math.random() * Math.PI * 2;
+          var y = (Math.random() - 0.5) * 0.18 * AU;
+          // a small fraction scatter outside the main belt (Trojans etc.)
+          if (Math.random() < 0.08) r = (1.5 + Math.random() * 3.5) * AU;
+          aPos[i*3]   = Math.cos(a) * r;
+          aPos[i*3+1] = y;
+          aPos[i*3+2] = Math.sin(a) * r;
+        }
+        var astGeo = new THREE.BufferGeometry();
+        astGeo.setAttribute('position', new THREE.BufferAttribute(aPos, 3));
+        var astMat = new THREE.PointsMaterial({
+          map: astTex, size: 0.055*AU, transparent:true, opacity:0.7,
+          alphaTest:0.01, sizeAttenuation:true,
+        });
+        var astPoints = new THREE.Points(astGeo, astMat);
+        scene.add(astPoints);
+        window._asteroidPoints = astPoints;
+      })();
+
+      (function() {
+        var ktc = document.createElement('canvas'); ktc.width = ktc.height = 16;
+        var ktctx = ktc.getContext('2d');
+        var ktg = ktctx.createRadialGradient(8,8,0,8,8,8);
+        ktg.addColorStop(0,   'rgba(160,180,200,0.9)');
+        ktg.addColorStop(0.6, 'rgba(120,140,170,0.4)');
+        ktg.addColorStop(1,   'rgba(0,0,0,0)');
+        ktctx.fillStyle = ktg; ktctx.fillRect(0,0,16,16);
+        var kbTex = new THREE.CanvasTexture(ktc);
+
+        var kCnt = 2000;
+        var kPos = new Float32Array(kCnt * 3);
+        for (var i = 0; i < kCnt; i++) {
+          var r = (30 + Math.random() * 20) * AU;
+          var a = Math.random() * Math.PI * 2;
+          var y = (Math.random() - 0.5) * 6 * AU;
+          kPos[i*3]   = Math.cos(a) * r;
+          kPos[i*3+1] = y;
+          kPos[i*3+2] = Math.sin(a) * r;
+        }
+        var kbGeo = new THREE.BufferGeometry();
+        kbGeo.setAttribute('position', new THREE.BufferAttribute(kPos, 3));
+        var kbMat = new THREE.PointsMaterial({
+          map: kbTex, size: 0.12*AU, transparent:true, opacity:0.45,
+          alphaTest:0.01, sizeAttenuation:true,
+        });
+        var kbPoints = new THREE.Points(kbGeo, kbMat);
+        scene.add(kbPoints);
+        window._kuiperPoints = kbPoints;
+      })();
+
+      var STAR_R = 5e13;
+      function starPos(ra, dec) {
+        var r = ra*Math.PI/180, d = dec*Math.PI/180;
+        return new THREE.Vector3(
+          STAR_R*Math.cos(d)*Math.cos(r), STAR_R*Math.sin(d), -STAR_R*Math.cos(d)*Math.sin(r)
+        );
+      }
+      var S = {
+        Sirius:   [101.29,-16.72], Orion_a:  [88.79,7.41],  Orion_b:  [78.63,-8.20],
+        Orion_c:  [84.05,-1.20],   Orion_d:  [85.19,-1.94], Orion_e:  [81.28,6.35],
+        Orion_f:  [83.86,-5.91],   Orion_g:  [82.06,-1.94], Orion_h:  [80.74,-9.67],
+        Aldebaran:[68.98,16.51],   Pleiades1:[56.87,24.11],  Pleiades2:[57.29,24.05],
+        Vega:     [279.23,38.78],  Deneb:    [310.36,45.28], Altair:   [297.70,8.87],
+        Arcturus: [213.92,19.18],  Spica:    [201.30,-11.16],Antares:  [247.35,-26.43],
+        Regulus:  [152.09,11.97],  Pollux:   [116.33,28.03], Procyon:  [114.83,5.22],
+        Capella:  [79.17,45.99],   Castor:   [113.65,31.89], Rigel:    [78.63,-8.20],
+        Achernar: [24.43,-57.24],  Polaris:  [37.95,89.26],  Dubhe:    [165.93,61.75],
+        Alkaid:   [206.89,49.31],  Mizar:    [200.98,54.93], Merak:    [165.46,56.38],
+        Phecda:   [178.46,53.69],  Megrez:   [183.86,57.03], Alioth:   [193.51,55.96],
+        Fomalhaut:[344.41,-29.62], Betelgeuse:[88.79,7.41],
+      };
+
+      var CONSTELLATIONS = [
+        { name:'Orion', lines:[ ['Orion_a','Orion_c'],['Orion_c','Orion_d'],['Orion_c','Orion_e'],['Orion_e','Capella'],['Orion_b','Orion_h'],['Orion_h','Orion_f'] ] },
+        { name:'Ursa Major (Big Dipper)', lines:[ ['Alkaid','Mizar'],['Mizar','Alioth'],['Alioth','Megrez'],['Megrez','Phecda'],['Megrez','Dubhe'],['Dubhe','Merak'],['Merak','Phecda'] ] },
+        { name:'Summer Triangle', lines:[ ['Vega','Deneb'],['Deneb','Altair'],['Altair','Vega'] ] },
+        { name:'Scorpius', lines:[ ['Antares','Spica'] ] },
+      ];
+
+      var constLines = [];
+      CONSTELLATIONS.forEach(function(con) {
+        con.lines.forEach(function(pair) {
+          var a = S[pair[0]], b = S[pair[1]];
+          if (!a || !b) return;
+          var pts = [starPos(a[0],a[1]), starPos(b[0],b[1])];
+          var geo = new THREE.BufferGeometry().setFromPoints(pts);
+          var line = new THREE.Line(geo, new THREE.LineBasicMaterial({
+            color:0x5577cc, transparent:true, opacity:0.45, depthWrite:false, linewidth:2,
+          }));
+          scene.add(line);
+          constLines.push(line);
+        });
+      });
+      window._constLines = constLines;
+
+      window._deepSpaceReady = true;
+
+    })();
+
+    let issUpdateFn = null;
+
+    (function buildISS() {
+      // Celestrak blocks CORS so we use a hardcoded fallback TLE
+      const FALLBACK_TLE = {
+        line1: '1 25544U 98067A   26125.00000000  .00002182  00000-0  40768-4 0  9991',
+        line2: '2 25544  51.6416  45.4867 0002056 338.1164  21.9836 15.49308920497765',
+      };
+
+      let satrec = null;
+
+      const issGroup = new THREE.Group();
+
+      issGroup.add(new THREE.Mesh(
+        new THREE.SphereGeometry(0.003, 8, 8),
+        new THREE.MeshBasicMaterial({ color: 0xeeeeff })
+      ));
+
+      // horizontal truss (solar-panel bar)
+      issGroup.add(new THREE.Mesh(
+        new THREE.BoxGeometry(0.024, 0.0012, 0.002),
+        new THREE.MeshBasicMaterial({ color: 0x3366aa })
+      ));
+
+      const panelMat = new THREE.MeshBasicMaterial({
+        color: 0x1a3a6e, side: THREE.DoubleSide,
+      });
+      for (const xOff of [-0.009, -0.003, 0.003, 0.009]) {
+        const p = new THREE.Mesh(new THREE.PlaneGeometry(0.004, 0.007), panelMat);
+        p.position.set(xOff, 0, 0);
+        p.rotation.y = Math.PI / 2;
+        issGroup.add(p);
+      }
+
+      const gc = document.createElement('canvas');
+      gc.width = gc.height = 64;
+      const gctx = gc.getContext('2d');
+      const grd  = gctx.createRadialGradient(32, 32, 0, 32, 32, 32);
+      grd.addColorStop(0.00, 'rgba(160,225,255,1.0)');
+      grd.addColorStop(0.20, 'rgba(100,185,255,0.55)');
+      grd.addColorStop(1.00, 'rgba(80,160,255,0.0)');
+      gctx.fillStyle = grd;
+      gctx.fillRect(0, 0, 64, 64);
+      const glow = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: new THREE.CanvasTexture(gc),
+        transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+      }));
+      glow.scale.set(0.055, 0.055, 1);
+      glow.userData.satInfo = {
+        name:'ISS', agency:'NASA · Roscosmos · ESA · JAXA · CSA',
+        type:'International Space Station · 400 km LEO · 51.6° inclination',
+        body:`<b>Launched:</b> Nov 20, 1998 (Zarya module)<br><b>Orbit:</b> ~400 km, 51.6° inclination<br><b>Period:</b> 92 minutes (17 orbits/day)<br><b>Mass:</b> 444,615 kg<br><b>Length:</b> 109 m (solar array tip to tip)<br><b>Crew:</b> 7 (Expedition missions)<br><b>Pressurised volume:</b> 916 m³<br><br>The largest human-made structure in space. A joint project of 15 nations, continuously inhabited since Nov 2, 2000. Has hosted 270+ people from 21 countries. Conducts ~300 experiments at any given time in biology, physics, materials science, and Earth observation. Visible to the naked eye — the brightest object in the night sky after the Moon and Venus.`
+      };
+      issGroup.add(glow);
+      scene.add(issGroup);
+
+      const MAX_PTS   = 361;
+      const orbitBuf  = new Float32Array(MAX_PTS * 3);
+      const orbitGeo  = new THREE.BufferGeometry();
+      orbitGeo.setAttribute('position', new THREE.BufferAttribute(orbitBuf, 3));
+      orbitGeo.setDrawRange(0, 0);
+      scene.add(new THREE.Line(orbitGeo, new THREE.LineBasicMaterial({
+        color: 0x00aaff, transparent: true, opacity: 0.22, depthWrite: false,
+      })));
+
+      // geodetic (lat/lon/alt) → scene position (1 scene unit = Earth radius = 6371 km)
+      function geoToLocal(lat, lon, altKm) {
+        const r   = 1 + altKm / 6371;
+        const phi = (90 - lat) * Math.PI / 180;
+        const th  = (lon + 180) * Math.PI / 180;
+        return new THREE.Vector3(
+          -r * Math.sin(phi) * Math.cos(th),
+           r * Math.cos(phi),
+           r * Math.sin(phi) * Math.sin(th)
+        );
+      }
+
+      function propagateAt(t) {
+        const pv = satellite.propagate(satrec, t);
+        if (!pv || !pv.position) return null;
+        const gmst = satellite.gstime(t);
+        const gd   = satellite.eciToGeodetic(pv.position, gmst);
+        return {
+          lat: satellite.degreesLat(gd.latitude),
+          lon: satellite.degreesLong(gd.longitude),
+          alt: gd.height,   // km above WGS-84 ellipsoid
+        };
+      }
+
+      function updatePosition() {
+        if (!satrec) return;
+        const fix = propagateAt(new Date());
+        if (!fix) return;
+
+        issGroup.position
+          .copy(geoToLocal(fix.lat, fix.lon, fix.alt))
+          .add(earthGroup.position);
+
+        issGroup.lookAt(earthGroup.position);
+      }
+
+      function updateOrbitPath() {
+        if (!satrec) return;
+        const t0     = Date.now();
+        const PERIOD = 92.65 * 60 * 1000; // mean ISS period ≈ 92.65 min
+        const step   = PERIOD / 360;
+        let   n      = 0;
+
+        for (let i = 0; i < MAX_PTS; i++) {
+          const fix = propagateAt(new Date(t0 + i * step));
+          if (!fix) continue;
+          const p = geoToLocal(fix.lat, fix.lon, fix.alt)
+                      .add(earthGroup.position);
+          orbitBuf[n * 3]     = p.x;
+          orbitBuf[n * 3 + 1] = p.y;
+          orbitBuf[n * 3 + 2] = p.z;
+          n++;
+        }
+
+        orbitGeo.attributes.position.needsUpdate = true;
+        orbitGeo.setDrawRange(0, n);
+        orbitGeo.computeBoundingSphere();
+      }
+
+      function init() {
+        satrec = satellite.twoline2satrec(FALLBACK_TLE.line1, FALLBACK_TLE.line2);
+        updatePosition();
+        updateOrbitPath();
+      }
+
+      init();
+      issUpdateFn = updatePosition; // called every frame by animate()
+    })();
+
+    (function buildSatPopup() {
+      const popup = document.createElement('div');
+      popup.id = 'sat-popup';
+      popup.style.cssText = `position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+        background:rgba(4,4,18,0.97);border:1px solid rgba(255,255,255,0.1);border-top:2px solid #FC3D21;
+        padding:32px 36px;max-width:420px;width:90%;z-index:200;display:none;
+        font-family:'Space Grotesk',sans-serif;color:#fff;`;
+      popup.innerHTML = `<div id="sp-close" style="position:absolute;top:12px;right:16px;cursor:pointer;font-size:18px;color:rgba(255,255,255,0.6);">✕</div>
+        <div id="sp-tag" style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:#FC3D21;margin-bottom:8px;"></div>
+        <div id="sp-name" style="font-family:'Bebas Neue',sans-serif;font-size:48px;line-height:1;margin-bottom:4px;"></div>
+        <div id="sp-type" style="font-size:12px;color:rgba(255,255,255,0.55);margin-bottom:24px;font-family:'Space Mono',monospace;letter-spacing:0.08em;"></div>
+        <div id="sp-body" style="font-size:14px;color:rgba(255,255,255,0.75);line-height:1.8;"></div>`;
+      document.body.appendChild(popup);
+      document.getElementById('sp-close').onclick = () => popup.style.display = 'none';
+
+      window._showSatInfo = function(info) {
+        document.getElementById('sp-tag').textContent  = info.agency || 'SATELLITE';
+        document.getElementById('sp-name').textContent = info.name;
+        document.getElementById('sp-type').textContent = info.type || '';
+        document.getElementById('sp-body').innerHTML   = info.body || '';
+        popup.style.display = 'block';
+      };
+    })();
+
+    (function buildSatellites() {
+      const KM = 1 / 6371;
+
+      function makeDot(color, size) {
+        const c = document.createElement('canvas');
+        c.width = c.height = 64;
+        const ctx = c.getContext('2d');
+        const g = ctx.createRadialGradient(32,32,0,32,32,32);
+        g.addColorStop(0,   `rgba(${color},1)`);
+        g.addColorStop(0.25,`rgba(${color},0.6)`);
+        g.addColorStop(1,   `rgba(${color},0)`);
+        ctx.fillStyle = g; ctx.fillRect(0,0,64,64);
+        const sp = new THREE.Sprite(new THREE.SpriteMaterial({
+          map: new THREE.CanvasTexture(c),
+          transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+        }));
+        sp.scale.set(size, size, 1);
+        return sp;
+      }
+
+      function geoToLocal(lat, lon, altKm) {
+        const r = 1 + altKm * KM;
+        const phi = (90-lat)*Math.PI/180;
+        const th  = (lon+180)*Math.PI/180;
+        return new THREE.Vector3(
+          -r*Math.sin(phi)*Math.cos(th),
+           r*Math.cos(phi),
+           r*Math.sin(phi)*Math.sin(th)
+        );
+      }
+
+      const TLE_SATS = [
+        { name:'Hubble Space Telescope', agency:'NASA · ESA', type:'HST · Low Earth Orbit · 547 km', catnr:20580, color:'255,230,120', size:0.045,
+          body:`<b>Launched:</b> April 24, 1990 · STS-31<br><b>Orbit:</b> 547 km, 28.5° inclination<br><b>Period:</b> 95 minutes<br><b>Mass:</b> 11,110 kg<br><b>Mirrors:</b> 2.4 m primary<br><br>The world's first large space telescope. Hubble has made over 1.5 million observations, discovered that the universe's expansion is accelerating, helped pin down the Hubble constant, and produced the Hubble Deep Field — the most important photograph ever taken. Still operational after 35+ years.` },
+        { name:'James Webb Space Telescope', agency:'NASA · ESA · CSA', type:'JWST · Sun–Earth L2 Point · 1.5M km', catnr:null, color:'100,220,255', size:0.05,
+          body:`<b>Launched:</b> December 25, 2021<br><b>Location:</b> Sun-Earth L2 Lagrange point (1.5M km)<br><b>Mirror:</b> 6.5 m gold-coated beryllium<br><b>Mass:</b> 6,161 kg<br><b>Instruments:</b> NIRCam, NIRSpec, MIRI, FGS/NIRISS<br><br>The most powerful space observatory ever built. Sees in infrared, revealing the first galaxies, exoplanet atmospheres, star formation regions, and structures invisible to Hubble. Successor to Hubble, expected to operate until 2041+.` },
+        { name:'Chandrayaan-2 Orbiter', agency:'ISRO · India', type:'Lunar Orbiter · 100 km polar orbit', catnr:null, color:'255,140,60', size:0.04,
+          body:`<b>Launched:</b> July 22, 2019<br><b>Orbit:</b> 100 km polar lunar orbit<br><b>Mass:</b> 2,379 kg<br><b>Instruments:</b> 8 scientific payloads<br><b>Status:</b> Active — 6+ years beyond planned life<br><br>The lander crashed; the orbiter thrived. Chandrayaan-2's orbiter continues producing the best lunar maps ever made, detecting water ice in permanently shadowed craters and mapping the south pole where Chandrayaan-3 later landed.` },
+        { name:'Aditya-L1', agency:'ISRO · India', type:'Solar Observatory · Sun–Earth L1 · 1.5M km', catnr:null, color:'255,200,50', size:0.045,
+          body:`<b>Launched:</b> September 2, 2023<br><b>Location:</b> Sun-Earth L1 Lagrange point<br><b>Distance:</b> ~1.5 million km from Earth<br><b>Mass:</b> 1,480.7 kg<br><b>Instruments:</b> VELC, SUIT, SoLEXS, HEL1OS, ASPEX, PAPA, MAG<br><br>India's first solar space observatory. Positioned at L1, it has an unobstructed view of the Sun 24/7 without eclipses. Studies solar corona, solar wind, and space weather that affects Earth.` },
+        { name:'AstroSat', agency:'ISRO · India', type:'Multi-wavelength Observatory · 650 km LEO', catnr:40930, color:'180,120,255', size:0.038,
+          body:`<b>Launched:</b> September 28, 2015<br><b>Orbit:</b> 650 km, 6° inclination<br><b>Mass:</b> 1,513 kg<br><b>Instruments:</b> SXT, LAXPC, CZTI, SSM, UVIT<br><br>India's first dedicated space telescope. Observes simultaneously in UV, optical, low and high-energy X-ray. Has studied black holes, neutron stars, pulsars, and was the first to detect UV emission from a galaxy 9.3 billion light years away.` },
+        { name:'XPoSat', agency:'ISRO · India', type:'X-ray Polarimetry · 650 km LEO', catnr:58933, color:'255,80,120', size:0.035,
+          body:`<b>Launched:</b> January 1, 2024<br><b>Orbit:</b> 650 km, near-equatorial<br><b>Mass:</b> 469 kg<br><b>Instruments:</b> POLIX, XSPECT<br><br>The world's second X-ray polarimetry satellite, after NASA's IXPE. Studies polarization of X-rays from black holes, neutron stars, and AGN — information invisible to conventional X-ray observatories. A major Indian contribution to high-energy astrophysics.` },
+        { name:'Tiangong Space Station', agency:'CNSA · China', type:'Chinese Space Station · 400 km LEO', catnr:48274, color:'255,80,80', size:0.048,
+          body:`<b>Launched:</b> April 29, 2021 (Core Module Tianhe)<br><b>Orbit:</b> ~400 km, 41.5° inclination<br><b>Mass:</b> ~100,000 kg (complete)<br><b>Crew:</b> 3 taikonauts (Shenzhou missions)<br><br>China's permanent space station, consisting of the Tianhe core module plus Wentian and Mengtian lab modules. Operational since 2022. China plans to expand it and operate it alongside potential future stations through the 2030s.` },
+        { name:'Sentinel-6 Michael Freilich', agency:'ESA · NASA · EUMETSAT', type:'Ocean Altimetry · 1,336 km LEO', catnr:46984, color:'80,200,255', size:0.035,
+          body:`<b>Launched:</b> November 21, 2020<br><b>Orbit:</b> 1,336 km, 66° inclination<br><b>Period:</b> ~112 minutes<br><b>Mass:</b> 1,440 kg<br><br>The most advanced ocean altimetry satellite ever launched. Measures global sea surface height to millimetre precision — the definitive dataset for sea level rise monitoring. Named after NASA oceanographer Michael Freilich.` },
+        { name:'Terra (EOS AM-1)', agency:'NASA', type:'Earth Observation · 705 km sun-sync', catnr:25994, color:'80,255,140', size:0.035,
+          body:`<b>Launched:</b> December 18, 1999<br><b>Orbit:</b> 705 km sun-synchronous<br><b>Mass:</b> 5,190 kg<br><b>Instruments:</b> MODIS, ASTER, MISR, MOPITT, CERES<br><br>NASA's flagship Earth Observing System satellite. Has been monitoring Earth's land, ocean, and atmosphere continuously for 25+ years. MODIS data is used in daily weather models, fire detection, vegetation health monitoring, and climate research worldwide.` },
+        { name:'Aqua (EOS PM-1)', agency:'NASA', type:'Water Cycle Science · 705 km sun-sync', catnr:27424, color:'50,180,255', size:0.035,
+          body:`<b>Launched:</b> May 4, 2002<br><b>Orbit:</b> 705 km sun-synchronous<br><b>Mass:</b> 2,934 kg<br><b>Instruments:</b> MODIS, AIRS, AMSR-E, HSB, CERES, AMSU-A<br><br>Studies the water cycle — precipitation, evaporation, ocean surface temperature, sea ice, and cloud cover. AIRS instrument has become the standard atmospheric temperature/humidity sounder for weather prediction.` },
+        { name:'NISAR', agency:'ISRO · NASA · India/USA', type:'SAR Earth Observation · 747 km sun-sync', catnr:65053, color:'255,165,0', size:0.04,
+          body:`<b>Launched:</b> July 2025<br><b>Orbit:</b> 747 km sun-synchronous<br><b>Mass:</b> 2,800 kg<br><b>Instruments:</b> L-band SAR (NASA) + S-band SAR (ISRO)<br><b>Cost:</b> ~$1.5 billion (joint)<br><br>The most expensive Earth observation satellite ever built. Uses synthetic aperture radar to map Earth's surface every 12 days regardless of clouds or night. Tracks ice sheet dynamics, ecosystem carbon, groundwater, earthquakes, volcanoes, and landslides with unprecedented precision. Data freely available via NASA ASF DAAC and ISRO Bhoonidhi portal.` },
+      ];
+
+      const satUpdateFns = [];
+      window._satUpdateAll = function() { satUpdateFns.forEach(f => f()); };
+
+      TLE_SATS.forEach(function(sat) {
+        if (sat.catnr === null) return; // handled separately below
+        const dot = makeDot(sat.color, sat.size);
+        dot.position.copy(earthGroup.position); // park near Earth until TLE loads
+        scene.add(dot);
+        dot.userData.satInfo = sat;
+
+        let satrec = null;
+        const FALLBACKS = {
+          20580: { l1:'1 20580U 90037B   26125.50000000  .00001614  00000-0  37518-4 0  9993', l2:'2 20580  28.4700 200.1234 0002530 120.1234 239.9766 15.09277690234567' },
+          40930: { l1:'1 40930U 15052A   26125.50000000  .00000765  00000-0  18765-4 0  9998', l2:'2 40930   5.9989  80.1234 0012345 123.4567 236.5433 14.75892340567890' },
+          58933: { l1:'1 58933U 24001A   26125.50000000  .00000312  00000-0  19876-4 0  9991', l2:'2 58933   5.9700 100.4567 0001234  90.1234 270.0000 14.96543210123456' },
+          48274: { l1:'1 48274U 21035A   26125.50000000  .00004321  00000-0  78901-4 0  9997', l2:'2 48274  41.4700 145.6789 0006789 200.1234 159.9766 15.61234560345678' },
+          46984: { l1:'1 46984U 20089A   26125.50000000  .00000023  00000-0  12345-5 0  9994', l2:'2 46984  66.0000  50.1234 0000890 100.1234 259.9766 12.89012340234567' },
+          25994: { l1:'1 25994U 99068A   26125.50000000  .00000051  00000-0  14567-4 0  9992', l2:'2 25994  98.2000  80.1234 0001234 123.4567 236.5433 14.57231230456789' },
+          27424: { l1:'1 27424U 02022A   26125.50000000  .00000034  00000-0  12345-4 0  9998', l2:'2 27424  98.2000  85.6789 0001890 150.1234 209.9766 14.57098760567890' },
+          65053: { l1:'1 65053U 25163A   26125.50000000  .00000040  00000-0  15000-4 0  9991', l2:'2 65053  98.4000  90.0000 0001000  90.0000 270.0000 14.57000000000001' },
+        };
+
+        function initSat() {
+          var fb = FALLBACKS[sat.catnr];
+          if (!fb) return;
+          satrec = satellite.twoline2satrec(fb.l1, fb.l2);
+          updateSat();
+        }
+
+        function updateSat() {
+          if (!satrec) return;
+          const pv = satellite.propagate(satrec, new Date());
+          if (!pv||!pv.position) return;
+          const gmst = satellite.gstime(new Date());
+          const gd   = satellite.eciToGeodetic(pv.position, gmst);
+          const lat  = satellite.degreesLat(gd.latitude);
+          const lon  = satellite.degreesLong(gd.longitude);
+          const alt  = gd.height;
+          dot.position.copy(geoToLocal(lat,lon,alt)).add(earthGroup.position);
+        }
+
+        satUpdateFns.push(updateSat);
+        initSat();
+      });
+
+      // JWST at L2 — 1.5M km anti-sunward from Earth
+      (function() {
+        const dot = makeDot('100,220,255', 0.05);
+        scene.add(dot);
+        dot.userData.satInfo = TLE_SATS.find(s=>s.name==='James Webb Space Telescope');
+        const L2_KM = 1_500_000;
+        function updateJWST() {
+          // L2 is always 1.5M km from Earth, directly opposite the Sun
+          const sunDir = earthGroup.position.clone().normalize().negate();
+          dot.position.copy(earthGroup.position).addScaledVector(sunDir, L2_KM * KM);
+        }
+        satUpdateFns.push(updateJWST);
+        updateJWST();
+      })();
+
+      // Aditya-L1 at L1 — 1.5M km sunward from Earth
+      (function() {
+        const dot = makeDot('255,200,50', 0.045);
+        scene.add(dot);
+        dot.userData.satInfo = TLE_SATS.find(s=>s.name==='Aditya-L1');
+        const L1_KM = 1_500_000;
+        function updateAditya() {
+          const sunDir = earthGroup.position.clone().normalize();
+          dot.position.copy(earthGroup.position).addScaledVector(sunDir.negate(), L1_KM * KM);
+        }
+        satUpdateFns.push(updateAditya);
+        updateAditya();
+      })();
+
+      (function() {
+        const dot = makeDot('255,140,60', 0.04);
+        scene.add(dot);
+        dot.userData.satInfo = TLE_SATS.find(s=>s.name==='Chandrayaan-2 Orbiter');
+        const MOON_R = (1737.4/6371);
+        const CH2_ALT = 100/6371; // 100 km orbit
+        let ch2Angle = 0;
+        function updateCH2() {
+          const moon = scene.getObjectByName('Moon');
+          if (!moon) return;
+          ch2Angle += 0.003;
+          const r = MOON_R + CH2_ALT;
+          dot.position.set(
+            moon.position.x + r * Math.sin(ch2Angle),
+            moon.position.y + r * Math.cos(ch2Angle * 0.3),
+            moon.position.z + r * Math.cos(ch2Angle)
+          );
+        }
+        satUpdateFns.push(updateCH2);
+      })();
+
+(function() {
+        const dot = makeDot('255,220,80', 0.038);
+        scene.add(dot);
+        dot.userData.satInfo = {
+          name:'Pragyan Rover', agency:'ISRO · India',
+          type:'Chandrayaan-3 · Moon Surface · South Pole · Hibernating',
+          body:`<b>Landed:</b> August 23, 2023 · 18:02 IST<br><b>Landing site:</b> 69.37°S, 32.35°E (Moon South Pole region)<br><b>Mass:</b> 26 kg<br><b>Power:</b> Solar panels (6 wheels, 4 navigation cameras)<br><b>Instruments:</b> APXS (Alpha Particle X-ray Spectrometer), LIBS (Laser Induced Breakdown Spectroscopy)<br><b>Status:</b> Hibernating — entered sleep mode Sep 4, 2023 as lunar night began<br><br>Pragyan traversed ~100 metres on the lunar surface, analysing regolith composition. LIBS confirmed sulphur, aluminium, calcium, iron, chromium, titanium, manganese, silicon, and oxygen in the lunar soil near the south pole — first in-situ measurement at this location. No signal since hibernation.`
+        };
+        const MOON_R_VIS = (1737.4/6371)*3;
+        const LAT=-69.37, LON=32.35;
+        function updatePragyan() {
+          const moon = scene.getObjectByName('Moon');
+          if (!moon) return;
+          const phi=(90-LAT)*Math.PI/180, th=(LON+180)*Math.PI/180;
+          dot.position.set(
+            moon.position.x - MOON_R_VIS*Math.sin(phi)*Math.cos(th),
+            moon.position.y + MOON_R_VIS*Math.cos(phi),
+            moon.position.z + MOON_R_VIS*Math.sin(phi)*Math.sin(th)
+          );
+        }
+        satUpdateFns.push(updatePragyan);
+      })();
+
+      (function() {
+        const dot = makeDot('180,200,255', 0.04);
+        scene.add(dot);
+        dot.userData.satInfo = {
+          name:'Vikram Lander', agency:'ISRO · India',
+          type:'Chandrayaan-3 · Moon Surface · South Pole · Hibernating',
+          body:`<b>Landed:</b> August 23, 2023 · 18:02 IST<br><b>Landing site:</b> 69.37°S, 32.35°E — Shiv Shakti Point<br><b>Mass:</b> 1,749.86 kg<br><b>Instruments:</b> RAMBHA (Langmuir probe), ChaSTE (thermal probe), ILSA (seismometer), LRA (laser retroreflector)<br><b>Status:</b> Hibernating — entered sleep mode Sep 4, 2023<br><br>Successfully demonstrated powered descent, hazard detection, and soft landing at the Moon's south polar region — a world first. The landing site has been officially named <em>Shiv Shakti Point</em> by the IAU. Vikram detected lunar surface temperatures reaching +60°C by day and near absolute zero at night. Seismometer detected a moonquake.`
+        };
+        const MOON_R_VIS = (1737.4/6371)*3;
+        const LAT=-69.365, LON=32.348;
+        function updateVikram() {
+          const moon = scene.getObjectByName('Moon');
+          if (!moon) return;
+          const phi=(90-LAT)*Math.PI/180, th=(LON+180)*Math.PI/180;
+          dot.position.set(
+            moon.position.x - MOON_R_VIS*Math.sin(phi)*Math.cos(th),
+            moon.position.y + MOON_R_VIS*Math.cos(phi),
+            moon.position.z + MOON_R_VIS*Math.sin(phi)*Math.sin(th)
+          );
+        }
+        satUpdateFns.push(updateVikram);
+      })();
+
+      // screen-space proximity pick — finds nearest satellite sprite to click point
+      const _wpVec = new THREE.Vector3();
+      window._pickSat = function(cx, cy) {
+        const rect = renderer.domElement.getBoundingClientRect();
+        const W2 = rect.width  / 2;
+        const H2 = rect.height / 2;
+        const RADIUS = window.innerWidth < 769 ? 56 : 40;
+        let nearest = null, nearestDist = RADIUS;
+        scene.traverseVisible(function(obj) {
+          if (!obj.isSprite || !obj.userData.satInfo) return;
+          // getWorldPosition handles sprites inside Groups (e.g. issGroup)
+          obj.getWorldPosition(_wpVec);
+          const p = _wpVec.clone().project(camera);
+          if (p.z > 1) return;
+          const sx = p.x * W2 + W2 + rect.left;
+          const sy = -p.y * H2 + H2 + rect.top;
+          const d = Math.hypot(cx - sx, cy - sy);
+          if (d < nearestDist) { nearestDist = d; nearest = obj; }
+        });
+        return nearest;
+      };
+
+      renderer.domElement.addEventListener('click', function(e) {
+        const sat = window._pickSat(e.clientX, e.clientY);
+        if (sat && window._showSatInfo) {
+          window._showSatInfo(sat.userData.satInfo);
+          window._satClickHandled = true;
+        } else { window._satClickHandled = false; }
+      });
+
+    })();
+
+    let hudUpdateFn = null;
+
+    (function buildHUD() {
+      const hudEl = document.getElementById('hud');
+      if (hudEl) hudEl.style.display = 'none';
+
+      const permBox = document.createElement('div');
+      permBox.style.cssText = `position:fixed;bottom:20px;left:50%;transform:translateX(-50%);
+        background:rgba(4,4,18,0.96);border:1px solid rgba(252,61,33,0.4);border-radius:8px;
+        padding:16px 22px;z-index:9999;font-family:'Space Grotesk',sans-serif;
+        max-width:380px;text-align:center;color:rgba(255,255,255,0.8);font-size:13px;
+        box-shadow:0 0 30px rgba(252,61,33,0.15);`;
+      permBox.innerHTML = `<div style="color:#FC3D21;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;margin-bottom:10px;">HUD · LOCATION ACCESS</div>
+        <div style="margin-bottom:14px;line-height:1.5;">Antriksh needs your location to show accurate local time and timezone on the HUD overlay.</div>
+        <div style="display:flex;gap:10px;justify-content:center;">
+          <button id="perm-allow" style="background:#FC3D21;color:#fff;border:none;padding:8px 20px;border-radius:4px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.1em;">ALLOW</button>
+          <button id="perm-deny" style="background:transparent;color:rgba(255,255,255,0.7);border:1px solid rgba(255,255,255,0.2);padding:8px 20px;border-radius:4px;cursor:pointer;font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.1em;">DENY</button>
+        </div>`;
+      document.body.appendChild(permBox);
+
+      function showHUD(tzName) {
+        if (hudEl) hudEl.style.display = '';
+        const elTZ = document.getElementById('hud-tz-label');
+        if (elTZ) elTZ.textContent = (tzName || Intl.DateTimeFormat().resolvedOptions().timeZone).replace(/_/g,' ');
+      }
+
+      document.getElementById('perm-deny').onclick = function() {
+        permBox.remove();
+      };
+
+      document.getElementById('perm-allow').onclick = function() {
+        permBox.remove();
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(function(pos) {
+            showHUD(Intl.DateTimeFormat().resolvedOptions().timeZone);
+          }, function() {
+            showHUD(Intl.DateTimeFormat().resolvedOptions().timeZone);
+          });
+        } else {
+          showHUD(Intl.DateTimeFormat().resolvedOptions().timeZone);
+        }
+      };
+
+      const localTimeFmt = new Intl.DateTimeFormat(undefined, {
+        hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false,
+      });
+      const localDateFmt = new Intl.DateTimeFormat(undefined, {
+        weekday: 'short', day: '2-digit', month: 'short',
+      });
+
+      const elLT = document.getElementById('hud-local-t');
+      const elLD = document.getElementById('hud-local-d');
+
+      function tickClock() {
+        const now = new Date();
+        if (elLT) elLT.textContent = localTimeFmt.format(now);
+        if (elLD) elLD.textContent = localDateFmt.format(now);
+      }
+      tickClock();
+      setInterval(tickClock, 1000);
+
+      const EARTH_R_KM = 6371;
+      const AU_KM      = 149_597_870;
+      const LY_KM      = 9.461e12;
+      const LOG_MAX    = Math.log10(LY_KM + 1); // normalisation ceiling
+
+      const TICKS = [
+        { km: 400,       label: 'LEO'  },
+        { km: 35_786,    label: 'GEO'  },
+        { km: 384_400,   label: 'Moon' },
+        { km: AU_KM,     label: '1 AU' },
+        { km: LY_KM,     label: '1 LY' },
+      ];
+
+      const tickWrap = document.getElementById('gauge-ticks');
+      TICKS.forEach(({ km, label }) => {
+        const pct  = Math.log10(km + 1) / LOG_MAX * 100;
+        const tick = document.createElement('div');
+        tick.className = 'gauge-tick';
+        tick.style.left = pct + '%';
+        tick.innerHTML  = `<div class="gauge-tick-pip"></div><div class="gauge-tick-lbl">${label}</div>`;
+        tickWrap.appendChild(tick);
+      });
+
+      const elVal    = document.getElementById('gauge-val');
+      const elUnit   = document.getElementById('gauge-unit');
+      const elFill   = document.getElementById('gauge-fill');
+      const elNeedle = document.getElementById('gauge-needle');
+      const elRef    = document.getElementById('gauge-ref');
+
+      function fmt(distKm) {
+        if (distKm < 100) {
+          const m = distKm * 1000;
+          return {
+            val:  m < 10_000
+                    ? m.toFixed(1)
+                    : Math.round(m).toLocaleString(),
+            unit: 'M',
+          };
+        }
+        if (distKm < AU_KM) {
+          return {
+            val:  distKm < 10_000
+                    ? distKm.toFixed(2)
+                    : Math.round(distKm).toLocaleString(),
+            unit: 'KM',
+          };
+        }
+        if (distKm < LY_KM) {
+          return { val: (distKm / AU_KM).toFixed(4), unit: 'AU' };
+        }
+        return { val: (distKm / LY_KM).toFixed(4), unit: 'LY' };
+      }
+
+      function updateGauge() {
+        const distScene = camera.position.distanceTo(earthGroup.position);
+        const altKm     = Math.max(0, distScene * EARTH_R_KM - EARTH_R_KM);
+
+        const { val, unit } = fmt(altKm);
+        elVal.textContent  = val;
+        elUnit.textContent = unit;
+
+        const pct = Math.min(Math.log10(altKm + 1) / LOG_MAX * 100, 100);
+        elFill.style.width   = pct + '%';
+        elNeedle.style.left  = pct + '%';
+
+        elRef.textContent = altKm < 100
+          ? `ALTITUDE · ${unit === 'M' ? val + ' M' : val + ' KM'} ABOVE SURFACE`
+          : 'FROM EARTH SURFACE';
+      }
+
+      hudUpdateFn = updateGauge;
+    })();
+
+    let tileUpdateFn = null;
+
+    (function buildSatelliteTiles() {
+      // activates when camera gets within ~319 km of the surface
+      const DIST_THRESH = 1.05;
+      const EARTH_R_KM  = 6371;
+      const GRID        = 3;
+      const SZ          = GRID * 256;   // 768×768 canvas
+
+      const canvas = document.createElement('canvas');
+      canvas.width = canvas.height = SZ;
+      const ctx    = canvas.getContext('2d');
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+
+      // overlay sphere just above the Earth surface
+      const overlaySphere = new THREE.Mesh(
+        new THREE.SphereGeometry(1.002, 128, 128),
+        new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false })
+      );
+      overlaySphere.visible = false;
+      overlaySphere.position.copy(earthGroup.position);
+      scene.add(overlaySphere);
+
+      const attrib = document.createElement('div');
+      attrib.style.cssText = [
+        'position:fixed', 'bottom:5px', 'right:5px', 'z-index:70',
+        "font-family:'Space Mono',monospace", 'font-size:7px',
+        'color:rgba(255,255,255,.22)', 'letter-spacing:.05em',
+        'pointer-events:none', 'display:none',
+      ].join(';');
+      attrib.textContent = '© Esri · Maxar · Earthstar Geographics';
+      document.body.appendChild(attrib);
+
+      // returns geographic lat/lon of a tile's NW corner
+      function tileNW(x, y, z) {
+        const n = Math.PI - (2 * Math.PI * y) / Math.pow(2, z);
+        return {
+          lat: (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n))),
+          lon: (x / Math.pow(2, z)) * 360 - 180,
+        };
+      }
+      function latLonToTile(lat, lon, z) {
+        lat = Math.max(-85.051129, Math.min(85.051129, lat));
+        const n    = Math.pow(2, z);
+        const latR = lat * Math.PI / 180;
+        return {
+          x: Math.floor((lon + 180) / 360 * n),
+          y: Math.floor((1 - Math.log(Math.tan(latR) + 1 / Math.cos(latR)) / Math.PI) / 2 * n),
+        };
+      }
+      function altToZoom(altKm) {
+        if (altKm <   5) return 14;
+        if (altKm <  20) return 12;
+        if (altKm <  80) return 11;
+        if (altKm < 150) return 10;
+        if (altKm < 300) return  9;
+        return 8;
+      }
+
+      const raycaster = new THREE.Raycaster();
+      const earthSph  = new THREE.Sphere(earthGroup.position.clone(), 1.0);
+
+      let fetchPending = false;
+      let lastLat = NaN, lastLon = NaN, lastZoom = -1;
+      let active  = false;
+
+      async function loadTiles(cLat, cLon, zoom) {
+        const half   = Math.floor(GRID / 2);
+        const center = latLonToTile(cLat, cLon, zoom);
+        const nTiles = Math.pow(2, zoom);
+
+        ctx.clearRect(0, 0, SZ, SZ);
+
+        // Geographic bounds of the entire GRID×GRID tile block
+        const nwC     = tileNW(center.x - half,     center.y - half,     zoom);
+        const seC     = tileNW(center.x + half + 1, center.y + half + 1, zoom);
+        const lonSpan = seC.lon - nwC.lon;
+        const latSpan = nwC.lat - seC.lat;
+
+        const loads = [];
+        for (let dy = -half; dy <= half; dy++) {
+          for (let dx = -half; dx <= half; dx++) {
+            const tx = ((center.x + dx) % nTiles + nTiles) % nTiles;
+            const ty = Math.max(0, Math.min(nTiles - 1, center.y + dy));
+            const nw = tileNW(tx,     ty,     zoom);
+            const se = tileNW(tx + 1, ty + 1, zoom);
+
+            const px = (nw.lon - nwC.lon) / lonSpan * SZ;
+            const pw = (se.lon - nw.lon)  / lonSpan * SZ;
+            const py = (nwC.lat - nw.lat) / latSpan * SZ;
+            const ph = (nw.lat - se.lat)  / latSpan * SZ;
+
+            const url = `https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${zoom}/${ty}/${tx}`;
+            loads.push(new Promise(resolve => {
+              const img = new Image();
+              img.crossOrigin = 'anonymous';
+              img.onload  = () => { ctx.drawImage(img, px, py, pw, ph); resolve(); };
+              img.onerror = resolve;
+              img.src = url;
+            }));
+          }
+        }
+        await Promise.all(loads);
+
+        // vignette to blend tile edges into the daymap
+        const grad = ctx.createRadialGradient(SZ / 2, SZ / 2, SZ * 0.22, SZ / 2, SZ / 2, SZ * 0.5);
+        grad.addColorStop(0, 'rgba(0,0,0,0)');
+        grad.addColorStop(1, 'rgba(0,0,0,1)');
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, SZ, SZ);
+        ctx.globalCompositeOperation = 'source-over';
+
+        // map tile UV to equirectangular sphere UV:
+        // repeat = 1/(u1-u0), offset = -u0 * repeat
+        const u0 = (nwC.lon + 180) / 360;
+        const u1 = (seC.lon + 180) / 360;
+        const v0 = (90 - nwC.lat)  / 180;
+        const v1 = (90 - seC.lat)  / 180;
+        tex.repeat.set(1 / (u1 - u0), 1 / (v1 - v0));
+        tex.offset.set(-u0 / (u1 - u0), -v0 / (v1 - v0));
+        tex.needsUpdate = true;
+      }
+
+      function tick() {
+        const dist  = camera.position.distanceTo(earthGroup.position);
+        const altKm = Math.max(0, (dist - 1) * EARTH_R_KM);
+
+        if (dist > DIST_THRESH) {
+          if (active) {
+            overlaySphere.visible = false;
+            attrib.style.display  = 'none';
+            active = false;
+            lastLat = NaN; lastZoom = -1;
+          }
+          return;
+        }
+
+        if (!active) {
+          overlaySphere.visible = true;
+          attrib.style.display  = 'block';
+          active = true;
+        }
+
+        // Ray through screen centre → nearest Earth surface point
+        raycaster.setFromCamera({ x: 0, y: 0 }, camera);
+        const hit = new THREE.Vector3();
+        if (!raycaster.ray.intersectSphere(earthSph, hit)) return;
+
+        // Hit point → geographic lat/lon (inverse of geoToLocal)
+        const local = hit.clone().sub(earthGroup.position);
+        const lat   = Math.asin(Math.max(-1, Math.min(1, local.y))) * 180 / Math.PI;
+        const lon   = Math.atan2(local.z, -local.x) * 180 / Math.PI - 180;
+        const zoom  = altToZoom(altKm);
+
+        // refetch when view centre drifts more than 70% of one tile width
+        const thr = (360 / Math.pow(2, zoom)) * 0.7;
+        if (!fetchPending && (
+          zoom !== lastZoom ||
+          Math.abs(lat - lastLat) > thr ||
+          Math.abs(lon - lastLon) > thr
+        )) {
+          lastLat = lat; lastLon = lon; lastZoom = zoom;
+          fetchPending = true;
+          loadTiles(lat, lon, zoom).finally(() => { fetchPending = false; });
+        }
+      }
+
+      tileUpdateFn = tick;
+    })();
+
+    (function buildMoons() {
+      const KM = 1 / (6_371 * 1_000);
+
+      var MOON_SEMI = 384_400 / 6371;
+      var MOON_R_VIS = (1737.4 / 6371) * 3; // 3× visual boost so it's visible
+
+      var moonMesh3 = new THREE.Mesh(
+        new THREE.SphereGeometry(MOON_R_VIS, 32, 32),
+        new THREE.MeshLambertMaterial({
+          map: new THREE.TextureLoader().load('./textures/8k_moon.jpg'),
+        })
+      );
+      moonMesh3.name = 'Moon';
+      scene.add(moonMesh3);
+
+      var moonOrbitPts = [];
+      for (var i = 0; i <= 128; i++) {
+        var a = (i / 128) * Math.PI * 2;
+        moonOrbitPts.push(new THREE.Vector3(Math.cos(a) * MOON_SEMI, 0, Math.sin(a) * MOON_SEMI));
+      }
+      var moonOrbitLine = new THREE.Line(
+        new THREE.BufferGeometry().setFromPoints(moonOrbitPts),
+        new THREE.LineBasicMaterial({ color: 0x445566, transparent: true, opacity: 0.4, depthWrite: false })
+      );
+      scene.add(moonOrbitLine);
+
+      // real-time Moon angle from J2000: L0=218.316°, n=13.176396°/day
+      var J2000 = new Date('2000-01-01T12:00:00Z').getTime();
+      function moonAngle() {
+        var daysSinceJ2000 = (Date.now() - J2000) / 86400000;
+        return (218.316 + 13.176396 * daysSinceJ2000) * Math.PI / 180;
+      }
+
+      window._moonUpdate = function() {
+        var angle = moonAngle();
+        var earthPos = earthGroup.position;
+        moonMesh3.position.set(
+          earthPos.x + MOON_SEMI * Math.cos(angle),
+          earthPos.y,
+          earthPos.z + MOON_SEMI * Math.sin(angle)
+        );
+        moonOrbitLine.position.copy(earthPos);
+      };
+    })();
+
+    (function buildRealStars() {
+      var STAR_R = 5e13; // far enough to appear at infinity from the solar system
+
+      // named stars: [name, ra_deg, dec_deg, dist_ly, magnitude]
+      var NAMED = [
+        ['Sirius',         101.29,-16.72,  8.6,  -1.46],
+        ['Canopus',         95.99,-52.70,  310,  -0.74],
+        ['Rigil Kentaurus', 219.90,-60.83, 4.37, -0.27],
+        ['Arcturus',        213.92, 19.18, 36.7, -0.05],
+        ['Vega',            279.23, 38.78, 25.0,  0.03],
+        ['Capella',          79.17, 45.99, 42.9,  0.08],
+        ['Rigel',             78.63,-8.20, 860,   0.12],
+        ['Procyon',          114.83, 5.22, 11.5,  0.38],
+        ['Achernar',          24.43,-57.24, 139,  0.46],
+        ['Betelgeuse',         88.79,7.41, 700,   0.50],
+        ['Hadar',             210.96,-60.37, 390, 0.61],
+        ['Altair',            297.70, 8.87, 16.7, 0.77],
+        ['Acrux',             186.65,-63.10, 320, 0.77],
+        ['Aldebaran',          68.98,16.51, 65.3, 0.85],
+        ['Antares',           247.35,-26.43, 550, 0.96],
+        ['Spica',             201.30,-11.16, 250, 0.97],
+        ['Pollux',            116.33, 28.03, 33.8, 1.14],
+        ['Fomalhaut',         344.41,-29.62, 25.1, 1.16],
+        ['Deneb',             310.36, 45.28, 2600, 1.25],
+        ['Mimosa',            191.93,-59.69, 280, 1.25],
+        ['Regulus',           152.09, 11.97, 79.3, 1.36],
+        ['Adhara',            104.66,-28.97, 430, 1.50],
+        ['Castor',            113.65, 31.89, 51.6, 1.58],
+        ['Gacrux',            187.79,-57.11, 88.0, 1.63],
+        ['Shaula',            263.40,-37.10, 570, 1.63],
+        ['Bellatrix',          81.28, 6.35, 240, 1.64],
+        ['Elnath',             81.57, 28.61, 131, 1.65],
+        ['Miaplacidus',       138.30,-69.72, 113, 1.68],
+        ['Alnilam',            84.05,-1.20, 1340, 1.70],
+        ['Alnitak',            85.19,-1.94, 800, 1.74],
+        ['Gamma Velorum',     122.38,-47.34, 840, 1.78],
+        ['Alioth',            193.51, 55.96, 82.6, 1.77],
+        ['Mirfak',             51.08, 49.86, 590, 1.79],
+        ['Dubhe',             165.93, 61.75, 123, 1.79],
+        ['Wezen',             107.10,-26.39, 1600, 1.84],
+        ['Alkaid',            206.89, 49.31, 101, 1.85],
+        ['Avior',             125.63,-59.51, 630, 1.86],
+        ['Sargas',            264.33,-42.00, 270, 1.87],
+        ['Menkent',           211.67,-36.37, 61.0, 2.06],
+        ['Atria',             253.40,-69.03, 391, 1.91],
+        ['Alhena',             99.43, 16.40, 109, 1.93],
+        ['Peacock',           306.41,-56.74, 183, 1.94],
+        ['Theta Scorpii',     264.33,-43.00, 272, 1.87],
+        ['Alsephina',         131.17,-54.71, 80.6, 1.96],
+        ['Murzim',             95.67,-17.96, 500, 1.98],
+        ['Alphard',           141.90,-8.66, 177, 1.98],
+        ['Polaris',             37.95,89.26, 433, 1.97],
+        ['Hamal',              31.79,23.46, 65.8, 2.00],
+        ['Algieba',           154.17,19.84, 131, 2.01],
+        ['Nunki',             283.82,-26.30, 224, 2.02],
+        ['Menkib',             58.53,35.79, 1000, 2.03],
+        ['Suhail',            136.99,-43.43, 570, 2.21],
+        ['Alphecca',          233.67,26.71, 75.0, 2.23],
+        ['Kaus Australis',    276.04,-34.38, 143, 1.79],
+        ['Naos',              120.90,-40.00, 1100, 2.21],
+        ['Caph',                2.29,59.15, 54.7, 2.27],
+        ['Schedar',             10.13,56.54, 228, 2.24],
+        ['Eltanin',            269.15,51.49, 148, 2.24],
+        ['Denebola',           177.26,14.57, 35.9, 2.14],
+        ['Zubenelgenubi',      222.72,-16.04, 76.7, 2.75],
+        ['Phecda',             178.46,53.69, 83.2, 2.44],
+        ['Ruchbah',             21.45,60.24, 99.4, 2.66],
+        ['Minkar',              61.09,60.86, 97.0, 2.47],
+        ['Sabik',              258.04,-15.73, 84.0, 2.43],
+        ['Ascella',            285.65,-29.88, 88.0, 2.60],
+        ['Seginus',            225.49,38.31, 85.0, 3.03],
+        ['Algorab',            187.47,-16.52, 87.0, 2.94],
+        ['Porrima',            190.41,-1.45, 38.1, 2.74],
+        ['Alderamin',          319.64,62.59, 49.1, 2.45],
+        ['Etamin',             269.15,51.49, 154, 2.23],
+      ];
+
+      var positions = [];
+      var sizes     = [];
+      var colors    = [];
+
+      NAMED.forEach(function(s) {
+        var ra=s[1]*Math.PI/180, dec=s[2]*Math.PI/180, mag=s[4];
+        var x =  STAR_R * Math.cos(dec) * Math.cos(ra);
+        var y =  STAR_R * Math.sin(dec);
+        var z = -STAR_R * Math.cos(dec) * Math.sin(ra);
+        positions.push(x, y, z);
+        var sz = Math.max(3.0, (6 - mag) * 2.5);
+        sizes.push(sz);
+        var r2 = mag < 0.5 ? 1.0 : mag < 1.5 ? 1.0 : 0.9;
+        var g2 = mag < 0.5 ? 0.9 : mag < 1.5 ? 0.85 : 0.8;
+        var b2 = mag < 0.5 ? 0.7 : mag < 1.5 ? 0.8 : 0.95;
+        colors.push(r2, g2, b2);
+      });
+
+      var rng = function() { return Math.random(); };
+      var count = 5000 - NAMED.length;
+      for (var i = 0; i < count; i++) {
+        var theta = 2 * Math.PI * rng();
+        var phi   = Math.acos(2 * rng() - 1);
+        positions.push(
+          STAR_R * Math.sin(phi) * Math.cos(theta),
+          STAR_R * Math.cos(phi),
+          STAR_R * Math.sin(phi) * Math.sin(theta)
+        );
+        sizes.push(1.0 + rng() * 3.0);
+        var t = rng();
+        if (t < 0.15)      { colors.push(0.6, 0.75, 1.0); }
+        else if (t < 0.5)  { colors.push(1.0, 0.97, 0.88); }
+        else if (t < 0.75) { colors.push(1.0, 0.85, 0.6); }
+        else               { colors.push(1.0, 1.0, 1.0); }
+      }
+
+      var geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+      geo.setAttribute('starSz',   new THREE.Float32BufferAttribute(sizes,     1));
+      geo.setAttribute('starCol',  new THREE.Float32BufferAttribute(colors,    3));
+
+      // RawShaderMaterial prevents Three.js from injecting its own 'color' attribute
+      var mat = new THREE.RawShaderMaterial({
+        uniforms: {},
+        vertexShader: `
+          precision highp float;
+          attribute vec3  position;
+          attribute float starSz;
+          attribute vec3  starCol;
+          uniform mat4 modelViewMatrix;
+          uniform mat4 projectionMatrix;
+          varying vec3 vColor;
+          void main() {
+            vColor = starCol;
+            gl_PointSize = starSz;
+            gl_Position  = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+          }
+        `,
+        fragmentShader: `
+          precision highp float;
+          varying vec3 vColor;
+          void main() {
+            float d = length(gl_PointCoord - vec2(0.5));
+            if (d > 0.5) discard;
+            float alpha = 1.0 - smoothstep(0.15, 0.5, d);
+            gl_FragColor = vec4(vColor, alpha);
+          }
+        `,
+        transparent: true,
+        depthWrite:  false,
+        depthTest:   false,
+        blending:    THREE.AdditiveBlending,
+      });
+
+      var starPoints = new THREE.Points(geo, mat);
+      starPoints.renderOrder = 1;
+      scene.add(starPoints);
+      window._starDomeMesh = starPoints; // hidden when Milky Way GLB fades in
+
+      // per-star glow sprites coloured by spectral type
+      // [name, ra_deg, dec_deg, inner_rgba, mid_rgba, outer_rgba, scale_mult]
+      var STAR_GLOWS = [
+        ['Betelgeuse',  88.79,  7.41, 'rgba(255,140,60,1.0)',  'rgba(255,80,20,0.6)',   'rgba(255,40,0,0.0)',    1.2],
+        ['Antares',    247.35,-26.43, 'rgba(255,100,50,1.0)',  'rgba(255,60,10,0.6)',   'rgba(255,20,0,0.0)',    1.1],
+        ['Aldebaran',   68.98, 16.51, 'rgba(255,160,80,1.0)',  'rgba(255,100,40,0.6)',  'rgba(255,60,0,0.0)',    0.9],
+        ['Arcturus',   213.92, 19.18, 'rgba(255,180,100,1.0)', 'rgba(255,130,60,0.6)',  'rgba(255,80,0,0.0)',    0.9],
+        ['Pollux',     116.33, 28.03, 'rgba(255,200,120,1.0)', 'rgba(255,160,80,0.6)',  'rgba(255,100,0,0.0)',   0.8],
+        ['Capella',     79.17, 45.99, 'rgba(255,230,150,1.0)', 'rgba(255,200,100,0.6)', 'rgba(255,150,0,0.0)',   0.85],
+        ['Sirius',     101.29,-16.72, 'rgba(200,220,255,1.0)',  'rgba(150,180,255,0.7)', 'rgba(100,140,255,0.0)', 1.3],
+        ['Vega',       279.23, 38.78, 'rgba(200,215,255,1.0)',  'rgba(160,190,255,0.6)', 'rgba(100,140,255,0.0)', 0.9],
+        ['Procyon',    114.83,  5.22, 'rgba(255,250,220,1.0)',  'rgba(255,230,180,0.6)', 'rgba(255,200,100,0.0)', 0.8],
+        ['Altair',     297.70,  8.87, 'rgba(220,235,255,1.0)',  'rgba(180,210,255,0.6)', 'rgba(130,170,255,0.0)', 0.8],
+        ['Fomalhaut',  344.41,-29.62, 'rgba(210,225,255,1.0)',  'rgba(170,200,255,0.6)', 'rgba(120,160,255,0.0)', 0.8],
+        ['Regulus',    152.09, 11.97, 'rgba(200,215,255,1.0)',  'rgba(160,195,255,0.6)', 'rgba(110,150,255,0.0)', 0.8],
+        ['Rigel',       78.63, -8.20, 'rgba(160,190,255,1.0)',  'rgba(100,150,255,0.7)', 'rgba(60,100,255,0.0)',  1.1],
+        ['Canopus',     95.99,-52.70, 'rgba(200,220,255,1.0)',  'rgba(150,190,255,0.6)', 'rgba(100,150,255,0.0)', 1.0],
+        ['Deneb',      310.36, 45.28, 'rgba(180,205,255,1.0)',  'rgba(130,170,255,0.6)', 'rgba(80,120,255,0.0)',  1.0],
+        ['Spica',      201.30,-11.16, 'rgba(170,200,255,1.0)',  'rgba(120,165,255,0.6)', 'rgba(70,110,255,0.0)',  0.85],
+        ['Achernar',    24.43,-57.24, 'rgba(180,210,255,1.0)',  'rgba(130,175,255,0.6)', 'rgba(80,125,255,0.0)',  0.85],
+        ['Polaris',     37.95, 89.26, 'rgba(255,245,210,1.0)',  'rgba(255,220,160,0.6)', 'rgba(255,180,80,0.0)',  0.8],
+      ];
+
+      (function() {
+        function makeStarGlow(inner, mid, outer) {
+          var c = document.createElement('canvas'); c.width = c.height = 64;
+          var ctx = c.getContext('2d');
+          var g = ctx.createRadialGradient(32,32,0,32,32,32);
+          g.addColorStop(0,   inner);
+          g.addColorStop(0.3, mid);
+          g.addColorStop(1,   outer);
+          ctx.fillStyle = g; ctx.fillRect(0,0,64,64);
+          return new THREE.CanvasTexture(c);
+        }
+
+        var _starGlowSprites = [];
+        STAR_GLOWS.forEach(function(s) {
+          var sp = new THREE.Sprite(new THREE.SpriteMaterial({
+            map: makeStarGlow(s[3], s[4], s[5]),
+            transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
+          }));
+          var ra  = s[1]*Math.PI/180, dec = s[2]*Math.PI/180;
+          sp.position.set(
+            STAR_R * Math.cos(dec) * Math.cos(ra),
+            STAR_R * Math.sin(dec),
+           -STAR_R * Math.cos(dec) * Math.sin(ra)
+          );
+          sp.scale.set(STAR_R * 0.012 * s[6], STAR_R * 0.012 * s[6], 1);
+          sp.renderOrder = 2;
+          sp.material.depthTest = false;
+          scene.add(sp);
+          _starGlowSprites.push(sp);
+        });
+        window._starGlowSprites = _starGlowSprites;
+      })();
+    })();
+
+    (function buildLabels() {
+      var labelDiv = document.createElement('div');
+      labelDiv.id = 'space-labels';
+      labelDiv.style.cssText = 'position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:50;';
+      document.body.appendChild(labelDiv);
+
+      var _v = new THREE.Vector3();
+      var _labels = [];
+
+      function makeLabel(text, type) {
+        var el = document.createElement('div');
+        var color = type === 'planet' ? '#FC3D21'
+                  : type === 'moon'   ? '#88ccff'
+                  : type === 'star'   ? '#ffffaa'
+                  : '#ffffff';
+        el.style.cssText = [
+          'position:absolute',
+          'transform:translate(-50%,-50%)',
+          'font-family:Space Mono,monospace',
+          'font-size:9px',
+          'letter-spacing:.1em',
+          'text-transform:uppercase',
+          'color:' + color,
+          'text-shadow:0 0 6px ' + color,
+          'white-space:nowrap',
+          'pointer-events:none',
+          'opacity:0',
+          'transition:opacity 0.3s',
+        ].join(';');
+        el.textContent = text;
+        labelDiv.appendChild(el);
+        return el;
+      }
+
+      function gatherObjects() {
+        var objs = [];
+
+        var planetNames = ['Mercury','Venus','Mars','Jupiter','Saturn','Uranus','Neptune'];
+        planetNames.forEach(function(pname) {
+          var g = planetOrbitGroups[pname] || scene.getObjectByName(pname);
+          if (g) objs.push({ el: makeLabel(pname, 'planet'), obj: g, type:'planet' });
+        });
+
+        objs.push({ el: makeLabel('Earth', 'planet'), obj: earthGroup, type:'planet' });
+        var moonObj = scene.getObjectByName('Moon');
+        if (moonObj) objs.push({ el: makeLabel('Moon', 'moon'), obj: moonObj, type:'moon' });
+
+        var STAR_R = 5e13;
+        var STAR_LABELS = [
+          ['Sirius',101.29,-16.72], ['Canopus',95.99,-52.70], ['Vega',279.23,38.78],
+          ['Arcturus',213.92,19.18], ['Capella',79.17,45.99], ['Rigel',78.63,-8.20],
+          ['Betelgeuse',88.79,7.41], ['Altair',297.70,8.87], ['Aldebaran',68.98,16.51],
+          ['Antares',247.35,-26.43], ['Spica',201.30,-11.16], ['Pollux',116.33,28.03],
+          ['Deneb',310.36,45.28], ['Regulus',152.09,11.97], ['Polaris',37.95,89.26],
+          ['Procyon',114.83,5.22], ['Fomalhaut',344.41,-29.62], ['Achernar',24.43,-57.24],
+          ['Sirius A',101.29,-16.72], ['Hadar',210.96,-60.37], ['Acrux',186.65,-63.10],
+        ];
+        STAR_LABELS.forEach(function(s) {
+          var ra = s[1]*Math.PI/180, dec = s[2]*Math.PI/180;
+          var pos = new THREE.Vector3(
+            STAR_R * Math.cos(dec) * Math.cos(ra),
+            STAR_R * Math.sin(dec),
+           -STAR_R * Math.cos(dec) * Math.sin(ra)
+          );
+          var el = makeLabel(s[0], 'star');
+          el.dataset.type = 'star';
+          objs.push({ el: el, pos: pos, type:'star' });
+        });
+
+        return objs;
+      }
+
+      var objects = gatherObjects();
+
+      function updateLabels() {
+        var W = window.innerWidth, H = window.innerHeight;
+        objects.forEach(function(item) {
+          var worldPos = item.pos ? item.pos : item.obj.getWorldPosition(_v.clone());
+          var proj = worldPos.clone().project(camera);
+          var sx = (proj.x *  0.5 + 0.5) * W;
+          var sy = (proj.y * -0.5 + 0.5) * H;
+
+          if (proj.z > 1 || sx < -60 || sx > W+60 || sy < -20 || sy > H+20) {
+            item.el.style.opacity = '0'; return;
+          }
+
+          var show = true;
+          if (item.type === 'moon') {
+            show = camera.position.distanceTo(worldPos) < 500;
+          }
+          item.el.style.opacity = show ? '1' : '0';
+          item.el.style.left = sx + 'px';
+          item.el.style.top  = (sy + 14) + 'px';
+        });
+      }
+
+      var satLabelDiv = document.createElement('div');
+      satLabelDiv.style.cssText = 'position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:51;';
+      document.body.appendChild(satLabelDiv);
+
+      var satLabels = [];
+
+      function makeSatLabel(text, color) {
+        var el = document.createElement('div');
+        var c = color || '#aaffee';
+        el.style.cssText = [
+          'position:absolute',
+          'transform:translate(-50%,0)',
+          'font-family:Space Mono,monospace',
+          'font-size:7px',
+          'letter-spacing:.07em',
+          'text-transform:uppercase',
+          'color:' + c,
+          'text-shadow:0 0 5px ' + c,
+          'white-space:nowrap',
+          'pointer-events:none',
+          'opacity:0',
+          'transition:opacity 0.4s',
+        ].join(';');
+        el.textContent = text;
+        satLabelDiv.appendChild(el);
+        return el;
+      }
+
+      var SAT_LABEL_COLORS = {
+        'ISS': '#00c8ff',
+        'Hubble Space Telescope': '#ffe878',
+        'James Webb Space Telescope': '#64dcff',
+        'AstroSat': '#b478ff',
+        'XPoSat': '#ff5078',
+        'Tiangong Space Station': '#ff5050',
+        'Sentinel-6 Michael Freilich': '#50c8ff',
+        'Terra (EOS AM-1)': '#50ff8c',
+        'Aqua (EOS PM-1)': '#32b4ff',
+        'NISAR': '#ffa500',
+        'Chandrayaan-2 Orbiter': '#ff8c3c',
+        'Aditya-L1': '#ffc832',
+        'Pragyan Rover': '#ffdc50',
+        'Vikram Lander': '#b4c8ff',
+      };
+
+      var SAT_SHORT_NAMES = {
+        'ISS': 'ISS',
+        'Hubble Space Telescope': 'Hubble',
+        'James Webb Space Telescope': 'JWST',
+        'AstroSat': 'AstroSat',
+        'XPoSat': 'XPoSat',
+        'Tiangong Space Station': 'Tiangong',
+        'Sentinel-6 Michael Freilich': 'Sentinel-6',
+        'Terra (EOS AM-1)': 'Terra',
+        'Aqua (EOS PM-1)': 'Aqua',
+        'NISAR': 'NISAR',
+        'Chandrayaan-2 Orbiter': 'Ch-2',
+        'Aditya-L1': 'Aditya-L1',
+        'Pragyan Rover': 'Pragyan',
+        'Vikram Lander': 'Vikram',
+      };
+
+      // retry gathering until all sprites are in the scene
+      var _gatherTries = 0;
+      function gatherSatLabels() {
+        var found = new Set(satLabels.map(function(s){ return s.sprite.uuid; }));
+        scene.traverse(function(obj) {
+          if (obj.isSprite && obj.userData.satInfo && !found.has(obj.uuid)) {
+            var info = obj.userData.satInfo;
+            var short = SAT_SHORT_NAMES[info.name] || info.name.split(' ')[0];
+            var color = SAT_LABEL_COLORS[info.name] || '#aaffee';
+            var el = makeSatLabel(short, color);
+            satLabels.push({ el: el, sprite: obj, info: info });
+          }
+        });
+        if (++_gatherTries < 10) setTimeout(gatherSatLabels, 1000);
+      }
+      setTimeout(gatherSatLabels, 500);
+
+      var _origUpdate = updateLabels;
+      updateLabels = function() {
+        _origUpdate();
+        var W = window.innerWidth, H = window.innerHeight;
+        var camDist = camera.position.length();
+        var showSats = camDist < 200;
+        satLabels.forEach(function(item) {
+          if (!item.sprite.parent) { item.el.style.opacity = '0'; return; }
+          var worldPos = item.sprite.getWorldPosition(_v.clone());
+          var proj = worldPos.clone().project(camera);
+          var sx = (proj.x *  0.5 + 0.5) * W;
+          var sy = (proj.y * -0.5 + 0.5) * H;
+          if (!showSats || proj.z > 1 || sx < -80 || sx > W+80 || sy < -20 || sy > H+20) {
+            item.el.style.opacity = '0'; return;
+          }
+          item.el.style.opacity = '1';
+          item.el.style.left = sx + 'px';
+          item.el.style.top  = (sy + 10) + 'px';
+        });
+      };
+
+      window._labelUpdate = updateLabels;
+    })();
+
+    // r128 OrbitControls doesn't support zoomToCursor natively, so we implement it here
+    (function setupZoom() {
+      const _ray = new THREE.Raycaster();
+      const _tmp = new THREE.Vector3();
+
+      renderer.domElement.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        const rect = renderer.domElement.getBoundingClientRect();
+        const nx =  ((e.clientX - rect.left) / rect.width)  * 2 - 1;
+        const ny = -((e.clientY - rect.top)  / rect.height) * 2 + 1;
+        _ray.setFromCamera({ x: nx, y: ny }, camera);
+
+        const hits = _ray.intersectObjects(scene.children, true).filter(function(h) {
+          return h.object !== skyMesh && !(h.object instanceof THREE.Points);
+        });
+
+        var focus = hits.length > 0 ? hits[0].point.clone() : controls.target.clone();
+
+        var delta = Math.abs(e.deltaY) > 100 ? e.deltaY * 0.3 : e.deltaY;
+        var factor = e.deltaY > 0 ? 1.0 / (1 - delta * 0.0008) : (1 - Math.abs(delta) * 0.0008);
+        factor = Math.max(0.92, Math.min(1.09, factor));
+
+        var AU = 23.48;
+        var distAU = camera.position.length() / AU;
+        if (distAU < 5) {
+          // inside inner solar system: zoom toward cursor and shift orbit target
+          camera.position.sub(focus).multiplyScalar(factor).add(focus);
+          controls.target.sub(focus).multiplyScalar(factor).add(focus);
+        } else {
+          // outside — lock target to Sun so the galaxy stays centred
+          controls.target.set(0, 0, 0);
+          camera.position.sub(focus).multiplyScalar(factor).add(focus);
+        }
+        controls.update();
+      }, { passive: false });
+
+      // Touch pinch-to-zoom (mobile)
+      var _pinchDist0 = 0;
+      renderer.domElement.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 2) {
+          _pinchDist0 = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+        }
+      }, { passive: true });
+      renderer.domElement.addEventListener('touchmove', function(e) {
+        if (e.touches.length !== 2) return;
+        var dist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        if (_pinchDist0 === 0) { _pinchDist0 = dist; return; }
+        var ratio = dist / _pinchDist0;
+        _pinchDist0 = dist;
+        var factor = ratio > 1 ? Math.max(0.92, 1 / ratio) : Math.min(1.09, 1 / ratio);
+        var AU = 23.48;
+        var distAU = camera.position.length() / AU;
+        if (distAU < 30) {
+          camera.position.multiplyScalar(factor);
+          controls.target.multiplyScalar(factor);
+        } else {
+          controls.target.set(0, 0, 0);
+          camera.position.multiplyScalar(factor);
+        }
+        controls.update();
+      }, { passive: true });
+      renderer.domElement.addEventListener('touchend', function(e) {
+        if (e.touches.length < 2) _pinchDist0 = 0;
+      }, { passive: true });
+
+      // forward touch taps to the click handlers for planets and satellites
+      var _tapX = 0, _tapY = 0;
+      renderer.domElement.addEventListener('touchstart', function(e) {
+        if (e.touches.length === 1) { _tapX = e.touches[0].clientX; _tapY = e.touches[0].clientY; }
+      }, { passive: true });
+      renderer.domElement.addEventListener('touchend', function(e) {
+        if (e.changedTouches.length !== 1) return;
+        var t = e.changedTouches[0];
+        var drag = Math.hypot(t.clientX - _tapX, t.clientY - _tapY);
+        if (drag > 16) return;
+        var sat = window._pickSat && window._pickSat(t.clientX, t.clientY);
+        if (sat && window._showSatInfo) {
+          window._showSatInfo(sat.userData.satInfo);
+          return;
+        }
+        // fall back to planet meshes via raycaster
+        var rect = renderer.domElement.getBoundingClientRect();
+        var nx = ((t.clientX - rect.left) / rect.width)  * 2 - 1;
+        var ny = -((t.clientY - rect.top)  / rect.height) * 2 + 1;
+        var _tRay = new THREE.Raycaster();
+        _tRay.setFromCamera({ x: nx, y: ny }, camera);
+        var meshes = [];
+        scene.traverse(function(obj) { if (obj.isMesh && obj.userData.planetInfo) meshes.push(obj); });
+        var pHits = _tRay.intersectObjects(meshes, false);
+        if (pHits.length > 0 && window._showSatInfo) {
+          window._showSatInfo(pHits[0].object.userData.planetInfo);
+        }
+      }, { passive: true });
+    })();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    (function() {
+      var gauge = document.getElementById('hud-gauge');
+      if (!gauge) return;
+      gauge.style.cursor = 'ns-resize';
+      gauge.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        var factor = e.deltaY > 0 ? 1.08 : 0.93;
+        var tgt = controls.target.clone();
+        camera.position.sub(tgt).multiplyScalar(factor).add(tgt);
+        controls.update();
+      }, { passive: false });
+      var track = document.querySelector('.gauge-track');
+      if (track) {
+        track.style.cursor = 'pointer';
+        track.addEventListener('click', function(e) {
+          var rect = track.getBoundingClientRect();
+          var frac = (e.clientX - rect.left) / rect.width;
+          var minLog = Math.log10(1/6371), maxLog = Math.log10(9.461e12/6371);
+          var targetDist = Math.pow(10, minLog + frac*(maxLog-minLog));
+          var dir = camera.position.clone().sub(controls.target).normalize();
+          camera.position.copy(controls.target).addScaledVector(dir, targetDist);
+          controls.update();
+        });
+      }
+    })();
+
+    (function animate() {
+      requestAnimationFrame(animate);
+      
+      atmUniforms.uCamPos.value.copy(camera.position);
+      if (issUpdateFn) issUpdateFn();
+      if (window._satUpdateAll) window._satUpdateAll();
+      if (hudUpdateFn) hudUpdateFn();
+      if (tileUpdateFn) tileUpdateFn();
+      if (window._moonUpdate) window._moonUpdate();
+      if (window._planetUpdate) window._planetUpdate();
+      if (window._labelUpdate) window._labelUpdate();
+      // fade the star skybox and Milky Way GLB depending on camera distance
+      (function() {
+        var dist = camera.position.length();
+        var AU = 23.48;
+        var distAU = dist / AU;
+        // star skybox fades out as the GLB galaxy becomes opaque
+        var tSky = Math.min(1, Math.max(0, (distAU - 1) / 200));
+        // GLB fades in from 5 AU, fully visible at 12 AU
+        var tGLB = Math.min(1, Math.max(0, (distAU - 5) / 7));
+        skyMesh.material.opacity = (0.2 + tSky * 0.8) * (1.0 - tGLB * 0.85);
+        var tMW = Math.min(1, Math.max(0, (distAU - 5) / 7));
+        // hide the star dome once the galaxy is visible — the dome forms a distracting sphere at that scale
+        var showStarDome = tMW < 0.1;
+        if (window._starDomeMesh) window._starDomeMesh.visible = showStarDome;
+        if (window._starGlowSprites) window._starGlowSprites.forEach(function(sp) { sp.visible = showStarDome; });
+        var gaugeEl = document.getElementById('hud-gauge');
+        if (gaugeEl) gaugeEl.style.opacity = Math.max(0, 1 - tMW * 3).toString();
+        var mhint = document.getElementById('milky-hint');
+        if (mhint) mhint.style.opacity = Math.max(0, 1 - tMW * 4).toString();
+        if (window._milkyWayObj) {
+          window._milkyWayObj.traverse(function(obj) {
+            if (obj.isMesh) obj.material.opacity = tMW * 0.95;
+          });
+        }
+        if (window._constLines) {
+          var constOpacity = Math.max(0, 1.0 - tMW * 2.5);
+          window._constLines.forEach(function(l) {
+            l.material.opacity = constOpacity;
+            l.material.transparent = true;
+          });
+        }
+        var starLabelOpacity = Math.max(0, 1.0 - tMW * 2.0);
+        var spaceLabelDiv = document.getElementById('space-labels');
+        if (spaceLabelDiv) {
+          spaceLabelDiv.querySelectorAll('[data-type="star"]').forEach(function(el) {
+            el.style.opacity = starLabelOpacity.toString();
+          });
+        }
+      })();
+
+      if (earthGroup) earthGroup.children[0] && (earthGroup.children[0].rotation.y += 0.0005);
+      controls.update();
+      renderer.render(scene, camera);
+    })();
+  </script>
+
+  <script>
+    const MISSION_CATALOG = [
+      { id:'aryabhata',     name:'Aryabhata',       year:1975, status:'complete', cat:'pioneer',   label:'Pioneer Era',         type:"India's First Satellite"        },
+      { id:'rohini',        name:'Rohini',           year:1980, status:'complete', cat:'pioneer',   label:'Pioneer Era',         type:'Indigenous Launch Vehicle'      },
+      { id:'apple',         name:'APPLE',            year:1981, status:'complete', cat:'pioneer',   label:'Pioneer Era',         type:'Experimental Comsat'            },
+      { id:'oceansat',      name:'OceanSat',         year:1999, status:'active',   cat:'earth',     label:'Earth Observation',   type:'Ocean Colour Monitor'           },
+      { id:'resourcesat',   name:'ResourceSat',      year:2003, status:'active',   cat:'earth',     label:'Earth Observation',   type:'Land Resources Imaging'         },
+      { id:'nisar',         name:'NISAR',            year:2025, status:'active',   cat:'earth',     label:'Earth Observation',   type:'NASA-ISRO SAR · LEO'            },
+      { id:'gsat',          name:'GSAT Series',      year:2001, status:'active',   cat:'comms',     label:'Communications',      type:'Geosynchronous Comsat Fleet'    },
+      { id:'navic',         name:'NavIC',            year:2013, status:'active',   cat:'comms',     label:'Navigation',          type:'Indian Regional Nav System'     },
+      { id:'chandrayaan1',  name:'Chandrayaan-1',    year:2008, status:'complete', cat:'lunar',     label:'Lunar',               type:'Lunar Orbiter · Water Discovery'},
+      { id:'chandrayaan2',  name:'Chandrayaan-2',    year:2019, status:'active',   cat:'lunar',     label:'Lunar',               type:'Orbiter · 100 km Polar Orbit'   },
+      { id:'chandrayaan3',  name:'Chandrayaan-3',    year:2023, status:'complete', cat:'lunar',     label:'Lunar',               type:'Lander + Rover · South Pole'    },
+      { id:'chandrayaan4',  name:'Chandrayaan-4',    year:2027, status:'upcoming', cat:'lunar',     label:'Lunar',               type:'Sample Return Mission'          },
+      { id:'mangalyaan',    name:'Mangalyaan',       year:2013, status:'complete', cat:'planetary', label:'Planetary',           type:'Mars Orbiter Mission'           },
+      { id:'adityal1',      name:'Aditya-L1',        year:2023, status:'active',   cat:'planetary', label:'Planetary / Solar',   type:'Solar Observatory · L1 Point'   },
+      { id:'shukrayaan',    name:'Shukrayaan-1',     year:2028, status:'upcoming', cat:'planetary', label:'Planetary',           type:'Venus Orbiter'                  },
+      { id:'astrosat',      name:'AstroSat',         year:2015, status:'active',   cat:'science',   label:'Space Science',       type:'Multi-Wavelength Observatory'   },
+      { id:'xposat',        name:'XPoSat',           year:2024, status:'active',   cat:'science',   label:'Space Science',       type:'X-ray Polarimetry Satellite'    },
+      { id:'104satellites', name:'104 Satellites',   year:2017, status:'complete', cat:'tech',      label:'Technology',          type:'World Record · Single Launch'   },
+      { id:'spadex',        name:'SpaDeX',           year:2024, status:'active',   cat:'tech',      label:'Technology',          type:'Space Docking Experiment'       },
+      { id:'rlv',           name:'RLV-TD',           year:2016, status:'active',   cat:'tech',      label:'Technology',          type:'Reusable Launch Vehicle Demo'   },
+      { id:'gaganyaan',     name:'Gaganyaan',        year:2026, status:'upcoming', cat:'human',     label:'Human Spaceflight',   type:'Crewed Orbital Mission · LEO'   },
+      { id:'bas',           name:'BAS',              year:2035, status:'future',   cat:'future',    label:'Future',              type:'Bharatiya Antariksh Station'    },
+    ];
+
+    const STATUS_COLOR = {
+      complete: '#aa88ff',
+      active:   '#00c864',
+      upcoming: '#ffaa00',
+      future:   '#555566',
+    };
+
+    const CAT_COLOR = {
+      pioneer:   '#888899',
+      earth:     '#00c864',
+      comms:     '#4488ff',
+      lunar:     '#aa88ff',
+      planetary: '#ff9944',
+      science:   '#00ccff',
+      tech:      '#ffaa00',
+      human:     '#FC3D21',
+      future:    '#cc44ff',
+    };
+
+    let activeMissionId = null;
+
+    function buildNav(list) {
+      const body = document.getElementById('nav-body');
+      body.innerHTML = '';
+
+      const seen = [], groups = {};
+      list.forEach(m => {
+        if (!groups[m.cat]) { groups[m.cat] = []; seen.push(m.cat); }
+        groups[m.cat].push(m);
+      });
+
+      seen.forEach(cat => {
+        const section = document.createElement('div');
+        section.className = 'nav-category';
+
+        const lbl = document.createElement('div');
+        lbl.className = 'nav-cat-label';
+        lbl.style.color = CAT_COLOR[cat] || '#888';
+        lbl.textContent = groups[cat][0].label;
+        section.appendChild(lbl);
+
+        groups[cat].forEach(m => {
+          const row = document.createElement('div');
+          row.className = 'nav-mission' + (activeMissionId === m.id ? ' active' : '');
+          row.dataset.id = m.id;
+          row.title = m.type;
+
+          const dot = document.createElement('div');
+          dot.className = 'nav-mission-dot';
+          const sc = STATUS_COLOR[m.status] || '#888';
+          dot.style.cssText = `background:${sc};box-shadow:0 0 5px ${sc}88`;
+
+          const info = document.createElement('div');
+          info.className = 'nav-mission-info';
+          info.innerHTML =
+            `<div class="nav-mission-name">${m.name}</div>` +
+            `<div class="nav-mission-meta">${m.type.split('·')[0].trim()}</div>`;
+
+          const yr = document.createElement('div');
+          yr.className = 'nav-mission-year';
+          yr.textContent = m.year;
+
+          row.append(dot, info, yr);
+          row.addEventListener('click', () => {
+            openPanel(m);
+          });
+          section.appendChild(row);
+        });
+
+        body.appendChild(section);
+      });
+    }
+
+    function openPanel(m) {
+      activeMissionId = m.id;
+      document.getElementById('panel-title').textContent = m.name.toUpperCase();
+      document.getElementById('mission-frame').src = `./data/mission-${m.id}.html`;
+      document.getElementById('mission-panel').classList.add('open');
+      document.getElementById('panel-popout').dataset.href = `./data/mission-${m.id}.html`;
+      document.querySelectorAll('.nav-mission').forEach(el =>
+        el.classList.toggle('active', el.dataset.id === m.id)
+      );
+    }
+
+    function closePanel() {
+      activeMissionId = null;
+      document.getElementById('mission-panel').classList.remove('open');
+      document.getElementById('mission-frame').src = '';
+      document.querySelectorAll('.nav-mission.active').forEach(el => el.classList.remove('active'));
+    }
+
+    document.getElementById('nav-search-input').addEventListener('input', function () {
+      const q = this.value.toLowerCase().trim();
+      const filtered = q
+        ? MISSION_CATALOG.filter(m =>
+            m.name.toLowerCase().includes(q) ||
+            m.type.toLowerCase().includes(q) ||
+            m.label.toLowerCase().includes(q) ||
+            String(m.year).includes(q)
+          )
+        : MISSION_CATALOG;
+      document.getElementById('nav-count').textContent = filtered.length;
+      buildNav(filtered);
+    });
+
+    let navCollapsed = true;
+    document.getElementById('mission-nav').classList.add('collapsed');
+    document.getElementById('nav-toggle').classList.add('collapsed');
+    document.getElementById('nav-toggle').textContent = '▶';
+    document.getElementById('nav-toggle').addEventListener('click', () => {
+      navCollapsed = !navCollapsed;
+      document.getElementById('mission-nav').classList.toggle('collapsed', navCollapsed);
+      const btn = document.getElementById('nav-toggle');
+      btn.classList.toggle('collapsed', navCollapsed);
+      btn.textContent = navCollapsed ? '▶' : '◀';
+    });
+
+    document.getElementById('panel-close').addEventListener('click', closePanel);
+    document.getElementById('panel-popout').addEventListener('click', function () {
+      if (this.dataset.href) window.open(this.dataset.href, '_blank');
+    });
+
+    buildNav(MISSION_CATALOG);
+  </script>
+
+<script>
+(function(){
+  var btn = document.getElementById('nav-hamburger');
+  var ul = document.querySelector('.nav-links');
+  if (!btn || !ul) return;
+  btn.addEventListener('click', function(){
+    btn.classList.toggle('open');
+    ul.classList.toggle('mobile-open');
+    document.body.style.overflow = ul.classList.contains('mobile-open') ? 'hidden' : '';
+  });
+  ul.querySelectorAll('li').forEach(function(li){
+    if (!li.querySelector('.dropdown')) return;
+    li.classList.add('has-dropdown');
+    var topLink = li.querySelector(':scope > a');
+    var toggle = document.createElement('span');
+    toggle.className = 'nav-toggle';
+    toggle.textContent = '+';
+    if (topLink) topLink.appendChild(toggle);
+    topLink && topLink.addEventListener('click', function(e){
+      if (window.innerWidth > 768) return;
+      e.preventDefault();
+      var open = li.classList.toggle('mobile-expanded');
+      toggle.textContent = open ? '−' : '+';
+    });
+  });
+  // close menu when a dropdown link is tapped
+  ul.querySelectorAll('.dropdown a').forEach(function(a){
+    a.addEventListener('click', function(){
+      if (window.innerWidth > 768) return;
+      btn.classList.remove('open');
+      ul.classList.remove('mobile-open');
+      document.body.style.overflow = '';
+    });
+  });
+})();
+</script>
+</body>
+</html>
