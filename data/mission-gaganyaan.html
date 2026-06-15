@@ -88,12 +88,42 @@
 
   /* ASTRONAUTS */
   .astronauts-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:2px;margin-top:32px;}
-  .astronaut-card{background:#080808;border:1px solid rgba(255,255,255,0.04);padding:28px 24px;text-align:center;transition:border-color 0.3s;}
-  .astronaut-card:hover{border-color:rgba(252,61,33,0.2);}
+  .astronaut-card{background:#080808;border:1px solid rgba(255,255,255,0.04);padding:28px 24px;text-align:center;transition:all 0.25s;cursor:pointer;}
+  .astronaut-card:hover{border-color:rgba(252,61,33,0.4);transform:translateY(-3px);box-shadow:0 12px 40px rgba(252,61,33,0.08);}
+  .astronaut-card:hover .astronaut-photo{border-color:rgba(252,61,33,0.5);transform:scale(1.06);}
   .astronaut-initial{font-family:'Bebas Neue',sans-serif;font-size:56px;color:rgba(6,3,141,0.5);line-height:1;margin-bottom:16px;}
+  .astronaut-photo{width:110px;height:110px;border-radius:50%;object-fit:cover;object-position:center top;margin:0 auto 16px;display:block;border:2px solid rgba(255,255,255,0.1);transition:all 0.25s;}
   .astronaut-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:0.04em;margin-bottom:4px;}
   .astronaut-rank{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.5);}
   .astronaut-role{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.12em;text-transform:uppercase;color:var(--red);margin-top:8px;}
+  .astronaut-hint{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.2);margin-top:12px;}
+
+  /* CAPTAIN MODAL */
+  .captain-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:9000;align-items:center;justify-content:center;padding:24px;backdrop-filter:blur(6px);}
+  .captain-overlay.active{display:flex;}
+  .captain-modal{background:#0a0a0a;border:1px solid rgba(255,255,255,0.08);max-width:900px;width:100%;max-height:90vh;overflow-y:auto;position:relative;}
+  .captain-modal-close{position:absolute;top:20px;right:24px;font-size:28px;color:rgba(255,255,255,0.5);cursor:pointer;line-height:1;z-index:10;background:none;border:none;transition:color 0.2s;}
+  .captain-modal-close:hover{color:var(--white);}
+  .captain-modal-hero{display:grid;grid-template-columns:280px 1fr;gap:0;border-bottom:1px solid rgba(255,255,255,0.06);}
+  .captain-modal-photo{width:100%;height:340px;object-fit:cover;object-position:center top;display:block;}
+  .captain-modal-header{padding:40px 40px 32px;display:flex;flex-direction:column;justify-content:flex-end;}
+  .captain-modal-tag{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--red);margin-bottom:10px;}
+  .captain-modal-name{font-family:'Bebas Neue',sans-serif;font-size:48px;letter-spacing:0.03em;line-height:0.95;margin-bottom:12px;}
+  .captain-modal-sub{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.5);line-height:1.8;}
+  .captain-modal-body{padding:40px;}
+  .captain-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:rgba(255,255,255,0.04);margin-bottom:40px;}
+  .captain-stat{background:#0a0a0a;padding:20px 16px;text-align:center;}
+  .captain-stat-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--white);line-height:1;}
+  .captain-stat-val span{color:var(--red);}
+  .captain-stat-lbl{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.12em;text-transform:uppercase;color:rgba(255,255,255,0.4);margin-top:4px;}
+  .captain-section-title{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--red);margin-bottom:16px;padding-bottom:8px;border-bottom:1px solid rgba(252,61,33,0.2);}
+  .captain-bio{font-size:15px;color:rgba(255,255,255,0.75);line-height:1.9;margin-bottom:36px;}
+  .captain-bio p{margin-bottom:14px;}
+  .captain-bio p:last-child{margin-bottom:0;}
+  .captain-facts{display:grid;grid-template-columns:1fr 1fr;gap:2px;margin-bottom:36px;}
+  .captain-fact{background:#080808;border:1px solid rgba(255,255,255,0.04);padding:16px 20px;}
+  .captain-fact-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.35);margin-bottom:5px;}
+  .captain-fact-val{font-size:13px;color:rgba(255,255,255,0.8);line-height:1.5;}
 
   /* DISCOVERIES */
   .discoveries-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:2px;margin-top:32px;}
@@ -125,10 +155,18 @@
   .footer-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.12em;color:rgba(255,255,255,0.3);text-decoration:none;}
   .footer-logo span{color:rgba(252,61,33,0.2);}
   .footer-credit{font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.35);}
+
+  /* Zoom lightbox */
+  .zoom-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;}
+  .zoom-overlay.active{display:flex;}
+  .zoom-overlay img{max-width:92vw;max-height:92vh;object-fit:contain;border:1px solid rgba(255,255,255,0.1);}
+  .zoom-close{position:absolute;top:20px;right:28px;font-size:32px;color:rgba(255,255,255,0.7);cursor:pointer;line-height:1;font-family:sans-serif;}
+
 </style>
 <link rel="stylesheet" href="../responsive.css">
 </head>
 <body>
+<div class="zoom-overlay" id="zoom-overlay"><span class="zoom-close">&times;</span><img id="zoom-img" src="" alt=""></div>
 
 <canvas id="stars-canvas"></canvas>
 
@@ -213,7 +251,7 @@
 
 <!-- MISSION HERO -->
 <div class="mission-hero">
-  <div class="hero-bg"><img src="../photos/chandrayaan3(2).jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.25;z-index:-1;"></div>
+  <div class="hero-bg"><img src="../photos/sats/chandrayaan3(2).jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.25;z-index:-1;"></div>
   <div class="hero-grid-lines"></div>
   <div class="breadcrumb">
     <a href="../index.html">Antriksh</a>
@@ -232,8 +270,8 @@
     </a>
     <div class="hero-stats">
       <div class="hero-stat">
-        <div class="hero-stat-value">3</div>
-        <div class="hero-stat-label">Crew Members</div>
+        <div class="hero-stat-value">3<span style="font-size:16px;color:rgba(255,255,255,0.4);font-family:'Space Mono',monospace;">/4</span></div>
+        <div class="hero-stat-label">Crew Per Mission · 4 Trained</div>
       </div>
       <div class="hero-stat">
         <div class="hero-stat-value">400<span>km</span></div>
@@ -378,29 +416,33 @@
   <h2 class="section-title">India's Astronauts</h2>
   <p style="font-size:15px;color:rgba(255,255,255,0.6);max-width:600px;line-height:1.7;margin-bottom:0;">Four astronaut-designates have been selected and trained — all Indian Air Force pilots. Three will fly the crewed mission. One flew to the ISS on Axiom-4 in 2025 as preparation.</p>
   <div class="astronauts-grid">
-    <div class="astronaut-card">
-      <div class="astronaut-initial">PS</div>
+    <div class="astronaut-card" onclick="openCaptain('prasanth')">
+      <img class="astronaut-photo" src="../photos/captains/prasanth_nair.jpg" alt="Prasanth Balakrishnan Nair">
       <div class="astronaut-name">Gp. Capt. Prasanth Balakrishnan Nair</div>
       <div class="astronaut-rank">Indian Air Force</div>
       <div class="astronaut-role">Astronaut-Designate</div>
+      <div class="astronaut-hint">Click for full profile</div>
     </div>
-    <div class="astronaut-card">
-      <div class="astronaut-initial">AK</div>
+    <div class="astronaut-card" onclick="openCaptain('ajit')">
+      <img class="astronaut-photo" src="../photos/captains/Ajit-Krishnan.jpg" alt="Ajit Krishnan">
       <div class="astronaut-name">Gp. Capt. Ajit Krishnan</div>
       <div class="astronaut-rank">Indian Air Force</div>
       <div class="astronaut-role">Astronaut-Designate</div>
+      <div class="astronaut-hint">Click for full profile</div>
     </div>
-    <div class="astronaut-card">
-      <div class="astronaut-initial">AN</div>
+    <div class="astronaut-card" onclick="openCaptain('angad')">
+      <img class="astronaut-photo" src="../photos/captains/angad_pratap.jpg" alt="Angad Pratap">
       <div class="astronaut-name">Gp. Capt. Angad Pratap</div>
       <div class="astronaut-rank">Indian Air Force</div>
       <div class="astronaut-role">Astronaut-Designate</div>
+      <div class="astronaut-hint">Click for full profile</div>
     </div>
-    <div class="astronaut-card" style="border-color:rgba(252,61,33,0.3);">
-      <div class="astronaut-initial" style="color:rgba(252,61,33,0.4);">SS</div>
+    <div class="astronaut-card" onclick="openCaptain('shubhanshu')">
+      <img class="astronaut-photo" src="../photos/captains/shubhanshu_shukla.jpg" alt="Shubhanshu Shukla">
       <div class="astronaut-name">Gp. Capt. Shubhanshu Shukla</div>
       <div class="astronaut-rank">Indian Air Force</div>
-      <div class="astronaut-role" style="color:var(--red);">Flew Axiom-4 · ISS 2025</div>
+      <div class="astronaut-role">Flew Axiom-4 · ISS 2025</div>
+      <div class="astronaut-hint">Click for full profile</div>
     </div>
   </div>
   <div class="highlight-box" style="margin-top:32px;">
@@ -435,8 +477,8 @@
       </div>
     </div>
     <div>
-      <div style="background:#080808;border:1px solid rgba(255,255,255,0.06);padding:40px;text-align:center;">
-        <div style="font-family:'Bebas Neue',sans-serif;font-size:80px;color:rgba(6,3,141,0.4);line-height:1;margin-bottom:20px;">VM</div>
+      <div style="background:#080808;border:1px solid rgba(255,255,255,0.06);padding:40px;text-align:center;cursor:pointer;transition:border-color 0.25s;" onclick="openCaptain('vyommitra')" onmouseenter="this.style.borderColor='rgba(252,61,33,0.35)'" onmouseleave="this.style.borderColor='rgba(255,255,255,0.06)'">
+        <img src="../photos/captains/vyommitra.jpg" alt="Vyommitra" style="width:100%;max-width:320px;height:260px;object-fit:cover;object-position:center top;display:block;margin:0 auto 20px;border:1px solid rgba(255,255,255,0.08);transition:transform 0.25s;" onmouseenter="this.style.transform='scale(1.03)'" onmouseleave="this.style.transform='scale(1)'">
         <div style="font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.06em;margin-bottom:8px;">Vyommitra</div>
         <div style="font-family:'Space Mono',monospace;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:28px;">Half-Humanoid · ISRO</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:1px;text-align:left;">
@@ -457,6 +499,7 @@
             <div style="font-size:13px;color:var(--red);">Apr 29, 2026 ✓</div>
           </div>
         </div>
+        <div style="font-family:'Space Mono',monospace;font-size:8px;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.2);margin-top:20px;">Click for full profile</div>
       </div>
     </div>
   </div>
@@ -678,17 +721,7 @@
 </div>
 
 <!-- NEXT MISSION -->
-<div class="next-mission">
-  <div>
-    <div class="next-label">Next ISRO Launch</div>
-    <div class="next-title">PSLV-C63 / Proba-3</div>
-    <div style="font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:0.1em;margin-top:6px;">ISRO × ESA · Precision Formation Flying Mission</div>
-  </div>
-  <div>
-    <a href="../missions.html" class="btn-red">Explore Mission →</a>
-    <a href="../missions.html" class="btn-outline">All Missions</a>
-  </div>
-</div>
+
 
 <footer>
   <a href="../index.html" class="footer-logo">ANTRIK<span>SH</span></a>
@@ -750,6 +783,305 @@ document.querySelectorAll('.spec-item,.discovery-card,.timeline-item,.astronaut-
     });
   });
 })();
+</script>
+
+
+<div class="content-section">
+  <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:60px;align-items:center;">
+    <div>
+      <div class="section-tag">Mission Photos</div>
+      <h2 class="section-title">In Pictures</h2>
+      <p style="font-size:14px;color:rgba(255,255,255,0.5);font-family:'Space Mono',monospace;letter-spacing:0.05em;line-height:1.8;margin-top:16px;">Swipe or click arrows to browse. Click any photo to zoom.</p>
+    </div>
+    <div class="swipe-carousel" id="gag-gallery" style="position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.06);user-select:none;">
+    <div class="swipe-track" style="display:flex;transition:transform 0.45s cubic-bezier(0.4,0,0.2,1);will-change:transform;">
+      <img class="swipe-slide" src="../photos/sats/Gaganyaan3.jpg" alt="Mission photo" style="min-width:100%;height:360px;object-fit:cover;flex-shrink:0;">
+      <img class="swipe-slide" src="../photos/sats/Gaganyaan-orbital-spacecraft-illustration-India-manned-space-flight.jpg" alt="Mission photo" style="min-width:100%;height:360px;object-fit:cover;flex-shrink:0;">
+      <img class="swipe-slide" src="../photos/sats/Gaganyaan_crewed_spacecraft_in_deployed_twin_solar_panel_configuration.png" alt="Mission photo" style="min-width:100%;height:360px;object-fit:cover;flex-shrink:0;">
+      <img class="swipe-slide" src="../photos/sats/TVD1_launch_15.jpg" alt="Mission photo" style="min-width:100%;height:360px;object-fit:cover;flex-shrink:0;">
+      <img class="swipe-slide" src="../photos/sats/Gaganyaan_vehicle_used_for_TVD1_mission.jpg" alt="Mission photo" style="min-width:100%;height:360px;object-fit:cover;flex-shrink:0;">
+      <img class="swipe-slide" src="../photos/sats/CE20_engine_(E9)_undergoing_720_second_qualification_test_for_Gaganyaan_programme_at_IPRC_Mahendragiri_001.jpg" alt="Mission photo" style="min-width:100%;height:360px;object-fit:cover;flex-shrink:0;">
+      <img class="swipe-slide" src="../photos/sats/CARE_Module_splashdown_at_Bay_of_Bengal.jpg" alt="Mission photo" style="min-width:100%;height:360px;object-fit:cover;flex-shrink:0;">
+      <img class="swipe-slide" src="../photos/sats/Simulated_Crew_Module_(SCM)_Structure_Assembly_for_the_Gaganyaan_project.jpg" alt="Mission photo" style="min-width:100%;height:360px;object-fit:cover;flex-shrink:0;">
+    </div>
+    <button class="swipe-btn swipe-prev" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.15);color:#fff;width:44px;height:44px;border-radius:50%;font-size:18px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;">&#8592;</button>
+    <button class="swipe-btn swipe-next" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.15);color:#fff;width:44px;height:44px;border-radius:50%;font-size:18px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;">&#8594;</button>
+    <div class="swipe-dots" style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10;"></div>
+  </div>
+</div>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  document.querySelectorAll('.swipe-carousel').forEach(function(car){
+    var track=car.querySelector('.swipe-track');
+    var slides=car.querySelectorAll('.swipe-slide');
+    var dotsWrap=car.querySelector('.swipe-dots');
+    if(!track||!slides.length)return;
+    var total=slides.length;
+    var idx=0;
+    var dots=[];
+    for(var i=0;i<total;i++){
+      var d=document.createElement('div');
+      d.style.cssText='width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.35);cursor:pointer;transition:background 0.2s,transform 0.2s;';
+      (function(n){d.addEventListener('click',function(){goTo(n);});})(i);
+      dotsWrap.appendChild(d);
+      dots.push(d);
+    }
+    function goTo(n){
+      idx=(n+total)%total;
+      track.style.transform='translateX(-'+idx*100+'%)';
+      dots.forEach(function(d,i){d.style.background=i===idx?'rgba(252,61,33,0.9)':'rgba(255,255,255,0.35)';d.style.transform=i===idx?'scale(1.2)':'scale(1)';});
+    }
+    goTo(0);
+    car.querySelector('.swipe-prev').addEventListener('click',function(){goTo(idx-1);});
+    car.querySelector('.swipe-next').addEventListener('click',function(){goTo(idx+1);});
+    var x0=null;
+    track.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;},{passive:true});
+    track.addEventListener('touchend',function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>40)goTo(dx<0?idx+1:idx-1);x0=null;});
+    var mx=null;
+    track.addEventListener('mousedown',function(e){mx=e.clientX;track.style.cursor='grabbing';});
+    window.addEventListener('mouseup',function(e){if(mx===null)return;var dx=e.clientX-mx;if(Math.abs(dx)>40)goTo(dx<0?idx+1:idx-1);mx=null;track.style.cursor='';});
+    setInterval(function(){goTo(idx+1);},4200);
+  });
+
+  // Zoom lightbox
+  var overlay=document.getElementById('zoom-overlay');
+  var zoomImg=document.getElementById('zoom-img');
+  if(overlay){
+    document.querySelectorAll('.swipe-slide').forEach(function(img){
+      img.style.cursor='zoom-in';
+      img.addEventListener('click',function(){zoomImg.src=img.src;overlay.classList.add('active');});
+    });
+    overlay.addEventListener('click',function(e){if(e.target===overlay||e.target.classList.contains('zoom-close'))overlay.classList.remove('active');});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape')overlay.classList.remove('active');});
+  }
+
+})();
+</script>
+<div class="next-mission">
+  <div>
+    <div class="next-label">Next ISRO Launch</div>
+    <div class="next-title">PSLV-C63 / Proba-3</div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:0.1em;margin-top:6px;">ISRO × ESA · Precision Formation Flying Mission</div>
+  </div>
+  <div>
+    <a href="../missions.html" class="btn-red">Explore Mission →</a>
+    <a href="../missions.html" class="btn-outline">All Missions</a>
+  </div>
+</div>
+
+<!-- CAPTAIN MODAL OVERLAY -->
+<div class="captain-overlay" id="captain-overlay">
+  <div class="captain-modal" id="captain-modal">
+    <button class="captain-modal-close" onclick="closeCaptain()">&times;</button>
+    <div id="captain-modal-content"></div>
+  </div>
+</div>
+
+<script>
+const CAPTAINS = {
+  prasanth: {
+    tag: 'Gaganyaan Astronaut-Designate',
+    name: 'Gp. Capt. Prasanth\nBalakrishnan Nair',
+    sub: 'Group Captain · Indian Air Force · Fighter & Test Pilot\nBorn: August 26, 1976 · Thiruvananthapuram, Kerala',
+    photo: '../photos/captains/prasanth_nair.jpg',
+    stats: [
+      {val:'2900<span>+</span>', lbl:'Flying Hours'},
+      {val:'30<span>+</span>', lbl:'Aircraft Types'},
+      {val:'2020', lbl:'Selected'},
+      {val:'IAF', lbl:'Service'}
+    ],
+    bioTitle: 'Background & Career',
+    bio: `<p>Group Captain Prasanth Balakrishnan Nair was born on August 26, 1976 in Thiruvananthapuram, Kerala. He joined the Indian Air Force and rose to become one of India's most accomplished fighter pilots and test pilots, accumulating over 2,900 flying hours on more than 30 types of aircraft.</p>
+<p>A graduate of the National Defence Academy (NDA), Prasanth has served in frontline fighter squadrons and was selected as a test pilot — one of the most demanding roles in the IAF. His test pilot credentials made him a natural candidate for India's human spaceflight programme.</p>
+<p>In 2020, he was among the four Indian Air Force pilots selected by ISRO as Gaganyaan astronaut-designates after a rigorous selection process involving thousands of IAF officers. He underwent extensive training at the Gagarin Cosmonaut Training Centre (GCTC) in Star City, Russia — covering spacecraft systems, EVA procedures, parachute training, winter survival, and sea recovery drills.</p>
+<p>Following training in Russia, he has continued advanced mission-specific training at ISRO's Astronaut Training Facility in Bengaluru — including spacecraft familiarisation, physiological training, and Gaganyaan crew module procedures.</p>`,
+    facts: [
+      {lbl:'Date of Birth', val:'August 26, 1976'},
+      {lbl:'Place of Birth', val:'Thiruvananthapuram, Kerala'},
+      {lbl:'Education', val:'National Defence Academy (NDA), Pune'},
+      {lbl:'Specialisation', val:'Fighter Pilot & Test Pilot'},
+      {lbl:'Flying Hours', val:'2,900+ hours'},
+      {lbl:'Aircraft Types Flown', val:'30+ including Su-30 MKI, MiG-21, MiG-29'},
+      {lbl:'Training — Russia', val:'Gagarin Cosmonaut Training Centre (GCTC), Star City'},
+      {lbl:'Training — India', val:'ISRO Astronaut Training Facility, Bengaluru'},
+      {lbl:'Selection Year', val:'2020'},
+      {lbl:'Gaganyaan Role', val:'Astronaut-Designate, G1 Mission Crew'},
+      {lbl:'International Training', val:'Parabolic flights, survival drills, spacecraft systems'},
+      {lbl:'Mission MITRA', val:'Participated in crew isolation study, Leh, Ladakh (Apr 2026)'}
+    ]
+  },
+  ajit: {
+    tag: 'Gaganyaan Astronaut-Designate',
+    name: 'Gp. Capt. Ajit\nKrishnan',
+    sub: 'Group Captain · Indian Air Force · Fighter & Test Pilot\nBorn: April 19, 1982 · Chennai, Tamil Nadu',
+    photo: '../photos/captains/Ajit-Krishnan.jpg',
+    stats: [
+      {val:'2900<span>+</span>', lbl:'Flying Hours'},
+      {val:'25<span>+</span>', lbl:'Aircraft Types'},
+      {val:'2020', lbl:'Selected'},
+      {val:'IAF', lbl:'Service'}
+    ],
+    bioTitle: 'Background & Career',
+    bio: `<p>Group Captain Ajit Krishnan was born on April 19, 1982 in Chennai, Tamil Nadu. An IAF fighter pilot and certified test pilot, he has logged over 2,900 flying hours across more than 25 aircraft types, including frontline combat aircraft.</p>
+<p>Ajit graduated from the prestigious National Defence Academy before being commissioned into the Indian Air Force. His expertise spans air superiority fighters and he developed deep specialisation as a test pilot, evaluating aircraft performance under extreme conditions.</p>
+<p>Selected in 2020 alongside three other IAF pilots for the Gaganyaan programme, Ajit completed his cosmonaut training at the Gagarin Cosmonaut Training Centre (GCTC) in Star City, Russia. The training covered emergency procedures, microgravity familiarisation through parabolic flights, orbital mechanics, Soyuz spacecraft systems (as a reference), and survival training in extreme environments including water, forest, and winter conditions.</p>
+<p>At ISRO's Astronaut Training Facility in Bengaluru, he has trained extensively on the Gaganyaan crew module, orbital rendezvous procedures, life support systems, and onboard experiment protocols. Ajit is also a trained yoga practitioner — yoga is a formal part of Gaganyaan astronaut fitness and mental resilience training.</p>`,
+    facts: [
+      {lbl:'Date of Birth', val:'April 19, 1982'},
+      {lbl:'Place of Birth', val:'Chennai, Tamil Nadu'},
+      {lbl:'Education', val:'National Defence Academy (NDA), Pune'},
+      {lbl:'Specialisation', val:'Fighter Pilot & Test Pilot'},
+      {lbl:'Flying Hours', val:'2,900+ hours'},
+      {lbl:'Aircraft Types Flown', val:'25+ including Su-30 MKI, Mirage-2000'},
+      {lbl:'Training — Russia', val:'Gagarin Cosmonaut Training Centre (GCTC), Star City'},
+      {lbl:'Training — India', val:'ISRO Astronaut Training Facility, Bengaluru'},
+      {lbl:'Selection Year', val:'2020'},
+      {lbl:'Gaganyaan Role', val:'Astronaut-Designate, G1 Mission Crew'},
+      {lbl:'Parabolic Flights', val:'Microgravity familiarisation (Russia & India)'},
+      {lbl:'Mission MITRA', val:'Participated in crew isolation study, Leh, Ladakh (Apr 2026)'}
+    ]
+  },
+  angad: {
+    tag: 'Gaganyaan Astronaut-Designate',
+    name: 'Gp. Capt. Angad\nPratap',
+    sub: 'Group Captain · Indian Air Force · Fighter & Test Pilot\nBorn: July 17, 1982 · Prayagraj, Uttar Pradesh',
+    photo: '../photos/captains/angad_pratap.jpg',
+    stats: [
+      {val:'2000<span>+</span>', lbl:'Flying Hours'},
+      {val:'20<span>+</span>', lbl:'Aircraft Types'},
+      {val:'2020', lbl:'Selected'},
+      {val:'IAF', lbl:'Service'}
+    ],
+    bioTitle: 'Background & Career',
+    bio: `<p>Group Captain Angad Pratap was born on July 17, 1982 in Prayagraj (Allahabad), Uttar Pradesh. A seasoned IAF fighter pilot and test pilot, he has over 2,000 flying hours across 20+ aircraft types.</p>
+<p>Angad completed his training at the National Defence Academy and was commissioned into the Indian Air Force. He went on to qualify as a test pilot — an elite distinction achieved by only a handful of IAF officers — and served in both fighter and test flying roles through his career.</p>
+<p>As one of the four Gaganyaan astronaut-designates selected in 2020, Angad underwent a year-long training programme at the Gagarin Cosmonaut Training Centre (GCTC) in Star City, Russia. His training covered Gaganyaan crew module systems, spacecraft operations, microgravity science, orbital mechanics, EVA theory, and survival training under extreme conditions.</p>
+<p>Back in India, Angad has continued intensive training at ISRO's Astronaut Training Facility in Bengaluru. He participated in the April 2026 Mission MITRA exercise in Leh, Ladakh — ISRO's landmark crew behaviour study designed to assess how the Gaganyaan team functions under extreme isolation and physiological stress.</p>`,
+    facts: [
+      {lbl:'Date of Birth', val:'July 17, 1982'},
+      {lbl:'Place of Birth', val:'Prayagraj, Uttar Pradesh'},
+      {lbl:'Education', val:'National Defence Academy (NDA), Pune'},
+      {lbl:'Specialisation', val:'Fighter Pilot & Test Pilot'},
+      {lbl:'Flying Hours', val:'2,000+ hours'},
+      {lbl:'Aircraft Types Flown', val:'20+ including Su-30 MKI, MiG-21'},
+      {lbl:'Training — Russia', val:'Gagarin Cosmonaut Training Centre (GCTC), Star City'},
+      {lbl:'Training — India', val:'ISRO Astronaut Training Facility, Bengaluru'},
+      {lbl:'Selection Year', val:'2020'},
+      {lbl:'Gaganyaan Role', val:'Astronaut-Designate, G1 Mission Crew'},
+      {lbl:'Mission MITRA', val:'Participated in crew isolation study, Leh, Ladakh (Apr 2026)'},
+      {lbl:'Additional Training', val:'Aero-medical, parachute, and sea recovery drills'}
+    ]
+  },
+  shubhanshu: {
+    tag: 'Gaganyaan Astronaut · ISS Veteran',
+    name: 'Gp. Capt. Shubhanshu\nShukla',
+    sub: 'Group Captain · Indian Air Force · Fighter & Test Pilot · Axiom-4 Crew\nBorn: October 10, 1985 · Lucknow, Uttar Pradesh',
+    photo: '../photos/captains/shubhanshu_shukla.jpg',
+    stats: [
+      {val:'2000<span>+</span>', lbl:'Flying Hours'},
+      {val:'18<span>+</span>', lbl:'Days in Space'},
+      {val:'2025', lbl:'Flew ISS'},
+      {val:'IAF', lbl:'Service'}
+    ],
+    bioTitle: 'Background & Career',
+    bio: `<p>Group Captain Shubhanshu Shukla was born on October 10, 1985 in Lucknow, Uttar Pradesh. He is India's most prominent active astronaut — a fighter pilot, test pilot, and now an ISS veteran who made history in 2025 by becoming the first Indian to reach the International Space Station.</p>
+<p>Shubhanshu graduated from the National Defence Academy and was commissioned into the Indian Air Force. He qualified as a test pilot and logged over 2,000 flying hours on 20+ aircraft types including frontline fighter jets. In 2020, he was selected as one of four Gaganyaan astronaut-designates and completed training at the Gagarin Cosmonaut Training Centre (GCTC) in Russia.</p>
+<p>In May 2025, Shubhanshu flew to the ISS as part of Axiom Space's Axiom-4 (Ax-4) mission — a historic milestone. He spent over 18 days aboard the ISS, conducting 7 scientific experiments designed by ISRO including studies on microgravity effects on crops, muscle atrophy, and fluid behaviour. This mission served as India's live dress rehearsal for Gaganyaan — proving crew procedures, ground operations, and mission control readiness in a real space environment.</p>
+<p>Following his return from Ax-4, Shubhanshu has resumed Gaganyaan training with even greater authority — now the only Gaganyaan crew member with actual orbital experience. He participated in Mission MITRA in April 2026 along with the full crew.</p>`,
+    facts: [
+      {lbl:'Date of Birth', val:'October 10, 1985'},
+      {lbl:'Place of Birth', val:'Lucknow, Uttar Pradesh'},
+      {lbl:'Education', val:'National Defence Academy (NDA), Pune'},
+      {lbl:'Specialisation', val:'Fighter Pilot & Test Pilot'},
+      {lbl:'Flying Hours', val:'2,000+ hours on 20+ aircraft types'},
+      {lbl:'Axiom-4 Mission', val:'May 2025 · ISS · 18+ days in orbit'},
+      {lbl:'ISS Experiments', val:'7 ISRO-designed microgravity science experiments'},
+      {lbl:'Training — Russia', val:'Gagarin Cosmonaut Training Centre (GCTC), Star City'},
+      {lbl:'Training — NASA', val:'Johnson Space Center (JSC), Houston'},
+      {lbl:'Training — India', val:'ISRO Astronaut Training Facility, Bengaluru'},
+      {lbl:'Selection Year', val:'2020'},
+      {lbl:'Mission MITRA', val:'Crew isolation study, Leh, Ladakh (Apr 2026)'}
+    ]
+  },
+  vyommitra: {
+    tag: 'Half-Humanoid Space Robot · ISRO',
+    name: 'Vyommitra',
+    sub: 'Half-Humanoid Robot · Developed by ISRO / VSSC\nDesigned to fly on Gaganyaan G1 & G2 uncrewed missions',
+    photo: '../photos/captains/vyommitra.jpg',
+    stats: [
+      {val:'~75', lbl:'Weight (kg)'},
+      {val:'G1+G2', lbl:'Missions'},
+      {val:'6', lbl:'Experiments'},
+      {val:'2', lbl:'Languages'}
+    ],
+    bioTitle: 'What is Vyommitra?',
+    bio: `<p>Vyommitra (Sanskrit: <em>vyoma</em> = sky/space + <em>mitra</em> = friend) is a half-humanoid robot developed by ISRO's Vikram Sarabhai Space Centre (VSSC) in Thiruvananthapuram. She was unveiled publicly in January 2020 and is designed specifically to fly aboard the Gaganyaan spacecraft on its G1 and G2 uncrewed test missions before any human crew boards.</p>
+<p>Vyommitra is not a display model — she performs real, mission-critical functions. She is designed to operate control panels and switches, monitor the crew module environment (oxygen, CO₂, pressure, temperature), detect off-nominal readings, and report system status. She responds to voice commands in both Hindi and English, and can hold a two-way conversation.</p>
+<p>Her most critical role is to test the <strong style="color:white;">life support system</strong> in the actual microgravity environment of orbit. No ground simulation can fully replicate weightlessness — Vyommitra will experience it first, live, and transmit data that will directly determine the safety of the human crew on G3.</p>
+<p>Vyommitra is a landmark in Indian robotics and AI. Designed to sit in a humanoid posture in the crew module, she has two functional arms capable of performing switch operations. Her development involved advanced areas including computer vision, natural language processing, robotic actuation, and space-grade materials — all designed and built in India.</p>`,
+    facts: [
+      {lbl:'Full Name', val:'Vyommitra (Sky Friend)'},
+      {lbl:'Developer', val:'ISRO — Vikram Sarabhai Space Centre (VSSC)'},
+      {lbl:'Unveiled', val:'January 2020, Bengaluru'},
+      {lbl:'Type', val:'Half-humanoid (upper body + seated)'},
+      {lbl:'Weight', val:'~75 kg'},
+      {lbl:'Languages', val:'Hindi and English (voice recognition & synthesis)'},
+      {lbl:'Missions', val:'Gaganyaan G1 (uncrewed) + G2 (uncrewed)'},
+      {lbl:'Primary Function', val:'Life support system validation in orbit'},
+      {lbl:'Experiments', val:'6 onboard science experiments'},
+      {lbl:'Capabilities', val:'Panel operation, anomaly detection, crew module monitoring'},
+      {lbl:'Integration Completed', val:'April 28, 2026'},
+      {lbl:'Significance', val:'First Indian robot in space — validates safety for human crew'}
+    ]
+  }
+};
+
+function renderCaptain(key) {
+  var d = CAPTAINS[key];
+  var statsHtml = d.stats.map(function(s){
+    return '<div class="captain-stat"><div class="captain-stat-val">'+s.val+'</div><div class="captain-stat-lbl">'+s.lbl+'</div></div>';
+  }).join('');
+  var factsHtml = d.facts.map(function(f){
+    return '<div class="captain-fact"><div class="captain-fact-label">'+f.lbl+'</div><div class="captain-fact-val">'+f.val+'</div></div>';
+  }).join('');
+  var nameParts = d.name.split('\n');
+  var nameHtml = nameParts.join('<br>');
+  var subParts = d.sub.split('\n');
+  var subHtml = subParts.join('<br>');
+  return '<div class="captain-modal-hero">'
+    + '<img class="captain-modal-photo" src="'+d.photo+'" alt="'+d.name+'">'
+    + '<div class="captain-modal-header">'
+    + '<div class="captain-modal-tag">'+d.tag+'</div>'
+    + '<div class="captain-modal-name">'+nameHtml+'</div>'
+    + '<div class="captain-modal-sub">'+subHtml+'</div>'
+    + '</div></div>'
+    + '<div class="captain-modal-body">'
+    + '<div class="captain-stats">'+statsHtml+'</div>'
+    + '<div class="captain-section-title">'+d.bioTitle+'</div>'
+    + '<div class="captain-bio">'+d.bio+'</div>'
+    + '<div class="captain-section-title">Profile</div>'
+    + '<div class="captain-facts">'+factsHtml+'</div>'
+    + '</div>';
+}
+
+function openCaptain(key) {
+  document.getElementById('captain-modal-content').innerHTML = renderCaptain(key);
+  var overlay = document.getElementById('captain-overlay');
+  overlay.classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closeCaptain() {
+  document.getElementById('captain-overlay').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.getElementById('captain-overlay').addEventListener('click', function(e){
+  if(e.target === this) closeCaptain();
+});
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeCaptain(); });
 </script>
 </body>
 </html>

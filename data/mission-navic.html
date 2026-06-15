@@ -81,10 +81,18 @@
   .footer-logo{font-family:'Bebas Neue',sans-serif;font-size:28px;letter-spacing:0.12em;color:rgba(255,255,255,0.3);text-decoration:none;}
   .footer-logo span{color:rgba(252,61,33,0.2);}
   .footer-credit{font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.35);}
+
+  /* Zoom lightbox */
+  .zoom-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.92);z-index:9999;align-items:center;justify-content:center;cursor:zoom-out;}
+  .zoom-overlay.active{display:flex;}
+  .zoom-overlay img{max-width:92vw;max-height:92vh;object-fit:contain;border:1px solid rgba(255,255,255,0.1);}
+  .zoom-close{position:absolute;top:20px;right:28px;font-size:32px;color:rgba(255,255,255,0.7);cursor:pointer;line-height:1;font-family:sans-serif;}
+
 </style>
 <link rel="stylesheet" href="../responsive.css">
 </head>
 <body>
+<div class="zoom-overlay" id="zoom-overlay"><span class="zoom-close">&times;</span><img id="zoom-img" src="" alt=""></div>
 <canvas id="stars-canvas"></canvas>
 <nav>
   <a href="../index.html" class="nav-logo">ANTRIK<span>SH</span></a>
@@ -101,7 +109,7 @@
 </nav>
 
 <div class="mission-hero">
-  <div class="hero-bg"><img src="../photos/navic1.jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.25;z-index:-1;"></div>
+  <div class="hero-bg"><img src="../photos/sats/navic1.jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.25;z-index:-1;"></div>
   <div class="hero-grid-lines"></div>
   <div class="breadcrumb"><a href="../index.html">Antriksh</a><span>/</span><a href="../missions.html">Missions</a><span>/</span>NavIC</div>
   <div class="mission-hero-content">
@@ -236,17 +244,7 @@
   </div>
 </div>
 
-<div class="next-mission">
-  <div>
-    <div class="next-label">Next Mission</div>
-    <div class="next-title">AstroSat — India's Space Telescope</div>
-    <div style="font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:0.1em;margin-top:6px;">Multi-Wavelength Astronomy · Active · 2015</div>
-  </div>
-  <div>
-    <a href="mission-astrosat.html" class="btn-red">Explore Mission →</a>
-    <a href="../missions.html" class="btn-outline">All Missions</a>
-  </div>
-</div>
+
 <footer><a href="../index.html" class="footer-logo">ANTRIK<span>SH</span></a><div class="footer-credit">Data sourced from ISRO open data</div></footer>
 <script>
 const sc=document.getElementById('stars-canvas');const sCtx=sc.getContext('2d');sc.width=window.innerWidth;sc.height=window.innerHeight;
@@ -295,5 +293,88 @@ document.querySelectorAll('.spec-item,.discovery-card,.satellite-card').forEach(
   });
 })();
 </script>
+
+
+<div class="content-section">
+  <div style="display:grid;grid-template-columns:1fr 1.6fr;gap:60px;align-items:center;">
+    <div>
+      <div class="section-tag">Mission Photos</div>
+      <h2 class="section-title">In Pictures</h2>
+      <p style="font-size:14px;color:rgba(255,255,255,0.5);font-family:'Space Mono',monospace;letter-spacing:0.05em;line-height:1.8;margin-top:16px;">Swipe or click arrows to browse. Click any photo to zoom.</p>
+    </div>
+    <div class="swipe-carousel" id="navic-gallery" style="position:relative;overflow:hidden;border:1px solid rgba(255,255,255,0.06);user-select:none;">
+    <div class="swipe-track" style="display:flex;transition:transform 0.45s cubic-bezier(0.4,0,0.2,1);will-change:transform;">
+      <img class="swipe-slide" src="../photos/sats/navic1.jpg" alt="Mission photo" style="min-width:100%;height:360px;object-fit:cover;flex-shrink:0;">
+      <img class="swipe-slide" src="../photos/sats/navic2.jpg" alt="Mission photo" style="min-width:100%;height:360px;object-fit:cover;flex-shrink:0;">
+      <img class="swipe-slide" src="../photos/sats/navic3.jpg" alt="Mission photo" style="min-width:100%;height:360px;object-fit:cover;flex-shrink:0;">
+    </div>
+    <button class="swipe-btn swipe-prev" style="position:absolute;left:16px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.15);color:#fff;width:44px;height:44px;border-radius:50%;font-size:18px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;">&#8592;</button>
+    <button class="swipe-btn swipe-next" style="position:absolute;right:16px;top:50%;transform:translateY(-50%);background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.15);color:#fff;width:44px;height:44px;border-radius:50%;font-size:18px;cursor:pointer;z-index:10;display:flex;align-items:center;justify-content:center;">&#8594;</button>
+    <div class="swipe-dots" style="position:absolute;bottom:16px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:10;"></div>
+  </div>
+</div>
+  </div>
+</div>
+
+
+<script>
+(function(){
+  document.querySelectorAll('.swipe-carousel').forEach(function(car){
+    var track=car.querySelector('.swipe-track');
+    var slides=car.querySelectorAll('.swipe-slide');
+    var dotsWrap=car.querySelector('.swipe-dots');
+    if(!track||!slides.length)return;
+    var total=slides.length;
+    var idx=0;
+    var dots=[];
+    for(var i=0;i<total;i++){
+      var d=document.createElement('div');
+      d.style.cssText='width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.35);cursor:pointer;transition:background 0.2s,transform 0.2s;';
+      (function(n){d.addEventListener('click',function(){goTo(n);});})(i);
+      dotsWrap.appendChild(d);
+      dots.push(d);
+    }
+    function goTo(n){
+      idx=(n+total)%total;
+      track.style.transform='translateX(-'+idx*100+'%)';
+      dots.forEach(function(d,i){d.style.background=i===idx?'rgba(252,61,33,0.9)':'rgba(255,255,255,0.35)';d.style.transform=i===idx?'scale(1.2)':'scale(1)';});
+    }
+    goTo(0);
+    car.querySelector('.swipe-prev').addEventListener('click',function(){goTo(idx-1);});
+    car.querySelector('.swipe-next').addEventListener('click',function(){goTo(idx+1);});
+    var x0=null;
+    track.addEventListener('touchstart',function(e){x0=e.touches[0].clientX;},{passive:true});
+    track.addEventListener('touchend',function(e){if(x0===null)return;var dx=e.changedTouches[0].clientX-x0;if(Math.abs(dx)>40)goTo(dx<0?idx+1:idx-1);x0=null;});
+    var mx=null;
+    track.addEventListener('mousedown',function(e){mx=e.clientX;track.style.cursor='grabbing';});
+    window.addEventListener('mouseup',function(e){if(mx===null)return;var dx=e.clientX-mx;if(Math.abs(dx)>40)goTo(dx<0?idx+1:idx-1);mx=null;track.style.cursor='';});
+    setInterval(function(){goTo(idx+1);},4200);
+  });
+
+  // Zoom lightbox
+  var overlay=document.getElementById('zoom-overlay');
+  var zoomImg=document.getElementById('zoom-img');
+  if(overlay){
+    document.querySelectorAll('.swipe-slide').forEach(function(img){
+      img.style.cursor='zoom-in';
+      img.addEventListener('click',function(){zoomImg.src=img.src;overlay.classList.add('active');});
+    });
+    overlay.addEventListener('click',function(e){if(e.target===overlay||e.target.classList.contains('zoom-close'))overlay.classList.remove('active');});
+    document.addEventListener('keydown',function(e){if(e.key==='Escape')overlay.classList.remove('active');});
+  }
+
+})();
+</script>
+<div class="next-mission">
+  <div>
+    <div class="next-label">Next Mission</div>
+    <div class="next-title">AstroSat — India's Space Telescope</div>
+    <div style="font-family:'Space Mono',monospace;font-size:10px;color:rgba(255,255,255,0.5);letter-spacing:0.1em;margin-top:6px;">Multi-Wavelength Astronomy · Active · 2015</div>
+  </div>
+  <div>
+    <a href="mission-astrosat.html" class="btn-red">Explore Mission →</a>
+    <a href="../missions.html" class="btn-outline">All Missions</a>
+  </div>
+</div>
 </body>
 </html>
