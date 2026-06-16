@@ -88,6 +88,22 @@
   .zoom-overlay img{max-width:92vw;max-height:92vh;object-fit:contain;border:1px solid rgba(255,255,255,0.1);}
   .zoom-close{position:absolute;top:20px;right:28px;font-size:32px;color:rgba(255,255,255,0.7);cursor:pointer;line-height:1;font-family:sans-serif;}
 
+
+  /* RESPONSIVE — BAS gaganyaan grid */
+  .bas-gaganyaan-grid{display:grid;grid-template-columns:1fr 1.5fr;gap:60px;align-items:center;}
+  @media(max-width:900px){
+    .bas-gaganyaan-grid{grid-template-columns:1fr;gap:32px;}
+    .swipe-slide{height:260px!important;}
+    .content-section{padding:48px 24px!important;}
+    .two-col,.two-col-wide{grid-template-columns:1fr!important;gap:40px!important;}
+  }
+  @media(max-width:600px){
+    .bas-gaganyaan-grid{grid-template-columns:1fr;gap:24px;}
+    .swipe-slide{height:220px!important;}
+    .content-section{padding:36px 16px!important;}
+    .section-title{font-size:36px!important;}
+  }
+
 </style>
 <link rel="stylesheet" href="../responsive.css">
 </head>
@@ -192,7 +208,7 @@
 </div>
 
 <div class="content-section" id="gaganyaan-link">
-  <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:60px;align-items:center;">
+  <div class="bas-gaganyaan-grid">
     <div>
       <div class="section-tag">The Connection</div>
       <h2 class="section-title">Gaganyaan is Module 1</h2>
